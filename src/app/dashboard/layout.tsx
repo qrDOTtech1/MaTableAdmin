@@ -1,4 +1,5 @@
 import { logout } from "@/lib/auth-action";
+import Link from "next/link";
 
 export default function DashboardLayout({
   children,
@@ -14,9 +15,9 @@ export default function DashboardLayout({
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
-          <a href="/dashboard" className="block px-4 py-2 rounded-lg bg-slate-800 text-white font-medium">Restaurateurs</a>
-          <a href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Statistiques</a>
-          <a href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Configuration</a>
+          <Link href="/dashboard" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Restaurateurs</Link>
+          <Link href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Statistiques</Link>
+          <Link href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Configuration</Link>
         </nav>
 
         <div className="p-4 border-t border-slate-800">

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -63,8 +64,12 @@ export default async function AdminDashboardPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-3">
-                      <button className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors">Gérer</button>
-                      <button className="text-slate-500 hover:text-red-400 text-sm font-medium transition-colors">Suspendre</button>
+                      <Link 
+                        href={`/dashboard/restaurants/${r.id}`}
+                        className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors"
+                      >
+                        Gérer
+                      </Link>
                     </div>
                   </td>
                 </tr>
