@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const restaurants = await prisma.restaurant.findMany({
     include: {
