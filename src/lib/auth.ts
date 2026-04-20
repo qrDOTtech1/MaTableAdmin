@@ -9,8 +9,8 @@ export async function login(formData: FormData) {
   const username = formData.get("username") as string;
   const password = formData.get("password") as string;
 
-  const admins = ADMIN_CREDENTIALS.split(",").map(pair => pair.split(":"));
-  const isValid = admins.some(([u, p]) => u === username && p === password);
+  const admins = ADMIN_CREDENTIALS.split(",").map(pair => pair.trim().split(":"));
+  const isValid = admins.some(([u, p]) => u && p && u === username && p === password);
 
   if (!isValid) return false;
 
