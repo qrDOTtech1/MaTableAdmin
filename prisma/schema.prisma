@@ -1,4 +1,4 @@
-// Schema version: 1.1
+// Schema version: 1.2
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
@@ -32,6 +32,11 @@ model Restaurant {
   tipsEnabled             Boolean  @default(true)
   serviceCallEnabled      Boolean  @default(true)
   reviewsEnabled          Boolean  @default(true)
+  // NovaTech IA Subscription
+  subscription            SubscriptionPlan @default(STARTER)
+  ollamaApiKey            String?  // Clé API Ollama unique (Pro IA seulement)
+  subscriptionStartedAt   DateTime?
+  subscriptionExpiresAt   DateTime?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @default(now()) @updatedAt
 
@@ -373,4 +378,10 @@ enum Diet {
   PORK_FREE
   LOW_CAL
   SPICY
+}
+
+enum SubscriptionPlan {
+  STARTER   // 49,99€/mois — 30 tables, fonctions de base
+  PRO       // 139,99€/mois — tables illimitées, analytics, export Z
+  PRO_IA    // 299€/mois — tout PRO + NovaTech IA (Magic Scan, Chatbot, Planning IA)
 }
