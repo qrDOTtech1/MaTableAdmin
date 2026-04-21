@@ -16,6 +16,7 @@ export default function DashboardLayout({
         
         <nav className="flex-1 p-4 space-y-2">
           <Link href="/dashboard" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Restaurateurs</Link>
+          <Link href="/dashboard/social" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Nova Connect</Link>
           <Link href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Statistiques</Link>
           <Link href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Configuration</Link>
         </nav>
