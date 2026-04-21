@@ -14,7 +14,7 @@ export default async function StatsPage() {
     take: 10,
     orderBy: { createdAt: "desc" },
     include: { table: { include: { restaurant: true } } }
-  });
+  }) as any[];
 
   return (
     <div className="p-8 space-y-8">
