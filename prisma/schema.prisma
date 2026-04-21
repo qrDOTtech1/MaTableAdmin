@@ -1,4 +1,4 @@
-// Schema version: 1.2
+// Schema version: 1.3
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
@@ -34,7 +34,9 @@ model Restaurant {
   reviewsEnabled          Boolean  @default(true)
   // NovaTech IA Subscription
   subscription            SubscriptionPlan @default(STARTER)
-  ollamaApiKey            String?  // Clé API Ollama unique (Pro IA seulement)
+  ollamaApiKey            String?  // Clé API ollama.com (Bearer token)
+  ollamaLangModel         String?  @default("gpt-oss:120b")       // Modèle langage (chatbot, descriptions, planning)
+  ollamaVisionModel       String?  @default("llama3.2-vision:11b") // Modèle vision (Magic Scan)
   subscriptionStartedAt   DateTime?
   subscriptionExpiresAt   DateTime?
   createdAt               DateTime @default(now())

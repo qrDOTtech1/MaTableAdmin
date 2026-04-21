@@ -46,6 +46,24 @@ export async function updateSubscription(id: string, formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function updateOllamaModels(id: string, formData: FormData) {
+  "use server";
+  const ollamaApiKey    = (formData.get("ollamaApiKey")     as string)?.trim() || undefined;
+  const ollamaLangModel = (formData.get("ollamaLangModel")   as string)?.trim() || undefined;
+  const ollamaVisionModel = (formData.get("ollamaVisionModel") as string)?.trim() || undefined;
+
+  await prisma.restaurant.update({
+    where: { id },
+    data: {
+      ...(ollamaApiKey      !== undefined ? { ollamaApiKey }      : {}),
+      ...(ollamaLangModel   !== undefined ? { ollamaLangModel }   : {}),
+      ...(ollamaVisionModel !== undefined ? { ollamaVisionModel } : {}),
+    },
+  });
+
+  revalidatePath(`/dashboard/restaurants/${id}`);
+}
+
 export async function regenerateOllamaKey(id: string) {
   "use server";
   const newKey = `nova_${crypto.randomBytes(24).toString("hex")}`;
