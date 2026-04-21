@@ -13,7 +13,6 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
       users: true,
       tables: true,
       menuItems: true,
-      orders: { take: 5, orderBy: { createdAt: "desc" } }
     }
   });
 
