@@ -3,20 +3,23 @@ import DeleteUserButton from "./DeleteUserButton";
 
 export const dynamic = "force-dynamic";
 
-async function getSocialData() {
+async function getSocialData(): Promise<
+  | { ok: true; users: any[]; profiles: number; pings: any[]; restaurants: any[]; reservations: any[] }
+  | { ok: false; reason: "no-env" | "query-error"; error?: string }
+> {
   const socialPrisma = getSocialPrisma();
-  if (!socialPrisma) return null;
+  if (!socialPrisma) return { ok: false, reason: "no-env" };
   try {
     const [users, profiles, pings, restaurants, reservations] = await Promise.all([
-      socialPrisma.user.findMany({
+      (socialPrisma as any).user.findMany({
         include: { profile: true },
         orderBy: { id: "desc" },
         take: 100,
-      }),
-      socialPrisma.socialProfile.count(),
-      socialPrisma.socialPing.groupBy({ by: ["status"], _count: true }),
-      socialPrisma.restaurant.findMany({ orderBy: { createdAt: "desc" } }),
-      socialPrisma.reservation.findMany({
+      }).catch((e: any) => { throw new Error("user.findMany: " + e.message); }),
+      (socialPrisma as any).socialProfile.count().catch((e: any) => { throw new Error("socialProfile.count: " + e.message); }),
+      (socialPrisma as any).socialPing.groupBy({ by: ["status"], _count: true }).catch(() => [] as any[]),
+      (socialPrisma as any).restaurant.findMany({ orderBy: { createdAt: "desc" } }).catch(() => [] as any[]),
+      (socialPrisma as any).reservation.findMany({
         include: {
           user: { select: { name: true, email: true } },
           restaurant: { select: { name: true } },
@@ -25,9 +28,10 @@ async function getSocialData() {
         take: 50,
       }).catch(() => [] as any[]),
     ]);
-    return { users, profiles, pings, restaurants, reservations };
-  } catch {
-    return null;
+    return { ok: true, users, profiles, pings, restaurants, reservations };
+  } catch (e: any) {
+    console.error("[social-users] query failed:", e);
+    return { ok: false, reason: "query-error", error: e?.message ?? String(e) };
   }
 }
 
@@ -46,22 +50,36 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default async function SocialUsersPage() {
-  const data = await getSocialData();
+  const result = await getSocialData();
 
-  if (!data) {
+  if (!result.ok) {
     return (
       <div className="p-8">
         <h1 className="text-3xl font-bold text-white mb-4">Utilisateurs Ma Table RS</h1>
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-6">
-          <p className="text-yellow-400 font-bold mb-2">⚠️ Variable manquante</p>
-          <p className="text-slate-400 text-sm">
-            Ajoutez <code className="bg-slate-800 px-2 py-0.5 rounded text-orange-400">SOCIAL_DATABASE_URL</code> dans les variables Railway de MaTableAdmin.
-            <br />Valeur = la DATABASE_URL du service RSMATABLE.
-          </p>
-        </div>
+        {result.reason === "no-env" ? (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-6">
+            <p className="text-yellow-400 font-bold mb-2">⚠️ Variable manquante</p>
+            <p className="text-slate-400 text-sm">
+              Ajoutez <code className="bg-slate-800 px-2 py-0.5 rounded text-orange-400">SOCIAL_DATABASE_URL</code> dans les variables Railway de MaTableAdmin.
+              <br />Valeur = la DATABASE_URL du service RSMATABLE.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
+            <p className="text-red-400 font-bold mb-2">❌ Erreur de requête sociale</p>
+            <p className="text-slate-400 text-xs mb-3">
+              La variable <code className="bg-slate-800 px-1.5 py-0.5 rounded text-orange-400">SOCIAL_DATABASE_URL</code> est bien définie, mais la requête a échoué.
+              Cela veut dire que le schéma Prisma <code className="text-orange-400">social.prisma</code> ne correspond pas à la structure réelle de la base.
+            </p>
+            <pre className="bg-slate-950 border border-slate-800 rounded p-3 text-[11px] text-red-300 whitespace-pre-wrap break-words overflow-auto max-h-96">
+              {result.error}
+            </pre>
+          </div>
+        )}
       </div>
     );
   }
+  const data = result;
 
   const pingStats = Object.fromEntries(data.pings.map((p) => [p.status, p._count]));
   const onboardedCount = data.users.filter((u) => u.profile?.onboardingDone).length;
