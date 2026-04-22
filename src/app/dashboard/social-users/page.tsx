@@ -1,4 +1,5 @@
 import { getSocialPrisma } from "@/lib/social-db";
+import DeleteUserButton from "./DeleteUserButton";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,7 @@ export default async function SocialUsersPage() {
                 <th className="px-4 py-3">Centres d'intérêt</th>
                 <th className="px-4 py-3">Onboarding</th>
                 <th className="px-4 py-3">Inscrit le</th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -149,6 +151,12 @@ export default async function SocialUsersPage() {
                       ? new Date(user.profile.createdAt).toLocaleDateString("fr-FR")
                       : "—"
                     }
+                  </td>
+                  <td className="px-4 py-3">
+                    <DeleteUserButton
+                      userId={user.id}
+                      userName={user.name ?? user.email ?? user.id}
+                    />
                   </td>
                 </tr>
               ))}
