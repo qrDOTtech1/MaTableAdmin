@@ -105,21 +105,18 @@ enum PingStatus {
 model Restaurant {
   id                  String   @id @default(cuid())
   name                String
-  slug                String   @unique
+  slug                String?  @unique // nullable — matches RSMATABLE / MaTable-API
   city                String?
   address             String?
   logoUrl             String?
-  coverUrl            String?
-  cuisine             String?
+  coverImageUrl       String?  // actual DB column name
   description         String?  @db.Text
-  isPremium           Boolean  @default(false)
   isPartner           Boolean  @default(true)
   phone               String?
   website             String?
-  acceptsReservations Boolean  @default(true)
-  maxPartySize        Int      @default(8)
+  acceptReservations  Boolean  @default(false) // actual DB column name
   createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  updatedAt           DateTime @default(now()) @updatedAt
   menuItems           MenuItem[]
   dishReviews         DishReview[]
   favoriteByUsers     FavoriteRestaurant[]
@@ -169,18 +166,19 @@ enum ReservationStatus {
 }
 
 model Reservation {
-  id           String            @id @default(cuid())
-  userId       String
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String     @id @default(cuid())
+  // Match actual DB columns created by RSMATABLE / MaTable-API
+  userId       String?    // nullable — reservations from MaTable-API have no userId
+  user         User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurantId String
-  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  date         DateTime
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  startsAt     DateTime   // actual column name in DB (was "date" in legacy schema)
   partySize    Int
-  status       ReservationStatus @default(PENDING)
-  notes        String?           @db.Text
-  guestName    String?
-  guestEmail   String?
-  guestPhone   String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  status       String     @default("PENDING") // String, not enum — matches DB column type
+  notes        String?    @db.Text
+  customerName  String?
+  customerEmail String?
+  customerPhone String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }

@@ -23,7 +23,7 @@ async function getSocialData() {
         },
         orderBy: { createdAt: "desc" },
         take: 50,
-      }),
+      }).catch(() => [] as any[]),
     ]);
     return { users, profiles, pings, restaurants, reservations };
   } catch {
@@ -199,15 +199,15 @@ export default async function SocialUsersPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-xs">{r.city ?? "—"}</td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">{r.cuisine ?? "—"}</td>
+                  <td className="px-4 py-3 text-slate-400 text-xs">{r.description ?? "—"}</td>
                   <td className="px-4 py-3">
-                    {r.isPremium
-                      ? <span className="text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full">Premium</span>
+                    {r.isPartner
+                      ? <span className="text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full">Partenaire</span>
                       : <span className="text-slate-600 text-xs">Standard</span>
                     }
                   </td>
                   <td className="px-4 py-3">
-                    {r.acceptsReservations
+                    {r.acceptReservations
                       ? <span className="text-green-400 text-xs font-bold">✓ Actif</span>
                       : <span className="text-slate-600 text-xs">Désactivé</span>
                     }
@@ -240,14 +240,14 @@ export default async function SocialUsersPage() {
               {data.reservations.map((r) => (
                 <tr key={r.id} className="hover:bg-slate-800/50 transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-white text-xs">{r.user.name ?? r.guestName ?? "—"}</div>
-                    <div className="text-slate-500 text-[10px]">{r.user.email}</div>
+                    <div className="font-medium text-white text-xs">{r.user?.name ?? r.customerName ?? "—"}</div>
+                    <div className="text-slate-500 text-[10px]">{r.user?.email ?? r.customerEmail ?? ""}</div>
                   </td>
                   <td className="px-4 py-3 text-slate-300 text-xs font-medium">{r.restaurant.name}</td>
                   <td className="px-4 py-3 text-slate-400 text-xs">
-                    {new Date(r.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                    {new Date(r.startsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                     {" "}
-                    {new Date(r.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(r.startsAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                   </td>
                   <td className="px-4 py-3 text-slate-400 text-xs">{r.partySize} pers.</td>
                   <td className="px-4 py-3">
