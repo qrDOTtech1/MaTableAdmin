@@ -14,11 +14,15 @@ export default function DashboardLayout({
           <span className="text-xl font-black">MaTable <span className="text-orange-500">Admin</span></span>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2">
-          <Link href="/dashboard" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Restaurateurs</Link>
-          <Link href="/dashboard/social" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Nova Connect</Link>
-          <Link href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Statistiques</Link>
-          <Link href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors">Configuration</Link>
+        <nav className="flex-1 p-4 space-y-1">
+          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-2 pb-1">Plateforme</p>
+          <Link href="/dashboard" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">🍽️ Restaurateurs</Link>
+          <Link href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">📊 Statistiques</Link>
+          <Link href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">⚙️ Configuration</Link>
+
+          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-4 pb-1">Ma Table RS</p>
+          <Link href="/dashboard/social-users" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">👥 Utilisateurs RS</Link>
+          <Link href="/dashboard/social" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">✨ Nova Connect IA</Link>
         </nav>
 
         <div className="p-4 border-t border-slate-800">

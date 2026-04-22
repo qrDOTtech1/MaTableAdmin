@@ -1,0 +1,186 @@
+generator socialClient {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/social-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SOCIAL_DATABASE_URL")
+}
+
+// ─── AUTH (NextAuth) ──────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  profile       SocialProfile?
+  dishReviews   DishReview[]
+  favoriteRestaurants FavoriteRestaurant[]
+  reservations  Reservation[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+// ─── SOCIAL CORE ──────────────────────────────────────────────────────────────
+
+enum SocialMode {
+  BUSINESS
+  FUN
+  DATE
+  HIDDEN
+}
+
+model SocialProfile {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio            String?    @db.Text
+  interests      String[]
+  occupation     String?
+  activeMode     SocialMode @default(HIDDEN)
+  onboardingData Json?
+  onboardingDone Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  sentPings      SocialPing[] @relation("SentPings")
+  receivedPings  SocialPing[] @relation("ReceivedPings")
+}
+
+model SocialPing {
+  id         String        @id @default(cuid())
+  senderId   String
+  sender     SocialProfile @relation("SentPings", fields: [senderId], references: [id])
+  receiverId String
+  receiver   SocialProfile @relation("ReceivedPings", fields: [receiverId], references: [id])
+  message    String?
+  mode       SocialMode
+  status     PingStatus    @default(SENT)
+  createdAt  DateTime      @default(now())
+}
+
+enum PingStatus {
+  SENT
+  ACCEPTED
+  DECLINED
+  SEEN
+}
+
+// ─── RESTAURANTS PARTENAIRES ──────────────────────────────────────────────────
+
+model Restaurant {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  city                String?
+  address             String?
+  logoUrl             String?
+  coverUrl            String?
+  cuisine             String?
+  description         String?  @db.Text
+  isPremium           Boolean  @default(false)
+  isPartner           Boolean  @default(true)
+  phone               String?
+  website             String?
+  acceptsReservations Boolean  @default(true)
+  maxPartySize        Int      @default(8)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  menuItems           MenuItem[]
+  dishReviews         DishReview[]
+  favoriteByUsers     FavoriteRestaurant[]
+  reservations        Reservation[]
+}
+
+model MenuItem {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?    @db.Text
+  priceCents   Int
+  category     String?
+  photoUrl     String?
+  available    Boolean    @default(true)
+  reviews      DishReview[]
+}
+
+model DishReview {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItemId   String?
+  menuItem     MenuItem?  @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  rating       Int
+  comment      String?    @db.Text
+  createdAt    DateTime   @default(now())
+}
+
+model FavoriteRestaurant {
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  @@id([userId, restaurantId])
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  DONE
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  date         DateTime
+  partySize    Int
+  status       ReservationStatus @default(PENDING)
+  notes        String?           @db.Text
+  guestName    String?
+  guestEmail   String?
+  guestPhone   String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
