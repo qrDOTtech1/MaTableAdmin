@@ -36,9 +36,6 @@ export async function DELETE(
         await tx.socialPing.deleteMany({
           where: { OR: [{ senderId: profile.id }, { receiverId: profile.id }] },
         });
-        await tx.socialConnection.deleteMany({
-          where: { OR: [{ requesterId: profile.id }, { receiverId: profile.id }] },
-        });
       }
 
       await tx.dishReview.deleteMany({ where: { userId: id } });
