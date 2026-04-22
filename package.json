@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && npx prisma generate --schema=prisma/social.prisma && next build",
-    "start": "npx prisma db push --accept-data-loss; next start",
+    "start": "npx prisma db push --accept-data-loss; if [ -n \"$SOCIAL_DATABASE_URL\" ]; then DATABASE_URL=\"$SOCIAL_DATABASE_URL\" npx prisma db push --schema=prisma/social.prisma --accept-data-loss; fi; next start",
     "lint": "eslint"
   },
   "dependencies": {
