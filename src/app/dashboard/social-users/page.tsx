@@ -1,10 +1,10 @@
-import { socialPrisma } from "@/lib/social-db";
-import { redirect } from "next/navigation";
+import { getSocialPrisma } from "@/lib/social-db";
 
 export const dynamic = "force-dynamic";
 
 async function getSocialData() {
-  if (!process.env.SOCIAL_DATABASE_URL) return null;
+  const socialPrisma = getSocialPrisma();
+  if (!socialPrisma) return null;
   try {
     const [users, profiles, pings, restaurants, reservations] = await Promise.all([
       socialPrisma.user.findMany({
