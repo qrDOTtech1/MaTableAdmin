@@ -20,6 +20,9 @@ export default function DashboardLayout({
           <Link href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">📊 Statistiques</Link>
           <Link href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">⚙️ Configuration</Link>
 
+          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-4 pb-1">Communication</p>
+          <Link href="/dashboard/emails" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">📧 Emails</Link>
+
           <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-4 pb-1">Ma Table RS</p>
           <Link href="/dashboard/social-users" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">👥 Utilisateurs RS</Link>
           <Link href="/dashboard/social" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">✨ Nova Connect IA</Link>
