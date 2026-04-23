@@ -4,7 +4,7 @@ import { getSocialPrisma } from "@/lib/social-db";
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> | { id: string } }
 ) {
   // Admin must be authenticated
   const session = await getAdminSession();
@@ -18,7 +18,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Base de données sociale non configurée." }, { status: 503 });
   }
 
-  const { id } = params;
+  // Next 15: params is a Promise. Await it either way.
+  const { id } = await Promise.resolve(context.params);
+  if (!id) {
+    return NextResponse.json({ error: "id manquant." }, { status: 400 });
+  }
 
   // Verify user exists
   const user = await socialPrisma.user.findUnique({ where: { id }, select: { id: true } });
