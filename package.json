@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && npx prisma generate --schema=prisma/social.prisma && next build",
-    "start": "next start",
+    "start": "npx prisma db push --skip-generate || true; next start",
     "lint": "eslint"
   },
   "dependencies": {

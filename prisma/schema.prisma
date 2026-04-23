@@ -21,8 +21,8 @@ model Restaurant {
   phone                   String?
   email                   String?
   website                 String?
-  coverImageUrl           String?
-  logoUrl                 String?
+  coverImageId            String?  @unique
+  logoId                  String?  @unique
   acceptReservations      Boolean  @default(false)
   depositPerGuestCents    Int      @default(0)
   avgPrepMinutes          Int      @default(90)
