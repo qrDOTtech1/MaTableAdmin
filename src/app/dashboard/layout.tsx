@@ -20,6 +20,8 @@ export default function DashboardLayout({
           <Link href="/dashboard/stats" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">📊 Statistiques</Link>
           <Link href="/dashboard/settings" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">⚙️ Configuration</Link>
 
+          <Link href="/dashboard/prospection" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm font-medium">🎯 Prospection</Link>
+
           <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-4 pb-1">Communication</p>
           <Link href="/dashboard/emails" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">📧 Emails</Link>
 
