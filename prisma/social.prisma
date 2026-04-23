@@ -108,8 +108,8 @@ model Restaurant {
   slug                String?  @unique // nullable — matches RSMATABLE / MaTable-API
   city                String?
   address             String?
-  logoUrl             String?
-  coverImageUrl       String?  // actual DB column name
+  logoId              String?
+  coverImageId        String?
   description         String?  @db.Text
   isPartner           Boolean  @default(true)
   phone               String?

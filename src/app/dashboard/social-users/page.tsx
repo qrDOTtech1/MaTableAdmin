@@ -208,7 +208,7 @@ export default async function SocialUsersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-lg shrink-0 overflow-hidden">
-                        {r.logoUrl ? <img src={r.logoUrl} className="w-full h-full object-cover" /> : "🍽️"}
+                        {(r as any).logoId ? <img src={`${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/media/${(r as any).logoId}`} className="w-full h-full object-cover" /> : "🍽️"}
                       </div>
                       <div>
                         <div className="font-medium text-white">{r.name}</div>
