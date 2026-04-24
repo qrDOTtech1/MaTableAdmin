@@ -83,6 +83,17 @@ export async function revokeOllamaKey(id: string) {
   revalidatePath(`/dashboard/restaurants/${id}`);
 }
 
+export async function updateCaissePin(id: string, formData: FormData) {
+  "use server";
+  const raw = (formData.get("caissePin") as string)?.trim();
+  const pin = /^\d{4,8}$/.test(raw) ? raw : null;
+  await prisma.restaurant.update({
+    where: { id },
+    data: { caissePin: pin } as any,
+  });
+  revalidatePath(`/dashboard/restaurants/${id}`);
+}
+
 export async function deleteRestaurant(id: string) {
   "use server";
   await prisma.restaurant.delete({ where: { id } });

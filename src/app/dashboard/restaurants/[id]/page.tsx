@@ -6,38 +6,48 @@ import {
   updateOllamaModels,
   regenerateOllamaKey,
   revokeOllamaKey,
+  updateCaissePin,
   deleteRestaurant,
 } from "@/lib/admin-actions";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-// ── Catalogue des modèles Ollama ──────────────────────────────────────────────
-const LANG_MODELS = [
-  // ── Cloud (ollama.com) ─────────────────────────────────────────────────────
-  { id: "gpt-oss:120b",       label: "GPT-OSS 120B",       cloud: true,  params: "120B", desc: "Meilleur équilibre qualité/vitesse — recommandé" },
-  { id: "gpt-oss:120b-cloud", label: "GPT-OSS 120B Cloud", cloud: true,  params: "120B", desc: "Version cloud optimisée, latence réduite" },
-  // ── Local ──────────────────────────────────────────────────────────────────
-  { id: "llama3.3:70b",       label: "Llama 3.3",          cloud: false, params: "70B",  desc: "Meta — excellent pour le français" },
-  { id: "llama3.1:8b",        label: "Llama 3.1",          cloud: false, params: "8B",   desc: "Léger, rapide, bon pour prod" },
-  { id: "mistral:7b",         label: "Mistral 7B",         cloud: false, params: "7B",   desc: "Français natif, très efficace" },
-  { id: "mistral-nemo:12b",   label: "Mistral Nemo",       cloud: false, params: "12B",  desc: "Multilingue, raisonnement avancé" },
-  { id: "qwen2.5:72b",        label: "Qwen 2.5",           cloud: false, params: "72B",  desc: "Excellent multilangue et code" },
-  { id: "phi4:14b",           label: "Phi-4",              cloud: false, params: "14B",  desc: "Microsoft — compact mais puissant" },
-  { id: "gemma3:27b",         label: "Gemma 3",            cloud: false, params: "27B",  desc: "Google — équilibré et rapide" },
+// ── Catalogue modèles IA Cloud ────────────────────────────────────────────────
+type ProviderBadge = "openai" | "anthropic" | "google" | "mistral";
+
+const PROVIDER_STYLE: Record<ProviderBadge, { label: string; bg: string; text: string }> = {
+  openai:    { label: "OpenAI",    bg: "bg-emerald-500/20", text: "text-emerald-400" },
+  anthropic: { label: "Anthropic", bg: "bg-orange-500/20",  text: "text-orange-400" },
+  google:    { label: "Google",    bg: "bg-blue-500/20",    text: "text-blue-400" },
+  mistral:   { label: "Mistral",   bg: "bg-purple-500/20",  text: "text-purple-400" },
+};
+
+const LANG_MODELS: { id: string; label: string; provider: ProviderBadge; tier: string; desc: string }[] = [
+  { id: "gpt-4o",                        label: "GPT-4o",              provider: "openai",    tier: "Best",    desc: "Meilleure qualité — multimodal, vision native" },
+  { id: "gpt-4o-mini",                   label: "GPT-4o Mini",         provider: "openai",    tier: "Fast $",  desc: "Rapide et économique — recommandé par défaut" },
+  { id: "claude-3-5-sonnet-20241022",    label: "Claude 3.5 Sonnet",   provider: "anthropic", tier: "Best",    desc: "Excellent français, raisonnement, long contexte" },
+  { id: "claude-3-haiku-20240307",       label: "Claude 3 Haiku",      provider: "anthropic", tier: "Fast $",  desc: "Ultra-rapide, très économique" },
+  { id: "gemini-1.5-pro",                label: "Gemini 1.5 Pro",      provider: "google",    tier: "Best",    desc: "Grande fenêtre contexte (1M tokens), multimodal" },
+  { id: "gemini-1.5-flash",              label: "Gemini 1.5 Flash",    provider: "google",    tier: "Fast $",  desc: "Rapide et économique, idéal pour chatbot" },
+  { id: "mistral-large-latest",          label: "Mistral Large",       provider: "mistral",   tier: "Best",    desc: "Meilleur modèle Mistral — excellent pour le français" },
+  { id: "mistral-small-latest",          label: "Mistral Small",       provider: "mistral",   tier: "Fast $",  desc: "Léger, rapide, modèle français souverain" },
 ];
 
-const VISION_MODELS = [
-  // ── Cloud (ollama.com) ─────────────────────────────────────────────────────
-  { id: "llama3.2-vision:90b-cloud", label: "Llama 3.2 Vision 90B Cloud", cloud: true,  params: "90B",  desc: "Meilleure analyse d'image — recommandé pour Magic Scan" },
-  // ── Local ──────────────────────────────────────────────────────────────────
-  { id: "llama3.2-vision:11b",       label: "Llama 3.2 Vision",           cloud: false, params: "11B",  desc: "Meta — vision généraliste, bon équilibre" },
-  { id: "llava:34b",                 label: "LLaVA 34B",                  cloud: false, params: "34B",  desc: "Vision haute résolution, détail fin" },
-  { id: "llava:13b",                 label: "LLaVA 13B",                  cloud: false, params: "13B",  desc: "Version allégée, bonne vitesse" },
-  { id: "minicpm-v:8b",             label: "MiniCPM-V",                  cloud: false, params: "8B",   desc: "Compact, excellent OCR et analyse plats" },
-  { id: "moondream:1.8b",           label: "Moondream",                  cloud: false, params: "1.8B", desc: "Ultra-léger, parfait si GPU limité" },
-  { id: "bakllava:7b",              label: "BakLLaVA",                   cloud: false, params: "7B",   desc: "Spécialisé analyse visuelle culinaire" },
+const VISION_MODELS: { id: string; label: string; provider: ProviderBadge; desc: string }[] = [
+  { id: "gpt-4o",                       label: "GPT-4o Vision",              provider: "openai",    desc: "Meilleure analyse image — recommandé pour Magic Scan" },
+  { id: "gpt-4o-mini",                  label: "GPT-4o Mini Vision",         provider: "openai",    desc: "Rapide et économique pour scan menu" },
+  { id: "claude-3-5-sonnet-20241022",   label: "Claude 3.5 Sonnet Vision",   provider: "anthropic", desc: "Vision haute précision, excellent OCR" },
+  { id: "gemini-1.5-pro",               label: "Gemini 1.5 Pro Vision",      provider: "google",    desc: "Analyse détaillée, haute résolution, multi-image" },
+  { id: "gemini-1.5-flash",             label: "Gemini 1.5 Flash Vision",    provider: "google",    desc: "Rapide pour scan plats et OCR" },
 ];
+
+const PROVIDER_KEY_HINT: Record<ProviderBadge, { placeholder: string; url: string; urlLabel: string }> = {
+  openai:    { placeholder: "sk-...",   url: "https://platform.openai.com/api-keys",            urlLabel: "platform.openai.com" },
+  anthropic: { placeholder: "sk-ant-...", url: "https://console.anthropic.com/settings/keys",  urlLabel: "console.anthropic.com" },
+  google:    { placeholder: "AIza...",  url: "https://aistudio.google.com/app/apikey",           urlLabel: "aistudio.google.com" },
+  mistral:   { placeholder: "...",      url: "https://console.mistral.ai/api-keys",              urlLabel: "console.mistral.ai" },
+};
 
 const PLANS = {
   STARTER: { label: "Starter",            price: "49,99€/mois",  color: "text-slate-300",  bg: "bg-slate-700/50",    border: "border-slate-600" },
@@ -58,8 +68,17 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   async function handleRevokeKey() { "use server"; await revokeOllamaKey(id); }
 
   const plan = PLANS[restaurant.subscription as keyof typeof PLANS] ?? PLANS.STARTER;
-  const currentLang   = (restaurant as any).ollamaLangModel   ?? "gpt-oss:120b";
-  const currentVision = (restaurant as any).ollamaVisionModel ?? "llama3.2-vision:11b";
+  const currentLang   = (restaurant as any).ollamaLangModel   ?? "gpt-4o-mini";
+  const currentVision = (restaurant as any).ollamaVisionModel ?? "gpt-4o";
+  const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
+  const currentCaissePin = (restaurant as any).caissePin ?? "";
+
+  // Detect current provider from selected model
+  const currentLangProvider: ProviderBadge =
+    currentLang.startsWith("claude-") ? "anthropic"
+    : currentLang.startsWith("gemini-") ? "google"
+    : currentLang.startsWith("mistral") ? "mistral"
+    : "openai";
 
   return (
     <div className="p-8 max-w-5xl space-y-8">
@@ -151,6 +170,40 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         )}
       </div>
 
+      {/* ── Service Caisse ── */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-xl">💳</div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Service Caisse</h2>
+            <p className="text-xs text-slate-400">Accès caissier via PIN — vue encaissement à <code className="text-emerald-400">/{restaurant.slug}/caisse</code></p>
+          </div>
+        </div>
+        <form action={updateCaissePin.bind(null, id)} className="flex items-end gap-4 flex-wrap">
+          <div className="flex-1 min-w-48">
+            <label className="block text-sm font-medium text-slate-400 mb-1">PIN Caisse (4-8 chiffres)</label>
+            <input
+              name="caissePin"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{4,8}"
+              maxLength={8}
+              defaultValue={currentCaissePin}
+              placeholder="ex : 1234"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono tracking-widest text-lg"
+            />
+          </div>
+          <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+            Enregistrer
+          </button>
+        </form>
+        {currentCaissePin ? (
+          <p className="text-xs text-emerald-400/70">✓ PIN configuré — le caissier peut se connecter sur <strong>/{restaurant.slug}/caisse</strong></p>
+        ) : (
+          <p className="text-xs text-slate-600">Aucun PIN défini — service caisse désactivé</p>
+        )}
+      </div>
+
       {/* ── Configuration IA (PRO_IA uniquement) ── */}
       {restaurant.subscription === "PRO_IA" && (
         <div className="bg-slate-900 border border-orange-600/40 p-6 rounded-xl space-y-8">
@@ -158,7 +211,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl">✨</div>
             <div>
               <h2 className="text-lg font-bold text-white">Configuration NovaTech IA</h2>
-              <p className="text-xs text-slate-400">Clé API & sélection des modèles Ollama pour ce restaurant</p>
+              <p className="text-xs text-slate-400">Modèles IA Cloud — OpenAI · Anthropic · Google · Mistral</p>
             </div>
           </div>
 
@@ -166,141 +219,93 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
 
             {/* ─ Clé API ─ */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-orange-400 font-bold text-sm">🔑 Clé API ollama.com</span>
-                <a href="https://ollama.com/settings/keys" target="_blank"
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-orange-400 font-bold text-sm">🔑 Clé API du fournisseur sélectionné</span>
+                <a href={PROVIDER_KEY_HINT[currentLangProvider].url} target="_blank"
                   className="text-xs text-slate-500 hover:text-orange-400 transition-colors">
-                  → Créer une clé ↗
+                  → {PROVIDER_KEY_HINT[currentLangProvider].urlLabel} ↗
                 </a>
               </div>
               <div className="flex gap-2">
                 <input
                   name="ollamaApiKey"
                   type="password"
-                  defaultValue={(restaurant as any).ollamaApiKey || ""}
-                  placeholder="ollama_..."
+                  defaultValue={currentApiKey}
+                  placeholder={PROVIDER_KEY_HINT[currentLangProvider].placeholder}
                   className="flex-1 bg-black/40 border border-orange-500/20 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder-slate-600 focus:border-orange-500 focus:outline-none"
                 />
-                {(restaurant as any).ollamaApiKey && (
-                  <div className="flex gap-2">
-                    <form action={handleRegenKey}>
-                      <button type="submit" title="Régénérer"
-                        className="px-3 py-2.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-lg text-sm transition-colors">
-                        🔄
-                      </button>
-                    </form>
-                    <form action={handleRevokeKey}>
-                      <button type="submit" title="Révoquer"
-                        className="px-3 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors">
-                        ✕
-                      </button>
-                    </form>
-                  </div>
+                {currentApiKey && (
+                  <form action={handleRevokeKey}>
+                    <button type="submit" title="Révoquer la clé"
+                      className="px-3 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors">
+                      ✕ Révoquer
+                    </button>
+                  </form>
                 )}
               </div>
               <p className="text-[11px] text-slate-600">
-                Cette clé permet à l'API MaTable de s'authentifier sur <code className="text-orange-400">https://ollama.com/api</code>
+                La clé correspond au fournisseur du modèle sélectionné. Chaque fournisseur a sa propre clé API.
               </p>
             </div>
 
             {/* ─ Modèle Langage ─ */}
             <div className="space-y-3">
-              <div>
-                <h3 className="font-bold text-white flex items-center gap-2">
-                  🗣️ Modèle Langage
-                  <span className="text-xs font-normal text-slate-400">— Chatbot Nova · Descriptions · Planning IA · Copywriting</span>
-                </h3>
-              </div>
+              <h3 className="font-bold text-white flex items-center gap-2 flex-wrap">
+                🗣️ Modèle Langage
+                <span className="text-xs font-normal text-slate-400">— Chatbot Nova · Descriptions IA · Planning · Défis quotidiens</span>
+              </h3>
               <div className="grid grid-cols-1 gap-2">
-                {/* Cloud */}
-                <p className="text-[10px] font-bold text-orange-400/70 uppercase tracking-widest mt-1">☁️ Cloud ollama.com</p>
-                {LANG_MODELS.filter(m => m.cloud).map(m => (
-                  <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    currentLang === m.id
-                      ? "border-orange-500 bg-orange-500/10"
-                      : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
-                  }`}>
-                    <input type="radio" name="ollamaLangModel" value={m.id} defaultChecked={currentLang === m.id} className="accent-orange-500" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-white">{m.label}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded font-mono">{m.params}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">Cloud</span>
+                {LANG_MODELS.map(m => {
+                  const ps = PROVIDER_STYLE[m.provider];
+                  const isSelected = currentLang === m.id;
+                  return (
+                    <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      isSelected ? "border-orange-500 bg-orange-500/10" : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
+                    }`}>
+                      <input type="radio" name="ollamaLangModel" value={m.id} defaultChecked={isSelected} className="accent-orange-500" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-white">{m.label}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${ps.bg} ${ps.text}`}>{ps.label}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded">{m.tier}</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
-                    </div>
-                  </label>
-                ))}
-                {/* Local */}
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">🖥️ Local / Self-hosted</p>
-                {LANG_MODELS.filter(m => !m.cloud).map(m => (
-                  <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    currentLang === m.id
-                      ? "border-orange-500 bg-orange-500/10"
-                      : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
-                  }`}>
-                    <input type="radio" name="ollamaLangModel" value={m.id} defaultChecked={currentLang === m.id} className="accent-orange-500" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-white">{m.label}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-600 text-slate-300 rounded font-mono">{m.params}</span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
-            {/* ─ Modèle Vision ─ */}
+            {/* ─ Modèle Vision (Magic Scan) ─ */}
             <div className="space-y-3">
-              <div>
-                <h3 className="font-bold text-white flex items-center gap-2">
-                  👁️ Modèle Vision
-                  <span className="text-xs font-normal text-slate-400">— Magic Scan · Analyse photo plat · OCR menu</span>
-                </h3>
-                <p className="text-xs text-amber-400/80 mt-1">
-                  ⚠️ Ces modèles analysent des images — requis pour le Magic Scan. Différents des modèles langage.
-                </p>
-              </div>
+              <h3 className="font-bold text-white flex items-center gap-2 flex-wrap">
+                👁️ Modèle Vision
+                <span className="text-xs font-normal text-slate-400">— Magic Scan · Analyse photo plat · OCR menu</span>
+              </h3>
+              <p className="text-xs text-amber-400/80">
+                ⚠️ Modèle dédié à l'analyse d'images. Tous supportent vision native — même clé API que le modèle langage si même fournisseur.
+              </p>
               <div className="grid grid-cols-1 gap-2">
-                {/* Cloud */}
-                <p className="text-[10px] font-bold text-orange-400/70 uppercase tracking-widest mt-1">☁️ Cloud ollama.com</p>
-                {VISION_MODELS.filter(m => m.cloud).map(m => (
-                  <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    currentVision === m.id
-                      ? "border-purple-500 bg-purple-500/10"
-                      : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
-                  }`}>
-                    <input type="radio" name="ollamaVisionModel" value={m.id} defaultChecked={currentVision === m.id} className="accent-purple-500" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-white">{m.label}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded font-mono">{m.params}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">Cloud</span>
+                {VISION_MODELS.map(m => {
+                  const ps = PROVIDER_STYLE[m.provider];
+                  const isSelected = currentVision === m.id;
+                  return (
+                    <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                      isSelected ? "border-purple-500 bg-purple-500/10" : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
+                    }`}>
+                      <input type="radio" name="ollamaVisionModel" value={m.id} defaultChecked={isSelected} className="accent-purple-500" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-white">{m.label}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${ps.bg} ${ps.text}`}>{ps.label}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">Vision ✓</span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
-                    </div>
-                  </label>
-                ))}
-                {/* Local */}
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">🖥️ Local / Self-hosted</p>
-                {VISION_MODELS.filter(m => !m.cloud).map(m => (
-                  <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    currentVision === m.id
-                      ? "border-purple-500 bg-purple-500/10"
-                      : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
-                  }`}>
-                    <input type="radio" name="ollamaVisionModel" value={m.id} defaultChecked={currentVision === m.id} className="accent-purple-500" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm text-white">{m.label}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 bg-slate-600 text-slate-300 rounded font-mono">{m.params}</span>
-                      </div>
-                      <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
