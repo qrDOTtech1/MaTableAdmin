@@ -1,22 +1,24 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-// Ensure GlobalConfig table + row exist
+// Ensure GlobalConfig table + columns + row exist
 async function ensureTable() {
+  // Create table if brand new DB
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "GlobalConfig" (
       id TEXT NOT NULL DEFAULT 'global',
-      "ollamaApiKey" TEXT,
-      "ollamaLangModel" TEXT NOT NULL DEFAULT 'gpt-oss:120b',
-      "ollamaVisionModel" TEXT NOT NULL DEFAULT 'qwen3-vl:235b',
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "GlobalConfig_pkey" PRIMARY KEY (id)
     )
   `);
+  // Add columns if table existed without them
+  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "ollamaApiKey" TEXT`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "ollamaLangModel" TEXT NOT NULL DEFAULT 'gpt-oss:120b'`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "ollamaVisionModel" TEXT NOT NULL DEFAULT 'qwen3-vl:235b'`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  // Ensure global row
   await prisma.$executeRawUnsafe(`
-    INSERT INTO "GlobalConfig" (id, "ollamaApiKey", "ollamaLangModel", "ollamaVisionModel", "updatedAt")
-    VALUES ('global', NULL, 'gpt-oss:120b', 'qwen3-vl:235b', NOW())
-    ON CONFLICT (id) DO NOTHING
+    INSERT INTO "GlobalConfig" (id) VALUES ('global') ON CONFLICT (id) DO NOTHING
   `);
 }
 
