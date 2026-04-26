@@ -1,49 +1,23 @@
-"use server";
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+import { saveGlobalIaConfig, revokeGlobalKey } from "@/lib/ia-actions";
 
-// ── Actions serveur ───────────────────────────────────────────────────────────
-async function saveGlobalIaConfig(formData: FormData) {
-  "use server";
-  const iaApiKey      = (formData.get("iaApiKey")      as string)?.trim() || null;
-  const iaLangModel   = (formData.get("iaLangModel")   as string)?.trim() || "gpt-4o-mini";
-  const iaVisionModel = (formData.get("iaVisionModel") as string)?.trim() || "gpt-4o";
-
-  await prisma.$executeRaw`
-    INSERT INTO "GlobalConfig" (id, "iaApiKey", "iaLangModel", "iaVisionModel", "updatedAt")
-    VALUES ('global', ${iaApiKey}, ${iaLangModel}, ${iaVisionModel}, NOW())
-    ON CONFLICT (id) DO UPDATE
-    SET "iaApiKey"      = EXCLUDED."iaApiKey",
-        "iaLangModel"   = EXCLUDED."iaLangModel",
-        "iaVisionModel" = EXCLUDED."iaVisionModel",
-        "updatedAt"     = NOW()
-  `;
-  revalidatePath("/dashboard/settings");
-}
-
-async function revokeGlobalKey() {
-  "use server";
-  await prisma.$executeRaw`
-    UPDATE "GlobalConfig" SET "iaApiKey" = NULL, "updatedAt" = NOW() WHERE id = 'global'
-  `;
-  revalidatePath("/dashboard/settings");
-}
+export const dynamic = "force-dynamic";
 
 // ── Catalogue modèles ─────────────────────────────────────────────────────────
 type ProviderBadge = "openai" | "anthropic" | "google" | "mistral";
 
-const PROVIDER_STYLE: Record<ProviderBadge, { label: string; bg: string; text: string; dot: string }> = {
-  openai:    { label: "OpenAI",    bg: "bg-emerald-500/20", text: "text-emerald-400", dot: "bg-emerald-400" },
-  anthropic: { label: "Anthropic", bg: "bg-orange-500/20",  text: "text-orange-400",  dot: "bg-orange-400" },
-  google:    { label: "Google",    bg: "bg-blue-500/20",    text: "text-blue-400",    dot: "bg-blue-400" },
-  mistral:   { label: "Mistral",   bg: "bg-purple-500/20",  text: "text-purple-400",  dot: "bg-purple-400" },
+const PROVIDER_STYLE: Record<ProviderBadge, { label: string; bg: string; text: string }> = {
+  openai:    { label: "OpenAI",    bg: "bg-emerald-500/20", text: "text-emerald-400" },
+  anthropic: { label: "Anthropic", bg: "bg-orange-500/20",  text: "text-orange-400"  },
+  google:    { label: "Google",    bg: "bg-blue-500/20",    text: "text-blue-400"    },
+  mistral:   { label: "Mistral",   bg: "bg-purple-500/20",  text: "text-purple-400"  },
 };
 
 const PROVIDER_KEY_HINT: Record<ProviderBadge, { placeholder: string; url: string; urlLabel: string }> = {
-  openai:    { placeholder: "sk-...",     url: "https://platform.openai.com/api-keys",           urlLabel: "platform.openai.com" },
-  anthropic: { placeholder: "sk-ant-...", url: "https://console.anthropic.com/settings/keys",   urlLabel: "console.anthropic.com" },
-  google:    { placeholder: "AIzaSy...",  url: "https://aistudio.google.com/app/apikey",          urlLabel: "aistudio.google.com" },
-  mistral:   { placeholder: "...",        url: "https://console.mistral.ai/api-keys",             urlLabel: "console.mistral.ai" },
+  openai:    { placeholder: "sk-...",     url: "https://platform.openai.com/api-keys",          urlLabel: "platform.openai.com"  },
+  anthropic: { placeholder: "sk-ant-...", url: "https://console.anthropic.com/settings/keys",  urlLabel: "console.anthropic.com" },
+  google:    { placeholder: "AIzaSy...",  url: "https://aistudio.google.com/app/apikey",         urlLabel: "aistudio.google.com"  },
+  mistral:   { placeholder: "...",        url: "https://console.mistral.ai/api-keys",            urlLabel: "console.mistral.ai"   },
 };
 
 const LANG_MODELS: { id: string; label: string; provider: ProviderBadge; tier: string; desc: string }[] = [
@@ -65,10 +39,7 @@ const VISION_MODELS: { id: string; label: string; provider: ProviderBadge; desc:
   { id: "gemini-1.5-flash",            label: "Gemini 1.5 Flash Vision",   provider: "google",    desc: "Rapide pour scan plats et OCR" },
 ];
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminSettingsPage() {
-  // Read current global config
   const rows = await prisma.$queryRaw<Array<{
     iaApiKey: string | null;
     iaLangModel: string;
@@ -88,7 +59,7 @@ export default async function AdminSettingsPage() {
     : currentLang.startsWith("mistral") ? "mistral"
     : "openai";
 
-  const ps = PROVIDER_STYLE[currentProvider];
+  const ps   = PROVIDER_STYLE[currentProvider];
   const hint = PROVIDER_KEY_HINT[currentProvider];
 
   return (
@@ -100,16 +71,15 @@ export default async function AdminSettingsPage() {
           <span className="text-4xl">🤖</span> Nova Connect IA
         </h1>
         <p className="text-slate-400 mt-1">
-          Une seule clé API, utilisée automatiquement par <strong className="text-white">tous les restaurants PRO_IA</strong>.
+          Une seule clé API, utilisée automatiquement par{" "}
+          <strong className="text-white">tous les restaurants PRO_IA</strong>.
           Chatbot, Magic Scan, Planning IA, Défis quotidiens — tout passe par cette config.
         </p>
       </div>
 
-      {/* Statut actuel */}
+      {/* Statut */}
       <div className={`rounded-2xl border p-5 flex items-center gap-4 ${
-        hasKey
-          ? "border-emerald-500/30 bg-emerald-500/5"
-          : "border-red-500/30 bg-red-500/5"
+        hasKey ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"
       }`}>
         <div className={`w-3 h-3 rounded-full flex-shrink-0 ${hasKey ? "bg-emerald-400 animate-pulse" : "bg-red-400"}`} />
         <div className="flex-1">
@@ -117,7 +87,7 @@ export default async function AdminSettingsPage() {
             <>
               <p className="text-emerald-400 font-bold text-sm">✓ IA Active — clé configurée</p>
               <p className="text-slate-400 text-xs mt-0.5">
-                Modèle : <span className={`font-mono font-semibold ${ps.text}`}>{currentLang}</span>
+                Modèle texte : <span className={`font-mono font-semibold ${ps.text}`}>{currentLang}</span>
                 {" · "}Vision : <span className="font-mono font-semibold text-blue-400">{currentVision}</span>
                 {config.updatedAt && ` · Mis à jour : ${new Date(config.updatedAt).toLocaleString("fr-FR")}`}
               </p>
@@ -125,7 +95,7 @@ export default async function AdminSettingsPage() {
           ) : (
             <>
               <p className="text-red-400 font-bold text-sm">⚠ Aucune clé API configurée</p>
-              <p className="text-slate-500 text-xs mt-0.5">Toutes les fonctions IA sont désactivées pour tous les restaurants.</p>
+              <p className="text-slate-500 text-xs mt-0.5">Toutes les fonctions IA sont désactivées.</p>
             </>
           )}
         </div>
@@ -133,17 +103,17 @@ export default async function AdminSettingsPage() {
           <form action={revokeGlobalKey}>
             <button type="submit"
               className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-semibold transition-colors">
-              Révoquer la clé
+              Révoquer
             </button>
           </form>
         )}
       </div>
 
-      {/* Formulaire principal */}
-      <form action={saveGlobalIaConfig} className="space-y-8">
+      {/* Formulaire */}
+      <form action={saveGlobalIaConfig} className="space-y-6">
 
         {/* Clé API */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               🔑 Clé API
@@ -158,20 +128,20 @@ export default async function AdminSettingsPage() {
             name="iaApiKey"
             type="password"
             autoComplete="off"
-            placeholder={hasKey ? "••••••••••••••• (laisser vide pour conserver)" : hint.placeholder}
+            placeholder={hasKey ? "••••••••••• (laisser vide pour conserver)" : hint.placeholder}
             className="w-full bg-black/40 border border-slate-700 focus:border-orange-500 rounded-xl px-4 py-3 text-white font-mono text-sm placeholder-slate-600 focus:outline-none transition-colors"
           />
           <p className="text-xs text-slate-600">
-            La clé doit correspondre au fournisseur du modèle sélectionné ci-dessous.
-            {hasKey && " Laissez vide pour conserver la clé actuelle."}
+            La clé doit correspondre au fournisseur du modèle sélectionné.
+            {hasKey && " Laissez le champ vide pour conserver la clé actuelle."}
           </p>
         </div>
 
-        {/* Modèle Langage */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        {/* Modèle texte */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3">
           <h2 className="text-lg font-bold text-white">
             🗣️ Modèle texte
-            <span className="text-xs font-normal text-slate-400 ml-2">Chatbot · Descriptions · Planning · Défis quotidiens</span>
+            <span className="text-xs font-normal text-slate-400 ml-2">Chatbot · Descriptions · Planning · Défis</span>
           </h2>
           <div className="space-y-2">
             {LANG_MODELS.map(m => {
@@ -196,14 +166,14 @@ export default async function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* Modèle Vision */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+        {/* Modèle vision */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-3">
           <h2 className="text-lg font-bold text-white">
             👁️ Modèle vision
             <span className="text-xs font-normal text-slate-400 ml-2">Magic Scan · Analyse photo plat · OCR menu</span>
           </h2>
           <p className="text-xs text-amber-400/80 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
-            ⚠️ Choisissez un modèle vision du même fournisseur que le modèle texte pour utiliser la même clé API.
+            ⚠️ Choisissez un modèle du même fournisseur que le modèle texte pour utiliser la même clé API.
           </p>
           <div className="space-y-2">
             {VISION_MODELS.map(m => {
