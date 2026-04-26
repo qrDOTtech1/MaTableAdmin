@@ -14,6 +14,18 @@ export async function saveGlobalIaConfig(formData: FormData) {
       ollamaVisionModel
     });
 
+    // Ensure table exists
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "GlobalConfig" (
+        id TEXT NOT NULL DEFAULT 'global',
+        "ollamaApiKey" TEXT,
+        "ollamaLangModel" TEXT NOT NULL DEFAULT 'gpt-oss:120b',
+        "ollamaVisionModel" TEXT NOT NULL DEFAULT 'qwen3-vl:235b',
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "GlobalConfig_pkey" PRIMARY KEY (id)
+      )
+    `);
+
     // If key field left empty, keep existing key
     if (ollamaApiKey === null) {
       console.log("[saveGlobalIaConfig] Updating models only (key remains unchanged)");
@@ -49,6 +61,16 @@ export async function saveGlobalIaConfig(formData: FormData) {
 export async function revokeGlobalKey() {
   try {
     console.log("[revokeGlobalKey] Revoking Ollama API key");
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "GlobalConfig" (
+        id TEXT NOT NULL DEFAULT 'global',
+        "ollamaApiKey" TEXT,
+        "ollamaLangModel" TEXT NOT NULL DEFAULT 'gpt-oss:120b',
+        "ollamaVisionModel" TEXT NOT NULL DEFAULT 'qwen3-vl:235b',
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "GlobalConfig_pkey" PRIMARY KEY (id)
+      )
+    `);
     await prisma.$executeRaw`
       UPDATE "GlobalConfig" SET "ollamaApiKey" = NULL, "updatedAt" = NOW() WHERE id = 'global'
     `;

@@ -31,14 +31,41 @@ const OLLAMA_VISION_MODELS = [
 ];
 
 export default async function AdminSettingsPage() {
-  const rows = await prisma.$queryRaw<Array<{
-    ollamaApiKey: string | null;
-    ollamaLangModel: string;
-    ollamaVisionModel: string;
-    updatedAt: Date;
-  }>>`SELECT "ollamaApiKey", "ollamaLangModel", "ollamaVisionModel", "updatedAt" FROM "GlobalConfig" WHERE id = 'global' LIMIT 1`;
+  let config: { ollamaApiKey: string | null; ollamaLangModel: string; ollamaVisionModel: string; updatedAt: Date | null } = {
+    ollamaApiKey: null, ollamaLangModel: "gpt-oss:120b", ollamaVisionModel: "qwen3-vl:235b", updatedAt: null
+  };
+  let dbError: string | null = null;
 
-  const config = rows[0] ?? { ollamaApiKey: null, ollamaLangModel: "gpt-oss:120b", ollamaVisionModel: "qwen3-vl:235b", updatedAt: null };
+  try {
+    // Ensure GlobalConfig table exists (idempotent)
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "GlobalConfig" (
+        id TEXT NOT NULL DEFAULT 'global',
+        "ollamaApiKey" TEXT,
+        "ollamaLangModel" TEXT NOT NULL DEFAULT 'gpt-oss:120b',
+        "ollamaVisionModel" TEXT NOT NULL DEFAULT 'qwen3-vl:235b',
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "GlobalConfig_pkey" PRIMARY KEY (id)
+      )
+    `);
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO "GlobalConfig" (id, "ollamaApiKey", "ollamaLangModel", "ollamaVisionModel", "updatedAt")
+      VALUES ('global', NULL, 'gpt-oss:120b', 'qwen3-vl:235b', NOW())
+      ON CONFLICT (id) DO NOTHING
+    `);
+
+    const rows = await prisma.$queryRaw<Array<{
+      ollamaApiKey: string | null;
+      ollamaLangModel: string;
+      ollamaVisionModel: string;
+      updatedAt: Date;
+    }>>`SELECT "ollamaApiKey", "ollamaLangModel", "ollamaVisionModel", "updatedAt" FROM "GlobalConfig" WHERE id = 'global' LIMIT 1`;
+
+    if (rows[0]) config = rows[0];
+  } catch (err: any) {
+    console.error("[AdminSettings] DB error:", err?.message ?? err);
+    dbError = err?.message ?? "Erreur base de donnees inconnue";
+  }
 
   const currentLang   = config.ollamaLangModel   ?? "gpt-oss:120b";
   const currentVision = config.ollamaVisionModel ?? "qwen3-vl:235b";
@@ -46,6 +73,15 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="p-8 max-w-3xl space-y-8">
+
+      {/* DB Error Banner */}
+      {dbError && (
+        <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-5">
+          <p className="text-yellow-400 font-bold text-sm">Avertissement base de donnees</p>
+          <p className="text-slate-400 text-xs mt-1 font-mono">{dbError}</p>
+          <p className="text-slate-500 text-xs mt-2">La table GlobalConfig a ete creee automatiquement. Rechargez la page.</p>
+        </div>
+      )}
 
       {/* Header */}
       <div>
