@@ -3,37 +3,59 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function saveGlobalIaConfig(formData: FormData) {
-  const iaApiKey      = (formData.get("iaApiKey")      as string)?.trim() || null;
-  const iaLangModel   = (formData.get("iaLangModel")   as string)?.trim() || "gpt-4o-mini";
-  const iaVisionModel = (formData.get("iaVisionModel") as string)?.trim() || "gpt-4o";
+  try {
+    const ollamaApiKey      = (formData.get("ollamaApiKey")      as string)?.trim() || null;
+    const ollamaLangModel   = (formData.get("ollamaLangModel")   as string)?.trim() || "gpt-oss:120b-cloud";
+    const ollamaVisionModel = (formData.get("ollamaVisionModel") as string)?.trim() || "gpt-4o-cloud";
 
-  // If key field left empty, keep existing key
-  if (iaApiKey === null) {
-    await prisma.$executeRaw`
-      INSERT INTO "GlobalConfig" (id, "iaLangModel", "iaVisionModel", "updatedAt")
-      VALUES ('global', ${iaLangModel}, ${iaVisionModel}, NOW())
-      ON CONFLICT (id) DO UPDATE
-      SET "iaLangModel"   = EXCLUDED."iaLangModel",
-          "iaVisionModel" = EXCLUDED."iaVisionModel",
-          "updatedAt"     = NOW()
-    `;
-  } else {
-    await prisma.$executeRaw`
-      INSERT INTO "GlobalConfig" (id, "iaApiKey", "iaLangModel", "iaVisionModel", "updatedAt")
-      VALUES ('global', ${iaApiKey}, ${iaLangModel}, ${iaVisionModel}, NOW())
-      ON CONFLICT (id) DO UPDATE
-      SET "iaApiKey"      = EXCLUDED."iaApiKey",
-          "iaLangModel"   = EXCLUDED."iaLangModel",
-          "iaVisionModel" = EXCLUDED."iaVisionModel",
-          "updatedAt"     = NOW()
-    `;
+    console.log("[saveGlobalIaConfig] Received Ollama config:", {
+      ollamaApiKey: ollamaApiKey ? "***" : null,
+      ollamaLangModel,
+      ollamaVisionModel
+    });
+
+    // If key field left empty, keep existing key
+    if (ollamaApiKey === null) {
+      console.log("[saveGlobalIaConfig] Updating models only (key remains unchanged)");
+      await prisma.$executeRaw`
+        INSERT INTO "GlobalConfig" (id, "ollamaLangModel", "ollamaVisionModel", "updatedAt")
+        VALUES ('global', ${ollamaLangModel}, ${ollamaVisionModel}, NOW())
+        ON CONFLICT (id) DO UPDATE
+        SET "ollamaLangModel"   = EXCLUDED."ollamaLangModel",
+            "ollamaVisionModel" = EXCLUDED."ollamaVisionModel",
+            "updatedAt"     = NOW()
+      `;
+    } else {
+      console.log("[saveGlobalIaConfig] Updating with new Ollama API key and models");
+      await prisma.$executeRaw`
+        INSERT INTO "GlobalConfig" (id, "ollamaApiKey", "ollamaLangModel", "ollamaVisionModel", "updatedAt")
+        VALUES ('global', ${ollamaApiKey}, ${ollamaLangModel}, ${ollamaVisionModel}, NOW())
+        ON CONFLICT (id) DO UPDATE
+        SET "ollamaApiKey"      = EXCLUDED."ollamaApiKey",
+            "ollamaLangModel"   = EXCLUDED."ollamaLangModel",
+            "ollamaVisionModel" = EXCLUDED."ollamaVisionModel",
+            "updatedAt"     = NOW()
+      `;
+    }
+    console.log("[saveGlobalIaConfig] Database update successful");
+    revalidatePath("/dashboard/settings");
+    console.log("[saveGlobalIaConfig] Path revalidated");
+  } catch (err: any) {
+    console.error("[saveGlobalIaConfig] ERROR:", err);
+    throw err;
   }
-  revalidatePath("/dashboard/settings");
 }
 
 export async function revokeGlobalKey() {
-  await prisma.$executeRaw`
-    UPDATE "GlobalConfig" SET "iaApiKey" = NULL, "updatedAt" = NOW() WHERE id = 'global'
-  `;
-  revalidatePath("/dashboard/settings");
+  try {
+    console.log("[revokeGlobalKey] Revoking Ollama API key");
+    await prisma.$executeRaw`
+      UPDATE "GlobalConfig" SET "ollamaApiKey" = NULL, "updatedAt" = NOW() WHERE id = 'global'
+    `;
+    console.log("[revokeGlobalKey] Key revoked successfully");
+    revalidatePath("/dashboard/settings");
+  } catch (err: any) {
+    console.error("[revokeGlobalKey] ERROR:", err);
+    throw err;
+  }
 }
