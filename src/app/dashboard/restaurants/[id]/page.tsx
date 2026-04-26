@@ -14,17 +14,21 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 // ── Catalogue modeles IA Ollama Cloud ──────────────────────────────────────────
+// Only models verified working with our Ollama Cloud API key (tested 2026-04-26)
 const LANG_MODELS: { id: string; label: string; tier: string; desc: string }[] = [
   { id: "gpt-oss:120b",           label: "GPT-OSS 120B",               tier: "Best",   desc: "Meilleure qualite — recommande par defaut" },
   { id: "gpt-oss:20b",            label: "GPT-OSS 20B",                tier: "Fast",   desc: "Rapide et leger" },
-  { id: "deepseek-v4-flash",      label: "DeepSeek V4 Flash",          tier: "Best",   desc: "Dernier modele DeepSeek — rapide, excellent raisonnement" },
   { id: "deepseek-v3.2",          label: "DeepSeek V3.2 671B",         tier: "Best",   desc: "Tres grand modele, excellente qualite" },
-  { id: "kimi-k2.6",              label: "Kimi K2.6",                   tier: "Best",   desc: "MoE puissant, excellent multi-tache" },
-  { id: "qwen3.5:397b",           label: "Qwen 3.5 397B",              tier: "Best",   desc: "Alibaba — fort en raisonnement et code" },
-  { id: "gemma4:31b",             label: "Gemma 4 31B (Google)",        tier: "Fast",   desc: "Leger, rapide, Google open-source" },
+  { id: "deepseek-v3.1:671b",     label: "DeepSeek V3.1 671B",         tier: "Best",   desc: "Version stable, haute qualite" },
   { id: "mistral-large-3:675b",   label: "Mistral Large 3 675B",       tier: "Best",   desc: "Plus grand Mistral — excellent francais" },
-  { id: "minimax-m2.7",           label: "MiniMax M2.7",                tier: "Best",   desc: "Grand modele MiniMax — polyvalent" },
   { id: "cogito-2.1:671b",        label: "Cogito 2.1 671B",            tier: "Best",   desc: "Raisonnement avance, grande precision" },
+  { id: "qwen3-coder:480b",       label: "Qwen 3 Coder 480B",          tier: "Code",   desc: "Specialise code et generation technique" },
+  { id: "gemma4:31b",             label: "Gemma 4 31B (Google)",        tier: "Fast",   desc: "Leger, rapide, Google open-source" },
+  { id: "gemma3:27b",             label: "Gemma 3 27B (Google)",        tier: "Fast",   desc: "Rapide et economique" },
+  { id: "minimax-m2.7",           label: "MiniMax M2.7",                tier: "Best",   desc: "Grand modele MiniMax — polyvalent" },
+  { id: "nemotron-3-super",       label: "Nemotron 3 Super (NVIDIA)",   tier: "Best",   desc: "NVIDIA — excellent suivi instructions" },
+  { id: "devstral-2:123b",        label: "Devstral 2 123B",             tier: "Code",   desc: "Mistral — specialise dev" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview",      tier: "Fast",   desc: "Google — rapide, preview" },
 ];
 
 const VISION_MODELS: { id: string; label: string; desc: string }[] = [
