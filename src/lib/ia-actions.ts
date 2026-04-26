@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 export async function saveGlobalIaConfig(formData: FormData) {
   try {
     const ollamaApiKey      = (formData.get("ollamaApiKey")      as string)?.trim() || null;
-    const ollamaLangModel   = (formData.get("ollamaLangModel")   as string)?.trim() || "gpt-oss:120b-cloud";
-    const ollamaVisionModel = (formData.get("ollamaVisionModel") as string)?.trim() || "gpt-4o-cloud";
+    const ollamaLangModel   = (formData.get("ollamaLangModel")   as string)?.trim() || "gpt-oss:120b";
+    const ollamaVisionModel = (formData.get("ollamaVisionModel") as string)?.trim() || "qwen3-vl:235b";
 
     console.log("[saveGlobalIaConfig] Received Ollama config:", {
       ollamaApiKey: ollamaApiKey ? "***" : null,

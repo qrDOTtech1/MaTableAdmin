@@ -13,41 +13,27 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-// ── Catalogue modèles IA Cloud ────────────────────────────────────────────────
-type ProviderBadge = "openai" | "anthropic" | "google" | "mistral";
-
-const PROVIDER_STYLE: Record<ProviderBadge, { label: string; bg: string; text: string }> = {
-  openai:    { label: "OpenAI",    bg: "bg-emerald-500/20", text: "text-emerald-400" },
-  anthropic: { label: "Anthropic", bg: "bg-orange-500/20",  text: "text-orange-400" },
-  google:    { label: "Google",    bg: "bg-blue-500/20",    text: "text-blue-400" },
-  mistral:   { label: "Mistral",   bg: "bg-purple-500/20",  text: "text-purple-400" },
-};
-
-const LANG_MODELS: { id: string; label: string; provider: ProviderBadge; tier: string; desc: string }[] = [
-  { id: "gpt-4o",                        label: "GPT-4o",              provider: "openai",    tier: "Best",    desc: "Meilleure qualité — multimodal, vision native" },
-  { id: "gpt-4o-mini",                   label: "GPT-4o Mini",         provider: "openai",    tier: "Fast $",  desc: "Rapide et économique — recommandé par défaut" },
-  { id: "claude-3-5-sonnet-20241022",    label: "Claude 3.5 Sonnet",   provider: "anthropic", tier: "Best",    desc: "Excellent français, raisonnement, long contexte" },
-  { id: "claude-3-haiku-20240307",       label: "Claude 3 Haiku",      provider: "anthropic", tier: "Fast $",  desc: "Ultra-rapide, très économique" },
-  { id: "gemini-1.5-pro",                label: "Gemini 1.5 Pro",      provider: "google",    tier: "Best",    desc: "Grande fenêtre contexte (1M tokens), multimodal" },
-  { id: "gemini-1.5-flash",              label: "Gemini 1.5 Flash",    provider: "google",    tier: "Fast $",  desc: "Rapide et économique, idéal pour chatbot" },
-  { id: "mistral-large-latest",          label: "Mistral Large",       provider: "mistral",   tier: "Best",    desc: "Meilleur modèle Mistral — excellent pour le français" },
-  { id: "mistral-small-latest",          label: "Mistral Small",       provider: "mistral",   tier: "Fast $",  desc: "Léger, rapide, modèle français souverain" },
+// ── Catalogue modeles IA Ollama Cloud ──────────────────────────────────────────
+const LANG_MODELS: { id: string; label: string; tier: string; desc: string }[] = [
+  { id: "gpt-oss:120b",           label: "GPT-OSS 120B",               tier: "Best",   desc: "Meilleure qualite — recommande par defaut" },
+  { id: "gpt-oss:20b",            label: "GPT-OSS 20B",                tier: "Fast",   desc: "Rapide et leger" },
+  { id: "deepseek-v4-flash",      label: "DeepSeek V4 Flash",          tier: "Best",   desc: "Dernier modele DeepSeek — rapide, excellent raisonnement" },
+  { id: "deepseek-v3.2",          label: "DeepSeek V3.2 671B",         tier: "Best",   desc: "Tres grand modele, excellente qualite" },
+  { id: "kimi-k2.6",              label: "Kimi K2.6",                   tier: "Best",   desc: "MoE puissant, excellent multi-tache" },
+  { id: "qwen3.5:397b",           label: "Qwen 3.5 397B",              tier: "Best",   desc: "Alibaba — fort en raisonnement et code" },
+  { id: "gemma4:31b",             label: "Gemma 4 31B (Google)",        tier: "Fast",   desc: "Leger, rapide, Google open-source" },
+  { id: "mistral-large-3:675b",   label: "Mistral Large 3 675B",       tier: "Best",   desc: "Plus grand Mistral — excellent francais" },
+  { id: "minimax-m2.7",           label: "MiniMax M2.7",                tier: "Best",   desc: "Grand modele MiniMax — polyvalent" },
+  { id: "cogito-2.1:671b",        label: "Cogito 2.1 671B",            tier: "Best",   desc: "Raisonnement avance, grande precision" },
 ];
 
-const VISION_MODELS: { id: string; label: string; provider: ProviderBadge; desc: string }[] = [
-  { id: "gpt-4o",                       label: "GPT-4o Vision",              provider: "openai",    desc: "Meilleure analyse image — recommandé pour Magic Scan" },
-  { id: "gpt-4o-mini",                  label: "GPT-4o Mini Vision",         provider: "openai",    desc: "Rapide et économique pour scan menu" },
-  { id: "claude-3-5-sonnet-20241022",   label: "Claude 3.5 Sonnet Vision",   provider: "anthropic", desc: "Vision haute précision, excellent OCR" },
-  { id: "gemini-1.5-pro",               label: "Gemini 1.5 Pro Vision",      provider: "google",    desc: "Analyse détaillée, haute résolution, multi-image" },
-  { id: "gemini-1.5-flash",             label: "Gemini 1.5 Flash Vision",    provider: "google",    desc: "Rapide pour scan plats et OCR" },
+const VISION_MODELS: { id: string; label: string; desc: string }[] = [
+  { id: "qwen3-vl:235b",          label: "Qwen 3 VL 235B",             desc: "Meilleure analyse image — recommande pour Magic Scan" },
+  { id: "qwen3-vl:235b-instruct", label: "Qwen 3 VL 235B Instruct",   desc: "Version instruct — ideal pour JSON structure" },
+  { id: "gemma4:31b",             label: "Gemma 4 31B Vision (Google)", desc: "Vision Google, rapide et precis" },
+  { id: "gemma3:27b",             label: "Gemma 3 27B Vision (Google)", desc: "Vision economique Google" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview",     desc: "Preview Google Cloud — rapide" },
 ];
-
-const PROVIDER_KEY_HINT: Record<ProviderBadge, { placeholder: string; url: string; urlLabel: string }> = {
-  openai:    { placeholder: "sk-...",   url: "https://platform.openai.com/api-keys",            urlLabel: "platform.openai.com" },
-  anthropic: { placeholder: "sk-ant-...", url: "https://console.anthropic.com/settings/keys",  urlLabel: "console.anthropic.com" },
-  google:    { placeholder: "AIza...",  url: "https://aistudio.google.com/app/apikey",           urlLabel: "aistudio.google.com" },
-  mistral:   { placeholder: "...",      url: "https://console.mistral.ai/api-keys",              urlLabel: "console.mistral.ai" },
-};
 
 const PLANS = {
   STARTER: { label: "Starter",            price: "49,99€/mois",  color: "text-slate-300",  bg: "bg-slate-700/50",    border: "border-slate-600" },
@@ -68,17 +54,12 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   async function handleRevokeKey() { "use server"; await revokeOllamaKey(id); }
 
   const plan = PLANS[restaurant.subscription as keyof typeof PLANS] ?? PLANS.STARTER;
-  const currentLang   = (restaurant as any).ollamaLangModel   ?? "gpt-4o-mini";
-  const currentVision = (restaurant as any).ollamaVisionModel ?? "gpt-4o";
+  const currentLang   = (restaurant as any).ollamaLangModel   ?? "gpt-oss:120b";
+  const currentVision = (restaurant as any).ollamaVisionModel ?? "qwen3-vl:235b";
   const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
   const currentCaissePin = (restaurant as any).caissePin ?? "";
 
-  // Detect current provider from selected model
-  const currentLangProvider: ProviderBadge =
-    currentLang.startsWith("claude-") ? "anthropic"
-    : currentLang.startsWith("gemini-") ? "google"
-    : currentLang.startsWith("mistral") ? "mistral"
-    : "openai";
+  // All models use the global Ollama Cloud key — no per-provider detection needed
 
   return (
     <div className="p-8 max-w-5xl space-y-8">
@@ -207,56 +188,39 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
       {/* ── Configuration IA (PRO_IA uniquement) ── */}
       {restaurant.subscription === "PRO_IA" && (
         <div className="bg-slate-900 border border-orange-600/40 p-6 rounded-xl space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl">✨</div>
+            <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl">🦙</div>
             <div>
               <h2 className="text-lg font-bold text-white">Configuration NovaTech IA</h2>
-              <p className="text-xs text-slate-400">Modèles IA Cloud — OpenAI · Anthropic · Google · Mistral</p>
+              <p className="text-xs text-slate-400">Modeles IA — Ollama Cloud (cle globale configuree dans Admin Settings)</p>
             </div>
           </div>
 
           <form action={updateOllamaModels.bind(null, id)} className="space-y-8">
 
-            {/* ─ Clé API ─ */}
+            {/* ─ Clé API info ─ */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-orange-400 font-bold text-sm">🔑 Clé API du fournisseur sélectionné</span>
-                <a href={PROVIDER_KEY_HINT[currentLangProvider].url} target="_blank"
-                  className="text-xs text-slate-500 hover:text-orange-400 transition-colors">
-                  → {PROVIDER_KEY_HINT[currentLangProvider].urlLabel} ↗
-                </a>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  name="ollamaApiKey"
-                  type="password"
-                  defaultValue={currentApiKey}
-                  placeholder={PROVIDER_KEY_HINT[currentLangProvider].placeholder}
-                  className="flex-1 bg-black/40 border border-orange-500/20 rounded-lg px-4 py-2.5 text-white font-mono text-sm placeholder-slate-600 focus:border-orange-500 focus:outline-none"
-                />
+              <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
+                <p className="text-sm text-blue-400 font-bold">🔑 Cle API Ollama Cloud</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  La cle API est configuree globalement dans <strong>Admin Settings</strong>.
+                  Tous les restaurants PRO_IA partagent la meme cle.
+                </p>
                 {currentApiKey && (
-                  <form action={handleRevokeKey}>
-                    <button type="submit" title="Révoquer la clé"
-                      className="px-3 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors">
-                      ✕ Révoquer
-                    </button>
-                  </form>
+                  <p className="text-xs text-emerald-400 mt-2">✓ Ce restaurant a aussi une cle propre configuree</p>
                 )}
               </div>
-              <p className="text-[11px] text-slate-600">
-                La clé correspond au fournisseur du modèle sélectionné. Chaque fournisseur a sa propre clé API.
-              </p>
+              <input type="hidden" name="ollamaApiKey" value={currentApiKey} />
             </div>
 
-            {/* ─ Modèle Langage ─ */}
+            {/* ─ Modele Langage ─ */}
             <div className="space-y-3">
               <h3 className="font-bold text-white flex items-center gap-2 flex-wrap">
-                🗣️ Modèle Langage
-                <span className="text-xs font-normal text-slate-400">— Chatbot Nova · Descriptions IA · Planning · Défis quotidiens</span>
+                🗣️ Modele Langage (Ollama Cloud)
+                <span className="text-xs font-normal text-slate-400">— Chatbot Nova · Descriptions IA · Planning · Defis quotidiens</span>
               </h3>
               <div className="grid grid-cols-1 gap-2">
                 {LANG_MODELS.map(m => {
-                  const ps = PROVIDER_STYLE[m.provider];
                   const isSelected = currentLang === m.id;
                   return (
                     <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
@@ -266,7 +230,6 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-white">{m.label}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${ps.bg} ${ps.text}`}>{ps.label}</span>
                           <span className="text-[10px] px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded">{m.tier}</span>
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
@@ -277,18 +240,14 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
               </div>
             </div>
 
-            {/* ─ Modèle Vision (Magic Scan) ─ */}
+            {/* ─ Modele Vision (Magic Scan) ─ */}
             <div className="space-y-3">
               <h3 className="font-bold text-white flex items-center gap-2 flex-wrap">
-                👁️ Modèle Vision
+                👁️ Modele Vision (Ollama Cloud)
                 <span className="text-xs font-normal text-slate-400">— Magic Scan · Analyse photo plat · OCR menu</span>
               </h3>
-              <p className="text-xs text-amber-400/80">
-                ⚠️ Modèle dédié à l'analyse d'images. Tous supportent vision native — même clé API que le modèle langage si même fournisseur.
-              </p>
               <div className="grid grid-cols-1 gap-2">
                 {VISION_MODELS.map(m => {
-                  const ps = PROVIDER_STYLE[m.provider];
                   const isSelected = currentVision === m.id;
                   return (
                     <label key={m.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
@@ -298,8 +257,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-semibold text-sm text-white">{m.label}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold ${ps.bg} ${ps.text}`}>{ps.label}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">Vision ✓</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">Vision</span>
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5">{m.desc}</p>
                       </div>

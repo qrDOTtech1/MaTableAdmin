@@ -3,17 +3,31 @@ import { saveGlobalIaConfig, revokeGlobalKey } from "@/lib/ia-actions";
 
 export const dynamic = "force-dynamic";
 
-// ── Ollama Cloud Models ──────────────────────────────────────────────────────
+// ── Ollama Cloud Models (fetched from https://ollama.com/api/tags) ────────────
 const OLLAMA_LANG_MODELS = [
-  { id: "gpt-oss:120b-cloud",    label: "GPT-OSS 120B Cloud",    tier: "Best",      desc: "Meilleure qualité — recommandé par défaut" },
-  { id: "gpt-oss:70b-cloud",     label: "GPT-OSS 70B Cloud",     tier: "Fast $",    desc: "Rapide et économique" },
-  { id: "gpt-4o-cloud",          label: "GPT-4o Cloud",          tier: "Best",      desc: "Excellent multimodal" },
-  { id: "llama3.1:latest-cloud", label: "Llama 3.1 Cloud",       tier: "Fast $",    desc: "Léger et rapide" },
+  { id: "gpt-oss:120b",           label: "GPT-OSS 120B",               tier: "Best",   desc: "Meilleure qualite — recommande par defaut" },
+  { id: "gpt-oss:20b",            label: "GPT-OSS 20B",                tier: "Fast",   desc: "Rapide et leger" },
+  { id: "deepseek-v4-flash",      label: "DeepSeek V4 Flash",          tier: "Best",   desc: "Dernier modele DeepSeek — rapide, excellent raisonnement" },
+  { id: "deepseek-v3.2",          label: "DeepSeek V3.2 671B",         tier: "Best",   desc: "Tres grand modele, excellente qualite" },
+  { id: "deepseek-v3.1:671b",     label: "DeepSeek V3.1 671B",         tier: "Best",   desc: "Version stable, haute qualite" },
+  { id: "kimi-k2.6",              label: "Kimi K2.6",                   tier: "Best",   desc: "MoE puissant, excellent multi-tache" },
+  { id: "qwen3.5:397b",           label: "Qwen 3.5 397B",              tier: "Best",   desc: "Modele Alibaba — fort en raisonnement et code" },
+  { id: "qwen3-coder:480b",       label: "Qwen 3 Coder 480B",          tier: "Code",   desc: "Specialise code — excellent pour generation technique" },
+  { id: "cogito-2.1:671b",        label: "Cogito 2.1 671B",            tier: "Best",   desc: "Raisonnement avance, grande precision" },
+  { id: "gemma4:31b",             label: "Gemma 4 31B (Google)",        tier: "Fast",   desc: "Leger, rapide, Google open-source" },
+  { id: "gemma3:27b",             label: "Gemma 3 27B (Google)",        tier: "Fast",   desc: "Rapide et economique" },
+  { id: "mistral-large-3:675b",   label: "Mistral Large 3 675B",       tier: "Best",   desc: "Plus grand Mistral — excellent francais" },
+  { id: "minimax-m2.7",           label: "MiniMax M2.7",                tier: "Best",   desc: "Grand modele MiniMax — polyvalent" },
+  { id: "nemotron-3-super",       label: "Nemotron 3 Super (NVIDIA)",   tier: "Best",   desc: "NVIDIA — excellent suivi d'instructions" },
+  { id: "glm-5.1",                label: "GLM 5.1",                     tier: "Best",   desc: "Dernier GLM — tres grand modele" },
 ];
 
 const OLLAMA_VISION_MODELS = [
-  { id: "gpt-4o-cloud",       label: "GPT-4o Vision Cloud",       desc: "Meilleure analyse image — recommandé pour Magic Scan" },
-  { id: "llava:latest-cloud", label: "LLaVA Vision Cloud",        desc: "Vision qualité, économique" },
+  { id: "qwen3-vl:235b",          label: "Qwen 3 VL 235B",             desc: "Meilleure analyse image — recommande pour Magic Scan" },
+  { id: "qwen3-vl:235b-instruct", label: "Qwen 3 VL 235B Instruct",   desc: "Version instruct — ideal pour JSON structure" },
+  { id: "gemma4:31b",             label: "Gemma 4 31B Vision (Google)", desc: "Vision Google, rapide et precis" },
+  { id: "gemma3:27b",             label: "Gemma 3 27B Vision (Google)", desc: "Vision economique Google" },
+  { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview",     desc: "Preview Google Cloud — rapide" },
 ];
 
 export default async function AdminSettingsPage() {
@@ -24,10 +38,10 @@ export default async function AdminSettingsPage() {
     updatedAt: Date;
   }>>`SELECT "ollamaApiKey", "ollamaLangModel", "ollamaVisionModel", "updatedAt" FROM "GlobalConfig" WHERE id = 'global' LIMIT 1`;
 
-  const config = rows[0] ?? { ollamaApiKey: null, ollamaLangModel: "gpt-oss:120b-cloud", ollamaVisionModel: "gpt-4o-cloud", updatedAt: null };
+  const config = rows[0] ?? { ollamaApiKey: null, ollamaLangModel: "gpt-oss:120b", ollamaVisionModel: "qwen3-vl:235b", updatedAt: null };
 
-  const currentLang   = config.ollamaLangModel   ?? "gpt-oss:120b-cloud";
-  const currentVision = config.ollamaVisionModel ?? "gpt-4o-cloud";
+  const currentLang   = config.ollamaLangModel   ?? "gpt-oss:120b";
+  const currentVision = config.ollamaVisionModel ?? "qwen3-vl:235b";
   const hasKey        = !!config.ollamaApiKey;
 
   return (
