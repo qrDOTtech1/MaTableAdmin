@@ -8,6 +8,7 @@ import {
   revokeOllamaKey,
   updateCaissePin,
   updateStripeKeys,
+  updateContactEmail,
   deleteRestaurant,
 } from "@/lib/admin-actions";
 import Link from "next/link";
@@ -63,6 +64,12 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   const currentVision = (restaurant as any).ollamaVisionModel ?? "qwen3-vl:235b";
   const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
   const currentCaissePin = (restaurant as any).caissePin ?? "";
+
+  // Contact email for public page
+  const contactEmailRows = await prisma.$queryRaw<Array<{ contactEmail: string | null; email: string | null }>>`
+    SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
+  `;
+  const currentContactEmail = contactEmailRows[0]?.contactEmail ?? contactEmailRows[0]?.email ?? "";
 
   // Stripe per-restaurant keys
   const stripeKeys = await prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
@@ -191,6 +198,42 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
           <p className="text-xs text-emerald-400/70">✓ PIN configuré — le caissier peut se connecter sur <strong>/{restaurant.slug}/caisse</strong></p>
         ) : (
           <p className="text-xs text-slate-600">Aucun PIN défini — service caisse désactivé</p>
+        )}
+      </div>
+
+      {/* ── Email de contact (affiche sur page publique) ── */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-xl">✉️</div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Email de contact public</h2>
+            <p className="text-xs text-slate-400">Affiche sur la page publique du restaurant et sur les tickets de caisse</p>
+          </div>
+        </div>
+
+        <form action={updateContactEmail.bind(null, id)} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Email affiche aux clients</label>
+            <input
+              name="contactEmail"
+              type="email"
+              defaultValue={currentContactEmail}
+              placeholder="contact@monrestaurant.fr ou monresto@matablepro.fr"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white"
+            />
+          </div>
+          <p className="text-xs text-slate-500">
+            Si vide, l'email du compte proprietaire sera utilise. Vous pouvez utiliser un email personnalise type <strong className="text-blue-400">{restaurant.slug ?? "monresto"}@matablepro.fr</strong>.
+          </p>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+            Enregistrer
+          </button>
+        </form>
+
+        {currentContactEmail ? (
+          <p className="text-xs text-emerald-400/70">Email public actuel : <strong>{currentContactEmail}</strong></p>
+        ) : (
+          <p className="text-xs text-slate-600">Aucun email de contact configure — l'email du compte sera utilise</p>
         )}
       </div>
 

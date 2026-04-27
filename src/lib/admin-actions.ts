@@ -94,6 +94,18 @@ export async function updateCaissePin(id: string, formData: FormData) {
   revalidatePath(`/dashboard/restaurants/${id}`);
 }
 
+export async function updateContactEmail(id: string, formData: FormData) {
+  "use server";
+  const contactEmail = (formData.get("contactEmail") as string)?.trim() || null;
+
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Restaurant" SET "contactEmail" = $1 WHERE id = $2`,
+    contactEmail, id,
+  );
+
+  revalidatePath(`/dashboard/restaurants/${id}`);
+}
+
 export async function updateStripeKeys(id: string, formData: FormData) {
   "use server";
   const stripeSecretKey    = (formData.get("stripeSecretKey")    as string)?.trim() || null;
