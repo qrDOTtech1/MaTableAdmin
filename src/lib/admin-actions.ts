@@ -94,6 +94,21 @@ export async function updateCaissePin(id: string, formData: FormData) {
   revalidatePath(`/dashboard/restaurants/${id}`);
 }
 
+export async function updateStripeKeys(id: string, formData: FormData) {
+  "use server";
+  const stripeSecretKey    = (formData.get("stripeSecretKey")    as string)?.trim() || null;
+  const stripePublicKey    = (formData.get("stripePublicKey")    as string)?.trim() || null;
+  const stripeWebhookSecret = (formData.get("stripeWebhookSecret") as string)?.trim() || null;
+
+  // Use raw SQL since these columns aren't in prisma schema
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Restaurant" SET "stripeSecretKey" = $1, "stripePublicKey" = $2, "stripeWebhookSecret" = $3 WHERE id = $4`,
+    stripeSecretKey, stripePublicKey, stripeWebhookSecret, id,
+  );
+
+  revalidatePath(`/dashboard/restaurants/${id}`);
+}
+
 export async function deleteRestaurant(id: string) {
   "use server";
   await prisma.restaurant.delete({ where: { id } });

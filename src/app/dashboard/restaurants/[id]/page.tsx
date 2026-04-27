@@ -7,6 +7,7 @@ import {
   regenerateOllamaKey,
   revokeOllamaKey,
   updateCaissePin,
+  updateStripeKeys,
   deleteRestaurant,
 } from "@/lib/admin-actions";
 import Link from "next/link";
@@ -63,7 +64,11 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
   const currentCaissePin = (restaurant as any).caissePin ?? "";
 
-  // All models use the global Ollama Cloud key — no per-provider detection needed
+  // Stripe per-restaurant keys
+  const stripeKeys = await prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
+    SELECT "stripeSecretKey", "stripePublicKey", "stripeWebhookSecret"
+    FROM "Restaurant" WHERE id = ${id} LIMIT 1
+  `.then(r => r[0] ?? { stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null });
 
   return (
     <div className="p-8 max-w-5xl space-y-8">
@@ -186,6 +191,72 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
           <p className="text-xs text-emerald-400/70">✓ PIN configuré — le caissier peut se connecter sur <strong>/{restaurant.slug}/caisse</strong></p>
         ) : (
           <p className="text-xs text-slate-600">Aucun PIN défini — service caisse désactivé</p>
+        )}
+      </div>
+
+      {/* ── Configuration Stripe / Paiement ── */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center text-xl">💳</div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Paiement Stripe</h2>
+            <p className="text-xs text-slate-400">Cles Stripe du restaurant — Google Pay & Apple Pay actives automatiquement</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-4">
+          <p className="text-xs text-blue-400">
+            <strong>Google Pay + Apple Pay :</strong> actives automatiquement via Stripe Checkout. Il suffit que le compte Stripe ait active ces methodes dans
+            <a href="https://dashboard.stripe.com/settings/payment_methods" target="_blank" rel="noopener" className="underline ml-1">
+              Stripe Dashboard &gt; Settings &gt; Payment Methods
+            </a>.
+          </p>
+          <p className="text-xs text-blue-400/70 mt-1">
+            Pour Apple Pay : verifier le domaine dans <strong>Stripe Dashboard &gt; Settings &gt; Apple Pay</strong>.
+          </p>
+        </div>
+
+        <form action={updateStripeKeys.bind(null, id)} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Cle publique (pk_live_... ou pk_test_...)</label>
+            <input
+              name="stripePublicKey"
+              type="text"
+              defaultValue={stripeKeys.stripePublicKey ?? ""}
+              placeholder="pk_live_..."
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Cle secrete (sk_live_... ou sk_test_...)</label>
+            <input
+              name="stripeSecretKey"
+              type="password"
+              defaultValue={stripeKeys.stripeSecretKey ?? ""}
+              placeholder="sk_live_..."
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-400 mb-1">Webhook secret (whsec_...)</label>
+            <input
+              name="stripeWebhookSecret"
+              type="password"
+              defaultValue={stripeKeys.stripeWebhookSecret ?? ""}
+              placeholder="whsec_..."
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
+            />
+          </div>
+
+          <button type="submit" className="bg-violet-600 hover:bg-violet-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+            Enregistrer les cles Stripe
+          </button>
+        </form>
+
+        {stripeKeys.stripeSecretKey ? (
+          <p className="text-xs text-emerald-400/70">✓ Cles Stripe configurees — paiement actif pour ce restaurant</p>
+        ) : (
+          <p className="text-xs text-slate-600">Aucune cle Stripe — le paiement utilisera les cles globales (si configurees)</p>
         )}
       </div>
 
