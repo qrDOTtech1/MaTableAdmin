@@ -9,6 +9,7 @@ import {
   updateCaissePin,
   updateStripeKeys,
   updateContactEmail,
+  updateEnabledApps,
   deleteRestaurant,
 } from "@/lib/admin-actions";
 import Link from "next/link";
@@ -47,6 +48,17 @@ const PLANS = {
   PRO_IA:  { label: "Pro + NovaTech IA",  price: "299€/mois",    color: "text-orange-300", bg: "bg-orange-900/30",   border: "border-orange-600" },
 };
 
+// ── App catalog ──────────────────────────────────────────────────────────────
+const APP_CATALOG = [
+  { id: "reviews",      name: "Avis Google & Reputation",  icon: "⭐", price: "45,99", desc: "QR code avis, chatbot IA, vouchers — app de base",                   base: true },
+  { id: "reservations", name: "Reservations en ligne",     icon: "📅", price: "29,99", desc: "Booking, creneaux, confirmation email",                              base: false },
+  { id: "orders",       name: "Commandes & Service",       icon: "🍽️", price: "39,99", desc: "QR commandes, appels serveur, pourboires, caisse",                   base: false },
+  { id: "nova_ia",      name: "Nova IA",                   icon: "🤖", price: "49,99", desc: "Chatbot, Magic Scan, generateur menu, accords mets/vins",            base: false },
+  { id: "nova_stock",   name: "Nova Stock IA",             icon: "📦", price: "39,99", desc: "Analyse stock, listes de courses, alertes, ingredients",              base: false },
+  { id: "nova_contab",  name: "Nova Contab IA",            icon: "📊", price: "39,99", desc: "Comptabilite IA, rapports URSSAF/TVA, export",                       base: false },
+  { id: "nova_finance", name: "Nova Finance IA",           icon: "💰", price: "29,99", desc: "Conseils financiers, promotions anti-gaspillage",                     base: false },
+];
+
 export default async function RestaurantManagePage({ params }: { params: { id: string } }) {
   const { id } = await params;
   const restaurant = await prisma.restaurant.findUnique({
@@ -70,6 +82,12 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
     SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
   `;
   const currentContactEmail = contactEmailRows[0]?.contactEmail ?? contactEmailRows[0]?.email ?? "";
+
+  // enabledApps (modular app system)
+  const appsRows = await prisma.$queryRaw<Array<{ enabledApps: unknown }>>`
+    SELECT "enabledApps" FROM "Restaurant" WHERE id = ${id} LIMIT 1
+  `;
+  const enabledApps: string[] = Array.isArray(appsRows[0]?.enabledApps) ? appsRows[0].enabledApps as string[] : ["reviews"];
 
   // Stripe per-restaurant keys
   const stripeKeys = await prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
@@ -135,10 +153,94 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         </div>
       </div>
 
-      {/* ── Souscription ── */}
+      {/* ── Applications activees (modular pricing) ── */}
+      <div className="bg-slate-900 border border-orange-600/40 p-6 rounded-xl space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl">📱</div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Applications actives</h2>
+              <p className="text-xs text-slate-400">Activez/desactivez les modules pour ce restaurant — tarification a l'app</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-slate-400">Total mensuel</div>
+            <div className="text-lg font-bold text-orange-400">
+              {(() => {
+                const total = APP_CATALOG.filter(a => enabledApps.includes(a.id)).reduce((s, a) => s + parseFloat(a.price.replace(",", ".")), 0);
+                const count = enabledApps.length;
+                const discount = count >= 4 ? 0.20 : count >= 3 ? 0.15 : count >= 2 ? 0.10 : 0;
+                const final = total * (1 - discount);
+                return `${final.toFixed(2).replace(".", ",")}EUR`;
+              })()}
+            </div>
+            {enabledApps.length >= 2 && (
+              <div className="text-[10px] text-emerald-400">
+                {enabledApps.length >= 4 ? "-20%" : enabledApps.length >= 3 ? "-15%" : "-10%"} multi-app
+              </div>
+            )}
+          </div>
+        </div>
+
+        <form action={updateEnabledApps.bind(null, id)} className="space-y-3">
+          <div className="grid grid-cols-1 gap-2">
+            {APP_CATALOG.map(app => {
+              const isEnabled = enabledApps.includes(app.id);
+              return (
+                <label key={app.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                  isEnabled
+                    ? app.base ? "border-orange-500 bg-orange-500/10" : "border-emerald-500 bg-emerald-500/10"
+                    : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
+                }`}>
+                  <input
+                    type="checkbox"
+                    name={`app_${app.id}`}
+                    defaultChecked={isEnabled}
+                    disabled={app.base}
+                    className="accent-orange-500 w-4 h-4"
+                  />
+                  <div className="text-xl w-8 text-center">{app.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm text-white">{app.name}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded">{app.price}EUR/mois</span>
+                      {app.base && <span className="text-[10px] px-1.5 py-0.5 bg-orange-500/30 text-orange-300 rounded">BASE</span>}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">{app.desc}</p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Hidden field: JS-free form — build enabledApps from checked boxes server-side */}
+          <input type="hidden" name="enabledApps" value={JSON.stringify(enabledApps)} />
+
+          <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
+            <p className="text-xs text-blue-400">
+              <strong>Tarif degressif :</strong> 1 app = prix plein, 2 apps = -10%, 3 apps = -15%, 4+ apps = -20%.
+              L'app "Avis Google & Reputation" est obligatoire (base).
+            </p>
+          </div>
+
+          <button type="submit"
+            className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors text-sm"
+            onClick={`
+              const form = this.closest('form');
+              const checks = form.querySelectorAll('input[type=checkbox]');
+              const apps = [];
+              checks.forEach(c => { if (c.checked || c.disabled) apps.push(c.name.replace('app_','')); });
+              form.querySelector('input[name=enabledApps]').value = JSON.stringify(apps);
+            `}>
+            Enregistrer les applications
+          </button>
+        </form>
+      </div>
+
+      {/* ── Souscription (legacy — kept for backward compat) ── */}
       <div className={`bg-slate-900 border p-6 rounded-xl space-y-4 ${plan.border}`}>
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-lg font-bold">💳 Souscription NovaTech</h2>
+          <h2 className="text-lg font-bold">💳 Souscription (legacy)</h2>
           <span className={`text-sm px-3 py-1 rounded-full font-semibold border ${plan.bg} ${plan.color} ${plan.border}`}>
             {plan.label} — {plan.price}
           </span>
@@ -149,8 +251,8 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             <select name="subscription" defaultValue={restaurant.subscription}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
               <option value="STARTER">Starter — 49,99€/mois (30 tables)</option>
-              <option value="PRO">Pro — 139,99€/mois (illimité + analytics)</option>
-              <option value="PRO_IA">Pro + NovaTech IA — 299€/mois (IA complète)</option>
+              <option value="PRO">Pro — 139,99€/mois (illimite + analytics)</option>
+              <option value="PRO_IA">Pro + NovaTech IA — 299€/mois (IA complete)</option>
             </select>
           </div>
           <button type="submit" className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
@@ -159,7 +261,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         </form>
         {restaurant.subscriptionStartedAt && (
           <div className="text-xs text-slate-500 flex gap-6 flex-wrap">
-            <span>Début : {new Date(restaurant.subscriptionStartedAt).toLocaleDateString("fr-FR")}</span>
+            <span>Debut : {new Date(restaurant.subscriptionStartedAt).toLocaleDateString("fr-FR")}</span>
             {restaurant.subscriptionExpiresAt && (
               <span>Expire : {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString("fr-FR")}</span>
             )}

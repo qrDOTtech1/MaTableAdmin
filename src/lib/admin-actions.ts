@@ -121,6 +121,27 @@ export async function updateStripeKeys(id: string, formData: FormData) {
   revalidatePath(`/dashboard/restaurants/${id}`);
 }
 
+// ── App gating — modular app system ──────────────────────────────────────────
+// App IDs: reviews, reservations, orders, nova_ia, nova_stock, nova_contab, nova_finance
+export async function updateEnabledApps(id: string, formData: FormData) {
+  "use server";
+  // Build enabledApps from checkbox fields: app_reviews, app_reservations, etc.
+  const ALL_APPS = ["reviews", "reservations", "orders", "nova_ia", "nova_stock", "nova_contab", "nova_finance"];
+  const apps: string[] = [];
+  for (const appId of ALL_APPS) {
+    if (formData.has(`app_${appId}`)) apps.push(appId);
+  }
+  // Ensure "reviews" is always included (base app)
+  if (!apps.includes("reviews")) apps.unshift("reviews");
+
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Restaurant" SET "enabledApps" = $1::jsonb WHERE id = $2`,
+    JSON.stringify(apps), id,
+  );
+
+  revalidatePath(`/dashboard/restaurants/${id}`);
+}
+
 export async function deleteRestaurant(id: string) {
   "use server";
   await prisma.restaurant.delete({ where: { id } });
