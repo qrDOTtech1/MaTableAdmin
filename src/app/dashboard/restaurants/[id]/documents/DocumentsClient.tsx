@@ -200,13 +200,13 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                     <p className="text-gray-500">Email : <span className="text-black font-bold">contact@matable.pro</span></p>
                   </div>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-xl border">
-                  <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Le Client</h3>
-                  <div className="text-sm space-y-1">
-                    <p className="text-gray-500">Raison sociale : <span className="text-orange-700 bg-orange-50 px-1 font-bold italic">{clientData.name}</span></p>
-                    <p className="text-gray-500">Adresse : <span className="text-orange-700 bg-orange-50 px-1 font-bold italic">{clientData.address}</span></p>
-                    <p className="text-gray-500">SIRET : <span className="text-orange-700 bg-orange-50 px-1 font-bold italic">{clientData.siret}</span></p>
-                    <p className="text-gray-500">Représentant : <span className="text-orange-700 bg-orange-50 px-1 font-bold italic">{clientData.managerName}</span></p>
+                <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                  <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Le Client</h3>
+                  <div className="text-sm space-y-2">
+                    <p className="text-orange-900">Raison sociale : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.name || "..."}</span></p>
+                    <p className="text-orange-900">Adresse : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.address || "..."}</span></p>
+                    <p className="text-orange-900">SIRET : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.siret || "..."}</span></p>
+                    <p className="text-orange-900">Représentant : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.managerName || "..."}</span></p>
                   </div>
                 </div>
               </div>
@@ -243,10 +243,10 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                   <div className="border-b h-12 mb-2"></div>
                   <p className="text-xs text-gray-500">Steven Franco<br/>Date : {docMeta.date}</p>
                 </div>
-                <div className="border rounded-xl p-4">
-                  <h3 className="text-xs uppercase tracking-widest text-gray-400 font-black mb-2">Le Client</h3>
-                  <div className="border-b h-12 mb-2"></div>
-                  <p className="text-xs text-gray-500"><span className="italic text-orange-700">{clientData.managerName}</span><br/>Date : {docMeta.date}</p>
+                <div className="border border-orange-200 bg-orange-50/50 rounded-xl p-4">
+                  <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Le Client</h3>
+                  <div className="border-b border-orange-200 h-12 mb-2"></div>
+                  <p className="text-xs text-orange-900"><span className="font-bold bg-white px-1 rounded">{clientData.managerName || "..."}</span><br/>Date : {docMeta.date}</p>
                 </div>
               </div>
             </div>
@@ -261,10 +261,13 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                   <p className="text-sm font-bold">Steven Franco — Ma Table</p>
                   <p className="text-sm text-gray-500">Votre adresse<br/>SIRET: En cours<br/>IBAN: FR76 XXXX</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-xl border">
-                  <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Destinataire</h3>
-                  <p className="text-sm font-bold text-orange-700 bg-orange-50">{clientData.name}</p>
-                  <p className="text-sm text-orange-700 bg-orange-50">{clientData.address}<br/>SIRET: {clientData.siret}</p>
+                <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                  <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Destinataire</h3>
+                  <p className="text-sm font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200 inline-block mb-1">{clientData.name || "..."}</p>
+                  <p className="text-sm text-orange-900 leading-relaxed">
+                    <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.address || "..."}</span><br/>
+                    SIRET: <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.siret || "..."}</span>
+                  </p>
                 </div>
               </div>
 
@@ -314,9 +317,9 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                   <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Émetteur</h3>
                   <p className="text-sm font-bold">Steven Franco — Ma Table</p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-xl border">
-                  <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Client</h3>
-                  <p className="text-sm font-bold text-orange-700 bg-orange-50">{clientData.name}</p>
+                <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                  <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Client</h3>
+                  <p className="text-sm font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200 inline-block">{clientData.name || "..."}</p>
                 </div>
               </div>
               <table className="w-full text-sm mb-6 border-collapse">
@@ -360,11 +363,11 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Informations établissement</h2>
                <table className="w-full text-sm mb-8">
                  <tbody>
-                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Nom</td><td className="p-3 bg-orange-50 text-orange-700">{clientData.name}</td></tr>
-                   <tr className="border-b"><td className="p-3 font-bold w-1/3">URL</td><td className="p-3">matable.pro/<span className="bg-orange-50 text-orange-700 px-1">{clientData.slug}</span></td></tr>
-                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Gérant</td><td className="p-3 bg-orange-50 text-orange-700">{clientData.managerName}</td></tr>
-                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Email</td><td className="p-3 bg-orange-50 text-orange-700">{clientData.email}</td></tr>
-                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Téléphone</td><td className="p-3 bg-orange-50 text-orange-700">{clientData.phone}</td></tr>
+                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Nom</td><td className="p-3"><span className="bg-orange-50 font-bold text-orange-800 border border-orange-200 px-2 py-1 rounded">{clientData.name || "..."}</span></td></tr>
+                   <tr className="border-b"><td className="p-3 font-bold w-1/3">URL</td><td className="p-3">matable.pro/<span className="bg-orange-50 font-bold text-orange-800 border border-orange-200 px-2 py-1 rounded">{clientData.slug || "..."}</span></td></tr>
+                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Gérant</td><td className="p-3"><span className="bg-orange-50 font-bold text-orange-800 border border-orange-200 px-2 py-1 rounded">{clientData.managerName || "..."}</span></td></tr>
+                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Email</td><td className="p-3"><span className="bg-orange-50 font-bold text-orange-800 border border-orange-200 px-2 py-1 rounded">{clientData.email || "..."}</span></td></tr>
+                   <tr className="border-b"><td className="p-3 font-bold w-1/3">Téléphone</td><td className="p-3"><span className="bg-orange-50 font-bold text-orange-800 border border-orange-200 px-2 py-1 rounded">{clientData.phone || "..."}</span></td></tr>
                  </tbody>
                </table>
                <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Checklist</h2>
