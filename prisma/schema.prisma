@@ -439,3 +439,19 @@ model Prospect {
   @@index([status])
   @@index([city])
 }
+
+// ---------------------------------------------------------------------------
+// Inbound Emails
+// ---------------------------------------------------------------------------
+model ReceivedEmail {
+  id        String   @id @default(uuid())
+  from      String
+  to        String
+  subject   String
+  text      String?  @db.Text
+  html      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([to])
+  @@index([createdAt])
+}
