@@ -105,7 +105,15 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         <span className={`text-xs px-3 py-1 rounded-full font-semibold border ${plan.bg} ${plan.color} ${plan.border}`}>
           {plan.label}
         </span>
-        <div className="ml-auto text-xs text-slate-500 font-mono">ID: {restaurant.id}</div>
+        <div className="ml-auto flex items-center gap-4">
+          <Link 
+            href={`/dashboard/restaurants/${id}/documents`}
+            className="text-sm bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-700 transition-colors flex items-center gap-2"
+          >
+            📄 Documents Contractuels
+          </Link>
+          <div className="text-xs text-slate-500 font-mono">ID: {restaurant.id}</div>
+        </div>
       </div>
 
       {/* ── Infos + Activité ── */}
