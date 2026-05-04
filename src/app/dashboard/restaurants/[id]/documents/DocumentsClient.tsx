@@ -195,9 +195,9 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                   <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Le Prestataire</h3>
                   <div className="text-sm space-y-1">
                     <p className="text-gray-500">Raison sociale : <span className="text-black font-bold">Steven Franco / Ma Table</span></p>
-                    <p className="text-gray-500">Adresse : <span className="text-black font-bold">Votre adresse</span></p>
                     <p className="text-gray-500">SIRET : <span className="text-black font-bold">En cours d'attribution</span></p>
                     <p className="text-gray-500">Email : <span className="text-black font-bold">contact@matable.pro</span></p>
+                    <p className="text-gray-500">Téléphone : <span className="text-black font-bold">+33 7 57 83 57 77</span></p>
                   </div>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
@@ -258,8 +258,13 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="bg-gray-50 p-4 rounded-xl border">
                   <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Émetteur</h3>
-                  <p className="text-sm font-bold">Steven Franco — Ma Table</p>
-                  <p className="text-sm text-gray-500">Votre adresse<br/>SIRET: En cours<br/>IBAN: FR76 XXXX</p>
+                  <p className="text-sm font-bold mb-1">Steven Franco — Ma Table</p>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    SIRET: En cours d'attribution<br/>
+                    Email: contact@matable.pro<br/>
+                    Tél: +33 7 57 83 57 77<br/>
+                    IBAN: FR76 XXXX
+                  </p>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
                   <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Destinataire</h3>
@@ -315,7 +320,8 @@ export default function DocumentsClient({ restaurant }: { restaurant: Restaurant
                <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="bg-gray-50 p-4 rounded-xl border">
                   <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Émetteur</h3>
-                  <p className="text-sm font-bold">Steven Franco — Ma Table</p>
+                  <p className="text-sm font-bold mb-1">Steven Franco — Ma Table</p>
+                  <p className="text-xs text-gray-500">contact@matable.pro<br/>+33 7 57 83 57 77</p>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
                   <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Client</h3>
