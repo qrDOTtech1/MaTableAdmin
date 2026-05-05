@@ -120,7 +120,7 @@ export default function ProspectionPage() {
     try {
       const res = await fetch("/api/prospects/scraper", { cache: "no-store" });
       const json = await res.json();
-      if (res.ok) setScraper(json);
+      setScraper(json);
     } finally {
       setScraperLoading(false);
     }
