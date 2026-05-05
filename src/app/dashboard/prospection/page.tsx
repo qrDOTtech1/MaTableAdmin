@@ -39,6 +39,20 @@ interface ApiResponse {
   cities: string[];
 }
 
+interface ScraperState {
+  status: "idle" | "running" | "success" | "error";
+  startedAt: string | null;
+  endedAt: string | null;
+  exitCode: number | null;
+  error: string | null;
+  logs: string[];
+  available: boolean;
+  workdir: string;
+  scriptPath: string;
+  command: string;
+  message?: string;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const STATUS_CONFIG: Record<ProspectStatus, { label: string; color: string; bg: string; border: string }> = {
   NEW:       { label: "Nouveau",    color: "text-blue-300",   bg: "bg-blue-500/10",   border: "border-blue-500/30" },
@@ -78,6 +92,11 @@ export default function ProspectionPage() {
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesValue, setNotesValue] = useState("");
 
+  // Scraper
+  const [scraper, setScraper] = useState<ScraperState | null>(null);
+  const [scraperLoading, setScraperLoading] = useState(true);
+  const [scraperStarting, setScraperStarting] = useState(false);
+
   // ── Fetch ────────────────────────────────────────────────────────────────
   const fetchData = useCallback(async (opts?: { search?: string; status?: string; city?: string; page?: number }) => {
     setLoading(true);
@@ -96,6 +115,30 @@ export default function ProspectionPage() {
   useEffect(() => {
     fetchData({ search, status: statusFilter, city: cityFilter, page });
   }, [statusFilter, cityFilter, page, fetchData]);
+
+  const fetchScraperState = useCallback(async () => {
+    try {
+      const res = await fetch("/api/prospects/scraper", { cache: "no-store" });
+      const json = await res.json();
+      if (res.ok) setScraper(json);
+    } finally {
+      setScraperLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchScraperState();
+  }, [fetchScraperState]);
+
+  useEffect(() => {
+    if (scraper?.status !== "running") return;
+
+    const interval = setInterval(() => {
+      fetchScraperState();
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [scraper?.status, fetchScraperState]);
 
   // Debounce search
   const handleSearch = (v: string) => {
@@ -175,6 +218,24 @@ export default function ProspectionPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function startScraper() {
+    setScraperStarting(true);
+    try {
+      const res = await fetch("/api/prospects/scraper", { method: "POST" });
+      const json = await res.json();
+      setScraper(json);
+
+      if (res.ok && json.status === "running") {
+        setTimeout(() => {
+          fetchScraperState();
+          fetchData({ search, status: statusFilter, city: cityFilter, page });
+        }, 1500);
+      }
+    } finally {
+      setScraperStarting(false);
+    }
+  }
+
   // ── Open prospect panel ──────────────────────────────────────────────────
   function openProspect(p: Prospect) {
     setSelected(p);
@@ -188,6 +249,14 @@ export default function ProspectionPage() {
 
   const stats = data?.stats;
   const totalAll = (stats?.NEW ?? 0) + (stats?.CONTACTED ?? 0) + (stats?.ACTIVATED ?? 0) + (stats?.IGNORED ?? 0);
+  const scraperRunning = scraper?.status === "running";
+  const scraperBadge = scraper?.status === "running"
+    ? "bg-orange-500/10 text-orange-300 border-orange-500/30"
+    : scraper?.status === "success"
+      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+      : scraper?.status === "error"
+        ? "bg-red-500/10 text-red-300 border-red-500/30"
+        : "bg-slate-900 text-slate-400 border-slate-700";
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -204,6 +273,20 @@ export default function ProspectionPage() {
             </div>
             <div className="flex gap-2">
               <button
+                onClick={startScraper}
+                disabled={scraperStarting || scraperRunning || scraperLoading || !scraper?.available}
+                className="px-3 py-2 rounded-lg bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:hover:bg-orange-500 text-white text-sm font-semibold transition-colors flex items-center gap-2"
+              >
+                {scraperStarting || scraperRunning ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    {scraperRunning ? "Scraping..." : "Lancement..."}
+                  </>
+                ) : (
+                  <>▶ Lancer le scraper</>
+                )}
+              </button>
+              <button
                 onClick={exportCSV}
                 className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 hover:border-slate-500 text-sm transition-colors"
               >
@@ -217,6 +300,60 @@ export default function ProspectionPage() {
               >
                 📂 Git
               </a>
+            </div>
+          </div>
+
+          <div className="mb-5 rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <p className="text-sm font-bold text-white">Scraper lacarte.menu</p>
+                  <span className={`text-[11px] px-2.5 py-1 rounded-full border font-semibold ${scraperBadge}`}>
+                    {scraperLoading ? "Chargement..." : scraper?.status === "running" ? "En cours" : scraper?.status === "success" ? "Termine" : scraper?.status === "error" ? "Erreur" : "Pret"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Lance le script directement depuis l'admin et affiche les logs pendant le scraping.
+                </p>
+                {scraper && (
+                  <div className="mt-3 space-y-1 text-xs text-slate-500">
+                    <p>Commande: <code className="text-orange-400">{scraper.command}</code></p>
+                    <p>Dossier: <code className="text-slate-300">{scraper.workdir}</code></p>
+                    {!scraper.available && <p className="text-red-400">Script introuvable: {scraper.scriptPath}</p>}
+                    {scraper.message && <p className="text-red-400">{scraper.message}</p>}
+                    {scraper.startedAt && <p>Debut: <span className="text-slate-300">{new Date(scraper.startedAt).toLocaleString("fr-FR")}</span></p>}
+                    {scraper.endedAt && <p>Fin: <span className="text-slate-300">{new Date(scraper.endedAt).toLocaleString("fr-FR")}</span></p>}
+                    {scraper.error && <p className="text-red-400">{scraper.error}</p>}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={fetchScraperState}
+                  className="px-3 py-2 rounded-lg border border-slate-700 text-slate-300 hover:border-slate-500 text-sm transition-colors"
+                >
+                  Actualiser les logs
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-slate-800 bg-black/40 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-950/80">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Logs du scraper</p>
+                <p className="text-[11px] text-slate-600">{scraper?.logs.length ?? 0} lignes</p>
+              </div>
+              <div className="max-h-64 overflow-y-auto px-4 py-3 font-mono text-xs leading-6 text-slate-300 whitespace-pre-wrap">
+                {scraperLoading ? (
+                  <p className="text-slate-500">Chargement des logs...</p>
+                ) : scraper?.logs?.length ? (
+                  scraper.logs.map((line, index) => (
+                    <div key={`${index}-${line.slice(0, 24)}`}>{line}</div>
+                  ))
+                ) : (
+                  <p className="text-slate-500">Aucun log pour le moment. Lancez le scraper pour suivre son execution ici.</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -286,7 +423,7 @@ export default function ProspectionPage() {
               <p className="text-5xl mb-4">🔍</p>
               <p className="text-slate-400 text-lg font-medium">Aucun prospect trouvé</p>
               <p className="text-slate-600 text-sm mt-1">
-                Lancez le scraper : <code className="text-orange-400">npx tsx scripts/scrape-lacarte.ts</code>
+                Utilisez le bouton "Lancer le scraper" ci-dessus pour remplir cette base automatiquement.
               </p>
             </div>
           ) : (
