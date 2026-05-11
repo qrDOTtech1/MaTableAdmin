@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-// @ts-ignore
-import html2pdf from "html2pdf.js";
 import DocumentTemplate, { type DocType } from "../../../documents/DocumentTemplate";
+import { printDocumentNode } from "../../../documents/printUtil";
 
 type RestaurantData = {
   name: string;
@@ -119,16 +118,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
   const generatePDF = () => {
     const element = printRef.current;
     if (!element) return;
-    
-    const opt = {
-      margin: 10,
-      filename: `MaTable_${docType}_${clientData.name.replace(/\s+/g, '_')}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
-    };
-
-    html2pdf().from(element).set(opt).save();
+    printDocumentNode(element, `${docMeta.numero} — ${clientData.name || "MaTable"}`);
   };
 
   const getPrice = () => {
@@ -248,7 +238,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
               onClick={generatePDF}
               className="w-full bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 transition-colors"
             >
-              📄 Exporter en PDF
+              🖨 Imprimer / Enregistrer PDF
             </button>
             {saveMsg && (
               <div className={`text-xs font-semibold p-2 rounded-lg ${

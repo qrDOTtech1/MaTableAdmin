@@ -2,8 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-// @ts-ignore
-import html2pdf from "html2pdf.js";
 import DocumentTemplate, {
   type DocType,
   type Vendor,
@@ -12,6 +10,7 @@ import DocumentTemplate, {
   type Prestation,
   computePriceInfo,
 } from "../DocumentTemplate";
+import { printDocumentNode } from "../printUtil";
 
 type Doc = {
   id: string;
@@ -51,14 +50,12 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
     const element = printRef.current;
     if (!element) return;
     setBusy("pdf");
-    const opt = {
-      margin: 10,
-      filename: `${doc.number}_${doc.restaurantName.replace(/\s+/g, "_")}.pdf`,
-      image: { type: "jpeg" as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
-    };
-    html2pdf().from(element).set(opt).save().then(() => setBusy(null));
+    try {
+      printDocumentNode(element, `${doc.number} — ${doc.restaurantName}`);
+    } finally {
+      // Le dialog d'impression s'ouvre immédiatement, on libère le bouton après un court délai
+      setTimeout(() => setBusy(null), 600);
+    }
   };
 
   const toggleSigned = async () => {
@@ -92,7 +89,7 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
             disabled={!!busy}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50"
           >
-            {busy === "pdf" ? "Export…" : "📄 Exporter en PDF"}
+            {busy === "pdf" ? "Ouverture…" : "🖨 Imprimer / Enregistrer PDF"}
           </button>
           <button
             onClick={toggleSigned}
