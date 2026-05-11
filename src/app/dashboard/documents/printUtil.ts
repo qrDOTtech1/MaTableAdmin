@@ -46,11 +46,40 @@ ${linksHtml}
 <style>
 ${inlineCss}
 /* === Surcharges spécifiques impression === */
-@page { size: A4; margin: 0; }
-html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
-body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+html, body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: white !important;
+}
+body {
+  /* Conserve les couleurs (bannières orange, en-têtes de tableau) */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
+}
 /* Le nœud du document conserve sa largeur 210mm, on retire son ombre */
-body > div { box-shadow: none !important; margin: 0 auto !important; }
+body > div {
+  box-shadow: none !important;
+  margin: 0 auto !important;
+}
+
+/* Suggestion d'impression recto-seul (le navigateur respecte si supporté) */
+@media print {
+  html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Évite de couper un bloc signature ou un tableau de prix au milieu */
+  .grid, table, tr, h2, .signature-block { page-break-inside: avoid; break-inside: avoid; }
+  thead { display: table-header-group; }
+
+  /* Force le rendu une seule face : on définit la taille de page sans verso.
+     Les navigateurs ne peuvent pas réellement forcer le mode "recto seul",
+     mais on s'assure que le contenu reste compact et tient sur des pages
+     simples. */
+}
 </style>
 </head>
 <body>

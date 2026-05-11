@@ -2,6 +2,115 @@
 
 import { forwardRef } from "react";
 
+// ───────────────────────────────────────────────────────────────────────────
+// Bannière latérale décorative — signature visuelle MaTable
+//
+// Imprimée dans les marges gauche/droite : motif tech (hex grid + nodes
+// réseau + wordmark vertical), opacité ~18 %. Identifiable mais quasi
+// gratuite en encre. Le motif est unique : grille hexagonale + chemin
+// circuit + points de connexion + wordmark — non-trivial à reproduire.
+// ───────────────────────────────────────────────────────────────────────────
+function SideBanner({ side }: { side: "left" | "right" }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        [side]: 0,
+        top: 0,
+        bottom: 0,
+        width: "16mm",
+        overflow: "hidden",
+        pointerEvents: "none",
+        zIndex: 0,
+      }}
+      aria-hidden
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 60 1120"
+        preserveAspectRatio="xMidYMid slice"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          {/* Grille hexagonale fine */}
+          <pattern id={`hex-${side}`} x="0" y="0" width="20" height="34.64" patternUnits="userSpaceOnUse">
+            <polygon
+              points="10,1 19,6 19,17 10,22 1,17 1,6"
+              fill="none"
+              stroke="#fb923c"
+              strokeWidth="0.4"
+              opacity="0.45"
+            />
+            <polygon
+              points="20,18.32 29,23.32 29,34.32 20,39.32 11,34.32 11,23.32"
+              fill="none"
+              stroke="#fb923c"
+              strokeWidth="0.4"
+              opacity="0.45"
+            />
+            <circle cx="10" cy="22" r="0.8" fill="#fb923c" opacity="0.5" />
+            <circle cx="20" cy="5.32" r="0.6" fill="#9ca3af" opacity="0.4" />
+          </pattern>
+          {/* Pattern de nodes réseau (dots reliés) */}
+          <pattern id={`nodes-${side}`} x="0" y="0" width="60" height="180" patternUnits="userSpaceOnUse">
+            <line x1="10" y1="20" x2="35" y2="45" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
+            <line x1="35" y1="45" x2="48" y2="90" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
+            <line x1="48" y1="90" x2="15" y2="135" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
+            <line x1="15" y1="135" x2="40" y2="170" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
+            <circle cx="10" cy="20" r="1.4" fill="#fb923c" opacity="0.55" />
+            <circle cx="35" cy="45" r="1" fill="#fb923c" opacity="0.55" />
+            <circle cx="48" cy="90" r="1.8" fill="#fb923c" opacity="0.6" />
+            <circle cx="15" cy="135" r="1" fill="#fb923c" opacity="0.55" />
+            <circle cx="40" cy="170" r="1.2" fill="#fb923c" opacity="0.55" />
+          </pattern>
+        </defs>
+
+        {/* Couche 1 : grille hexagonale plein fond */}
+        <rect x="0" y="0" width="60" height="1120" fill={`url(#hex-${side})`} />
+        {/* Couche 2 : nodes réseau par-dessus */}
+        <rect x="0" y="0" width="60" height="1120" fill={`url(#nodes-${side})`} />
+
+        {/* Bandeaux d'extrémité haut & bas — fines barres orange */}
+        <rect x="0" y="0" width="60" height="2" fill="#f97316" opacity="0.85" />
+        <rect x="0" y="1118" width="60" height="2" fill="#f97316" opacity="0.85" />
+
+        {/* Wordmark vertical répété — signature anti-contrefaçon */}
+        <g transform="rotate(-90, 30, 200)">
+          <text x="30" y="200" textAnchor="middle" fontSize="6" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.55" letterSpacing="2">
+            MA · TABLE · MA · TABLE · MA · TABLE
+          </text>
+        </g>
+        <g transform="rotate(-90, 30, 560)">
+          <text x="30" y="560" textAnchor="middle" fontSize="6" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.55" letterSpacing="2">
+            MA · TABLE · MA · TABLE · MA · TABLE
+          </text>
+        </g>
+        <g transform="rotate(-90, 30, 920)">
+          <text x="30" y="920" textAnchor="middle" fontSize="6" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.55" letterSpacing="2">
+            MA · TABLE · MA · TABLE · MA · TABLE
+          </text>
+        </g>
+
+        {/* Petits blocs façon QR — anti-contrefaçon discret */}
+        <g opacity="0.5">
+          <rect x="22" y="280" width="3" height="3" fill="#1f2937" />
+          <rect x="28" y="280" width="3" height="3" fill="#1f2937" />
+          <rect x="22" y="286" width="3" height="3" fill="#1f2937" />
+          <rect x="34" y="286" width="3" height="3" fill="#1f2937" />
+          <rect x="28" y="292" width="3" height="3" fill="#1f2937" />
+
+          <rect x="20" y="780" width="3" height="3" fill="#1f2937" />
+          <rect x="26" y="780" width="3" height="3" fill="#1f2937" />
+          <rect x="32" y="786" width="3" height="3" fill="#1f2937" />
+          <rect x="20" y="792" width="3" height="3" fill="#1f2937" />
+          <rect x="26" y="792" width="3" height="3" fill="#1f2937" />
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 export type Vendor = {
   raisonSociale: string;
   formeJuridique?: string;   // ex. "Auto-entrepreneur", "SARL au capital de 5 000 €"
@@ -75,14 +184,22 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       style={{
         width: "210mm",
         minHeight: "297mm",
-        padding: "20mm",
+        padding: "18mm 22mm 18mm 22mm",  // marges intérieures laissant 16mm pour les bannières latérales
+        position: "relative",
         boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
         fontFamily: "Arial, sans-serif",
         color: "#1a1a1a",
       }}
     >
+      {/* Bannières décoratives sur les deux côtés — signature visuelle MaTable */}
+      <SideBanner side="left" />
+      <SideBanner side="right" />
+
+      {/* Contenu principal au-dessus des bannières */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+
       {/* Header commun */}
-      <div className="flex justify-between items-start border-b-2 border-black pb-5 mb-8">
+      <div className="flex justify-between items-start border-b-2 border-orange-500 pb-5 mb-8">
         <div className="text-2xl font-black">
           Ma <span className="text-orange-500">Table</span>
         </div>
@@ -147,7 +264,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Modules & Tarifs</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
-              <tr className="bg-black text-white text-left text-xs uppercase tracking-wider">
+              <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
                 <th className="p-3">Module</th>
                 <th className="p-3 text-right">Prix HT/mois</th>
               </tr>
@@ -261,7 +378,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           <table className="w-full text-sm mb-6 border-collapse">
             <thead>
-              <tr className="bg-black text-white text-left text-xs uppercase tracking-wider">
+              <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
                 <th className="p-3">Désignation</th>
                 <th className="p-3">Période</th>
                 <th className="p-3 text-center">Qté</th>
@@ -295,15 +412,15 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </tbody>
           </table>
 
-          <div className="bg-black text-white rounded-xl p-6 flex justify-between items-end mb-6">
+          <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-6 flex justify-between items-end mb-6">
             <div>
-              <div className="font-bold text-lg">Net à payer</div>
-              <div className="text-xs text-gray-400">Échéance : <b className="text-white">{docMeta.echeance}</b></div>
-              <div className="text-xs text-gray-400 mt-1">Mode : virement bancaire</div>
+              <div className="font-black text-lg text-gray-900">Net à payer</div>
+              <div className="text-xs text-gray-600">Échéance : <b className="text-gray-900">{docMeta.echeance}</b></div>
+              <div className="text-xs text-gray-600 mt-1">Mode : virement bancaire</div>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-black text-orange-500">{priceInfo.monthly.toFixed(2)} €</div>
-              <div className="text-xs text-gray-400">Sans TVA</div>
+              <div className="text-3xl font-black text-orange-600">{priceInfo.monthly.toFixed(2)} €</div>
+              <div className="text-xs text-gray-600">Sans TVA</div>
             </div>
           </div>
 
@@ -356,7 +473,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Détail tarifaire</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
-              <tr className="bg-black text-white text-left text-xs uppercase tracking-wider">
+              <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
                 <th className="p-3">Description</th>
                 <th className="p-3">Engagement</th>
                 <th className="p-3 text-right">Prix HT/mois</th>
@@ -681,7 +798,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 3 — Rémunération</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
-              <tr className="bg-black text-white text-left text-xs uppercase tracking-wider">
+              <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
                 <th className="p-3">Désignation</th>
                 <th className="p-3 text-right">Montant HT</th>
               </tr>
@@ -781,7 +898,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Modules inclus dans l'abonnement</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
-              <tr className="bg-black text-white text-left text-xs uppercase tracking-wider">
+              <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
                 <th className="p-3">Module</th>
                 <th className="p-3 text-center">Statut</th>
                 <th className="p-3">Détails</th>
@@ -851,6 +968,8 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
         </div>
       )}
+
+      </div>{/* /contenu zIndex 1 */}
     </div>
   );
 });
