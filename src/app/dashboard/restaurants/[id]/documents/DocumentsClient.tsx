@@ -37,14 +37,20 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
   const [clientData, setClientData] = useState(restaurant);
 
   // États éditables — Prestataire (le vendeur / signataire MaTable)
+  // NB : les champs vides afficheront un placeholder "[… — à compléter]" dans les docs
   const [vendor, setVendor] = useState({
-    raisonSociale: "Steven Franco / Ma Table",
-    siret: "En cours d'attribution",
+    raisonSociale: "Ma Table",
+    formeJuridique: "Auto-entrepreneur",
+    siret: "",                  // sera affiché "[N° SIRET — IMAT en cours]" si vide
+    rcs: "",                    // facultatif pour auto-entrepreneur
+    codeAPE: "6201Z — Programmation informatique",
+    tvaIntracom: "",            // affichera "Non assujetti (art. 293B CGI)" si vide
     address: "France",
     email: "contact@matable.pro",
     phone: "+33 7 57 83 57 77",
     representant: "Steven Franco",
-    iban: "FR76 XXXX XXXX XXXX XXXX XXXX XXX",
+    iban: "",
+    bic: "",
   });
 
   const [docMeta, setDocMeta] = useState({
@@ -188,13 +194,20 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           <div className="pt-4 border-t border-slate-800 space-y-2">
             <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Prestataire (vendeur)</label>
             <input type="text" value={vendor.raisonSociale} placeholder="Raison sociale" onChange={(e) => setVendor({...vendor, raisonSociale: e.target.value})} className={INPUT_CLS} />
+            <input type="text" value={vendor.formeJuridique} placeholder="Forme juridique (ex. Auto-entrepreneur)" onChange={(e) => setVendor({...vendor, formeJuridique: e.target.value})} className={INPUT_CLS} />
             <input type="text" value={vendor.representant} placeholder="Nom du signataire" onChange={(e) => setVendor({...vendor, representant: e.target.value})} className={INPUT_CLS} />
-            <input type="text" value={vendor.siret} placeholder="SIRET" onChange={(e) => setVendor({...vendor, siret: e.target.value})} className={INPUT_CLS} />
+            <input type="text" value={vendor.siret} placeholder="SIRET (laisser vide si IMAT en cours)" onChange={(e) => setVendor({...vendor, siret: e.target.value})} className={INPUT_CLS} />
+            <input type="text" value={vendor.rcs} placeholder="RCS (facultatif)" onChange={(e) => setVendor({...vendor, rcs: e.target.value})} className={INPUT_CLS} />
+            <input type="text" value={vendor.codeAPE} placeholder="Code APE / NAF" onChange={(e) => setVendor({...vendor, codeAPE: e.target.value})} className={INPUT_CLS} />
+            <input type="text" value={vendor.tvaIntracom} placeholder="TVA intracom. (laisser vide si 293B)" onChange={(e) => setVendor({...vendor, tvaIntracom: e.target.value})} className={INPUT_CLS} />
             <input type="text" value={vendor.address} placeholder="Adresse" onChange={(e) => setVendor({...vendor, address: e.target.value})} className={INPUT_CLS} />
             <input type="text" value={vendor.email} placeholder="Email" onChange={(e) => setVendor({...vendor, email: e.target.value})} className={INPUT_CLS} />
             <input type="text" value={vendor.phone} placeholder="Téléphone" onChange={(e) => setVendor({...vendor, phone: e.target.value})} className={INPUT_CLS} />
-            {docType === "facture" && (
-              <input type="text" value={vendor.iban} placeholder="IBAN" onChange={(e) => setVendor({...vendor, iban: e.target.value})} className={INPUT_CLS} />
+            {(docType === "facture" || docType === "contrat") && (
+              <>
+                <input type="text" value={vendor.iban} placeholder="IBAN" onChange={(e) => setVendor({...vendor, iban: e.target.value})} className={INPUT_CLS} />
+                <input type="text" value={vendor.bic} placeholder="BIC" onChange={(e) => setVendor({...vendor, bic: e.target.value})} className={INPUT_CLS} />
+              </>
             )}
           </div>
 
