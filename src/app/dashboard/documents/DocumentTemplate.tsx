@@ -5,10 +5,12 @@ import { forwardRef } from "react";
 // ───────────────────────────────────────────────────────────────────────────
 // Bannière latérale décorative — signature visuelle MaTable
 //
-// Imprimée dans les marges gauche/droite : motif tech (hex grid + nodes
-// réseau + wordmark vertical), opacité ~18 %. Identifiable mais quasi
-// gratuite en encre. Le motif est unique : grille hexagonale + chemin
-// circuit + points de connexion + wordmark — non-trivial à reproduire.
+// Calibré pour rester économe en encre AUSSI EN NOIR & BLANC :
+// la plupart des impressions clients sont N&B. Sur une impression couleur,
+// le motif est nettement orange ; en N&B il se traduit en gris très clair
+// (≈ 8-15 % de couverture) — visible mais quasi gratuit.
+// Toutes les opacités SVG sont volontairement basses (≤ 0.30) pour garantir
+// ce comportement bivalent.
 // ───────────────────────────────────────────────────────────────────────────
 function SideBanner({ side }: { side: "left" | "right" }) {
   return (
@@ -33,36 +35,35 @@ function SideBanner({ side }: { side: "left" | "right" }) {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Grille hexagonale fine */}
+          {/* Grille hexagonale — opacité réduite : ~10-12 % gris en N&B */}
           <pattern id={`hex-${side}`} x="0" y="0" width="20" height="34.64" patternUnits="userSpaceOnUse">
             <polygon
               points="10,1 19,6 19,17 10,22 1,17 1,6"
               fill="none"
               stroke="#fb923c"
-              strokeWidth="0.4"
-              opacity="0.45"
+              strokeWidth="0.35"
+              opacity="0.28"
             />
             <polygon
               points="20,18.32 29,23.32 29,34.32 20,39.32 11,34.32 11,23.32"
               fill="none"
               stroke="#fb923c"
-              strokeWidth="0.4"
-              opacity="0.45"
+              strokeWidth="0.35"
+              opacity="0.28"
             />
-            <circle cx="10" cy="22" r="0.8" fill="#fb923c" opacity="0.5" />
-            <circle cx="20" cy="5.32" r="0.6" fill="#9ca3af" opacity="0.4" />
+            <circle cx="10" cy="22" r="0.7" fill="#fb923c" opacity="0.3" />
           </pattern>
-          {/* Pattern de nodes réseau (dots reliés) */}
+          {/* Nodes réseau — opacité très douce */}
           <pattern id={`nodes-${side}`} x="0" y="0" width="60" height="180" patternUnits="userSpaceOnUse">
-            <line x1="10" y1="20" x2="35" y2="45" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
-            <line x1="35" y1="45" x2="48" y2="90" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
-            <line x1="48" y1="90" x2="15" y2="135" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
-            <line x1="15" y1="135" x2="40" y2="170" stroke="#fb923c" strokeWidth="0.35" opacity="0.35" />
-            <circle cx="10" cy="20" r="1.4" fill="#fb923c" opacity="0.55" />
-            <circle cx="35" cy="45" r="1" fill="#fb923c" opacity="0.55" />
-            <circle cx="48" cy="90" r="1.8" fill="#fb923c" opacity="0.6" />
-            <circle cx="15" cy="135" r="1" fill="#fb923c" opacity="0.55" />
-            <circle cx="40" cy="170" r="1.2" fill="#fb923c" opacity="0.55" />
+            <line x1="10" y1="20" x2="35" y2="45" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <line x1="35" y1="45" x2="48" y2="90" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <line x1="48" y1="90" x2="15" y2="135" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <line x1="15" y1="135" x2="40" y2="170" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <circle cx="10" cy="20" r="1.2" fill="#fb923c" opacity="0.3" />
+            <circle cx="35" cy="45" r="0.9" fill="#fb923c" opacity="0.3" />
+            <circle cx="48" cy="90" r="1.5" fill="#fb923c" opacity="0.32" />
+            <circle cx="15" cy="135" r="0.9" fill="#fb923c" opacity="0.3" />
+            <circle cx="40" cy="170" r="1.1" fill="#fb923c" opacity="0.3" />
           </pattern>
         </defs>
 
@@ -71,40 +72,42 @@ function SideBanner({ side }: { side: "left" | "right" }) {
         {/* Couche 2 : nodes réseau par-dessus */}
         <rect x="0" y="0" width="60" height="1120" fill={`url(#nodes-${side})`} />
 
-        {/* Bandeaux d'extrémité haut & bas — fines barres orange */}
-        <rect x="0" y="0" width="60" height="2" fill="#f97316" opacity="0.85" />
-        <rect x="0" y="1118" width="60" height="2" fill="#f97316" opacity="0.85" />
+        {/* Fines barres en haut et en bas — opacité modérée pour cadrage visible mais pas lourd */}
+        <rect x="0" y="0" width="60" height="1.5" fill="#f97316" opacity="0.55" />
+        <rect x="0" y="1118.5" width="60" height="1.5" fill="#f97316" opacity="0.55" />
 
-        {/* Wordmark vertical répété — signature anti-contrefaçon */}
+        {/* Wordmark vertical répété — signature anti-contrefaçon, opacité douce */}
         <g transform="rotate(-90, 30, 200)">
-          <text x="30" y="200" textAnchor="middle" fontSize="6" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.55" letterSpacing="2">
+          <text x="30" y="200" textAnchor="middle" fontSize="5.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.3" letterSpacing="2">
             MA · TABLE · MA · TABLE · MA · TABLE
           </text>
         </g>
         <g transform="rotate(-90, 30, 560)">
-          <text x="30" y="560" textAnchor="middle" fontSize="6" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.55" letterSpacing="2">
+          <text x="30" y="560" textAnchor="middle" fontSize="5.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.3" letterSpacing="2">
             MA · TABLE · MA · TABLE · MA · TABLE
           </text>
         </g>
         <g transform="rotate(-90, 30, 920)">
-          <text x="30" y="920" textAnchor="middle" fontSize="6" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.55" letterSpacing="2">
+          <text x="30" y="920" textAnchor="middle" fontSize="5.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.3" letterSpacing="2">
             MA · TABLE · MA · TABLE · MA · TABLE
           </text>
         </g>
 
-        {/* Petits blocs façon QR — anti-contrefaçon discret */}
-        <g opacity="0.5">
-          <rect x="22" y="280" width="3" height="3" fill="#1f2937" />
-          <rect x="28" y="280" width="3" height="3" fill="#1f2937" />
-          <rect x="22" y="286" width="3" height="3" fill="#1f2937" />
-          <rect x="34" y="286" width="3" height="3" fill="#1f2937" />
-          <rect x="28" y="292" width="3" height="3" fill="#1f2937" />
+        {/* Micro-blocs façon QR — anti-contrefaçon discret. Volontairement gris
+            (et pas orange) pour rester reconnaissables en N&B comme en couleur,
+            mais opacité basse pour limiter l'encre. */}
+        <g opacity="0.32">
+          <rect x="22" y="280" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="28" y="280" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="22" y="286" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="34" y="286" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="28" y="292" width="2.5" height="2.5" fill="#1f2937" />
 
-          <rect x="20" y="780" width="3" height="3" fill="#1f2937" />
-          <rect x="26" y="780" width="3" height="3" fill="#1f2937" />
-          <rect x="32" y="786" width="3" height="3" fill="#1f2937" />
-          <rect x="20" y="792" width="3" height="3" fill="#1f2937" />
-          <rect x="26" y="792" width="3" height="3" fill="#1f2937" />
+          <rect x="20" y="780" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="26" y="780" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="32" y="786" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="20" y="792" width="2.5" height="2.5" fill="#1f2937" />
+          <rect x="26" y="792" width="2.5" height="2.5" fill="#1f2937" />
         </g>
       </svg>
     </div>
