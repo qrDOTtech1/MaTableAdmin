@@ -3,14 +3,12 @@
 import { forwardRef } from "react";
 
 // ───────────────────────────────────────────────────────────────────────────
-// Bannière latérale — signature visuelle MaTable, ultra-fine (0.6 mm)
+// Bannière latérale décorative — signature visuelle MaTable (6 mm)
 //
-// À cette épaisseur on ne peut plus afficher de motif, donc on rend :
-//   - un trait orange vertical (le "fil signature")
-//   - 3 micro-segments noirs équidistants (marquage discret, anti-contrefaçon
-//     en N&B comme en couleur)
-//   - 2 caps colorées en haut et en bas
-// Couverture d'encre négligeable même imprimée en pleine couleur.
+// Calibré pour rester économe en encre AUSSI EN NOIR & BLANC.
+// Toutes opacités SVG ≤ 0.30 → ~10-15 % gris en N&B = quasi gratuit.
+// Composition : grille hexagonale + nodes réseau + wordmark vertical
+// + micro-blocs QR-like (anti-contrefaçon).
 // ───────────────────────────────────────────────────────────────────────────
 function SideBanner({ side }: { side: "left" | "right" }) {
   return (
@@ -20,7 +18,7 @@ function SideBanner({ side }: { side: "left" | "right" }) {
         [side]: 0,
         top: 0,
         bottom: 0,
-        width: "0.6mm",
+        width: "6mm",
         overflow: "hidden",
         pointerEvents: "none",
         zIndex: 0,
@@ -30,21 +28,80 @@ function SideBanner({ side }: { side: "left" | "right" }) {
       <svg
         width="100%"
         height="100%"
-        viewBox="0 0 2 1120"
-        preserveAspectRatio="none"
+        viewBox="0 0 24 1120"
+        preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Fil vertical orange à 40 % d'opacité — discret en couleur, gris pâle en N&B */}
-        <rect x="0.7" y="0" width="0.6" height="1120" fill="#f97316" opacity="0.4" />
+        <defs>
+          {/* Grille hexagonale — taille adaptée à 6 mm */}
+          <pattern id={`hex-${side}`} x="0" y="0" width="12" height="20.78" patternUnits="userSpaceOnUse">
+            <polygon
+              points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5"
+              fill="none"
+              stroke="#fb923c"
+              strokeWidth="0.3"
+              opacity="0.28"
+            />
+            <polygon
+              points="12,11 17.5,14 17.5,21 12,24 6.5,21 6.5,14"
+              fill="none"
+              stroke="#fb923c"
+              strokeWidth="0.3"
+              opacity="0.28"
+            />
+            <circle cx="6" cy="13.5" r="0.5" fill="#fb923c" opacity="0.3" />
+          </pattern>
+          {/* Nodes réseau — version compacte */}
+          <pattern id={`nodes-${side}`} x="0" y="0" width="24" height="180" patternUnits="userSpaceOnUse">
+            <line x1="5" y1="20" x2="18" y2="55" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <line x1="18" y1="55" x2="7" y2="100" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <line x1="7" y1="100" x2="20" y2="145" stroke="#fb923c" strokeWidth="0.3" opacity="0.22" />
+            <circle cx="5" cy="20" r="1.1" fill="#fb923c" opacity="0.32" />
+            <circle cx="18" cy="55" r="0.9" fill="#fb923c" opacity="0.32" />
+            <circle cx="7" cy="100" r="1.3" fill="#fb923c" opacity="0.35" />
+            <circle cx="20" cy="145" r="0.9" fill="#fb923c" opacity="0.32" />
+          </pattern>
+        </defs>
 
-        {/* Caps haut et bas — marquage net qui borne la page */}
-        <rect x="0" y="0" width="2" height="3" fill="#f97316" opacity="0.85" />
-        <rect x="0" y="1117" width="2" height="3" fill="#f97316" opacity="0.85" />
+        {/* Couches : grille hexagonale + nodes réseau */}
+        <rect x="0" y="0" width="24" height="1120" fill={`url(#hex-${side})`} />
+        <rect x="0" y="0" width="24" height="1120" fill={`url(#nodes-${side})`} />
 
-        {/* Trois micro-segments noirs — repères anti-contrefaçon (visibles en N&B aussi) */}
-        <rect x="0.5" y="278" width="1" height="6" fill="#111827" opacity="0.55" />
-        <rect x="0.5" y="558" width="1" height="6" fill="#111827" opacity="0.55" />
-        <rect x="0.5" y="838" width="1" height="6" fill="#111827" opacity="0.55" />
+        {/* Fines barres haut et bas */}
+        <rect x="0" y="0" width="24" height="1.5" fill="#f97316" opacity="0.6" />
+        <rect x="0" y="1118.5" width="24" height="1.5" fill="#f97316" opacity="0.6" />
+
+        {/* Wordmark vertical répété — police 3.5 pour rentrer dans 6 mm */}
+        <g transform="rotate(-90, 12, 200)">
+          <text x="12" y="200" textAnchor="middle" fontSize="3.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.32" letterSpacing="1.5">
+            MA · TABLE · MA · TABLE · MA · TABLE
+          </text>
+        </g>
+        <g transform="rotate(-90, 12, 560)">
+          <text x="12" y="560" textAnchor="middle" fontSize="3.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.32" letterSpacing="1.5">
+            MA · TABLE · MA · TABLE · MA · TABLE
+          </text>
+        </g>
+        <g transform="rotate(-90, 12, 920)">
+          <text x="12" y="920" textAnchor="middle" fontSize="3.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.32" letterSpacing="1.5">
+            MA · TABLE · MA · TABLE · MA · TABLE
+          </text>
+        </g>
+
+        {/* Micro-blocs QR — anti-contrefaçon discret, gris pour rester visible en N&B */}
+        <g opacity="0.32">
+          <rect x="8" y="280" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="11.5" y="280" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="8" y="283.5" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="14" y="283.5" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="11.5" y="287" width="1.8" height="1.8" fill="#1f2937" />
+
+          <rect x="7" y="780" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="10.5" y="780" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="13" y="783.5" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="7" y="787" width="1.8" height="1.8" fill="#1f2937" />
+          <rect x="10.5" y="787" width="1.8" height="1.8" fill="#1f2937" />
+        </g>
       </svg>
     </div>
   );
@@ -123,7 +180,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       style={{
         width: "210mm",
         minHeight: "297mm",
-        padding: "18mm 20mm 18mm 20mm",  // marges A4 standards (les 0.6mm de bannières tiennent dedans)
+        padding: "18mm 14mm 18mm 14mm",  // 14 mm latéral = 6 mm bannière + 8 mm air avant le texte
         position: "relative",
         boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
         fontFamily: "Arial, sans-serif",
