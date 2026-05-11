@@ -158,7 +158,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               <tr className="border-b"><td className="p-3"><b>Portail Serveur</b><br/><span className="text-xs text-gray-500">Prise de commande mobile, suivi des tables, attribution serveur</span></td><td className="p-3 text-right">Inclus</td></tr>
               <tr className="border-b"><td className="p-3"><b>Cuisine Live</b><br/><span className="text-xs text-gray-500">Écran cuisine temps réel, statuts plats, ruptures</span></td><td className="p-3 text-right">Inclus</td></tr>
               <tr className="border-b"><td className="p-3"><b>Caisse intégrée</b><br/><span className="text-xs text-gray-500">Encaissement par session, modes de paiement, pourboires</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Nova IA — Assistant complet</b><br/><span className="text-xs text-gray-500">Magic Scan menu, descriptions, planning, chatbot, finance IA</span></td><td className="p-3 text-right">Inclus</td></tr>
+              <tr className="border-b"><td className="p-3"><b>Nova IA — Assistant complet</b> <span className="text-xs text-gray-500">(par NovaTech)</span><br/><span className="text-xs text-gray-500">Magic Scan menu, descriptions, planning, chatbot, finance IA — usage standard inclus (voir art. 5 bis)</span></td><td className="p-3 text-right">Inclus</td></tr>
               <tr className="border-b"><td className="p-3"><b>Gestion de stock IA</b><br/><span className="text-xs text-gray-500">Suivi des ingrédients, alertes seuils, prédictions</span></td><td className="p-3 text-right">Inclus</td></tr>
               <tr className="border-b"><td className="p-3"><b>Réservations en ligne</b><br/><span className="text-xs text-gray-500">Calendrier, acompte Stripe, politique d'annulation</span></td><td className="p-3 text-right">Inclus</td></tr>
               <tr className="bg-gray-50 font-black"><td className="p-3">TOTAL MENSUEL HT</td><td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td></tr>
@@ -173,17 +173,28 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="text-sm mb-2 leading-relaxed">Le Client règle le Prestataire par <b>virement bancaire</b> ou <b>prélèvement SEPA</b>, à terme à échoir, le 1er de chaque mois. Toute mise en service est conditionnée à la réception du premier paiement.</p>
           <p className="text-sm mb-3 leading-relaxed">En cas de retard de paiement et conformément à l'art. <b>L. 441-10 du Code de commerce</b>, des pénalités égales à <b>3 fois le taux d'intérêt légal</b> seront appliquées de plein droit, sans mise en demeure préalable. Une indemnité forfaitaire pour frais de recouvrement de <b>40 € (art. D. 441-5)</b> sera également due. Aucun escompte n'est accordé pour paiement anticipé.</p>
 
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 bis — Limite raisonnable d'utilisation de l'IA</h2>
+          <p className="text-sm mb-2 leading-relaxed">Les fonctionnalités d'intelligence artificielle de la Plateforme (Nova IA, Magic Scan, descriptions, chatbot, finance assistée) sont opérées par notre partenaire technique <b>NovaTech</b> et fournies dans la limite d'un <b>usage professionnel raisonnable</b>.</p>
+          <p className="text-sm mb-2 leading-relaxed">Au-delà du seuil standard (correspondant approximativement à 2 fois l'usage moyen constaté sur des clients de profil comparable) :</p>
+          <ul className="text-sm mb-3 ml-6 list-disc space-y-1">
+            <li>une notification email est envoyée au Client à 80 % du quota mensuel ;</li>
+            <li>les services IA pourront être <b>temporairement restreints</b> jusqu'au début du mois suivant ;</li>
+            <li>un <b>quota étendu</b> peut être souscrit à tout moment sur devis préalable, sans interruption de service ;</li>
+            <li>les autres modules (commande, caisse, serveur, cuisine, stock hors IA, réservations) <b>demeurent pleinement opérationnels</b> en cas de restriction des fonctions IA.</li>
+          </ul>
+
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 5 — Disponibilité du service</h2>
           <p className="text-sm mb-3 leading-relaxed">Le Prestataire s'engage à fournir un service disponible <b>24h/24 et 7j/7</b>, avec un taux d'engagement de disponibilité (SLA) cible de <b>99 %</b> sur l'année, hors interventions de maintenance planifiées (notifiées 48 h à l'avance) et cas de force majeure (art. 10). Le support est assuré par email (<b>{vendor.email}</b>) du lundi au vendredi, 9h–18h.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 6 — Données personnelles & RGPD</h2>
-          <p className="text-sm mb-3 leading-relaxed">Le Prestataire agit en tant que <b>sous-traitant</b> au sens de l'art. 28 du RGPD pour les données personnelles que le Client lui confie (clients finaux, avis, commandes). Le Prestataire s'engage à :</p>
+          <p className="text-sm mb-2 leading-relaxed">Le Prestataire agit en tant que <b>sous-traitant</b> au sens de l'art. 28 du RGPD pour les données personnelles que le Client lui confie (clients finaux, avis, commandes). Le Prestataire s'engage à :</p>
           <ul className="text-sm mb-3 ml-6 list-disc space-y-1">
             <li>traiter les données uniquement aux fins de l'exécution du Contrat ;</li>
             <li>garantir la confidentialité et la sécurité (chiffrement TLS, hébergement UE) ;</li>
             <li>notifier toute violation de données dans les 72 heures ;</li>
             <li>restituer ou détruire les données à la fin du Contrat sur demande écrite du Client.</li>
           </ul>
+          <p className="text-sm mb-2 leading-relaxed"><b>Sous-traitants ultérieurs autorisés</b> : Railway Corp. (hébergement UE), <b>NovaTech</b> (modèles IA pour les fonctions Nova IA — données limitées au strict nécessaire, non utilisées pour l'entraînement), Stripe (paiements, si module Réservations actif), Resend (emails transactionnels).</p>
           <p className="text-sm mb-3 leading-relaxed">Le Client conserve la pleine propriété des données qu'il saisit ou que ses clients génèrent via la plateforme.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 7 — Propriété intellectuelle</h2>
@@ -419,6 +430,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <li>Directeur de la publication : {vendor.representant}</li>
             <li>Hébergeur : Railway Corp., 251 Little Falls Drive, Wilmington, DE 19808, États-Unis — infrastructure et base de données déployées sur la région européenne (Frankfurt, Allemagne)</li>
             <li>Code source versionné sur GitHub Inc. (Microsoft Corp.) — accès restreint</li>
+            <li><b>Partenaire technique IA</b> : <b>NovaTech</b> — fournisseur des modèles d'intelligence artificielle, de leur infrastructure d'exécution et du savoir-faire associé pour les fonctionnalités Nova IA, Magic Scan, descriptions assistées, chatbot et finance IA</li>
           </ul>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Objet</h2>
@@ -435,7 +447,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <li><b>Portail Serveur</b> — application mobile pour le personnel de salle, suivi des sessions et commandes, attribution des tables.</li>
             <li><b>Cuisine Live</b> — écran temps réel pour la cuisine, statuts plats (en cours / servi / rupture).</li>
             <li><b>Caisse</b> — fermeture de session, modes de paiement (carte, espèces, comptoir), gestion des pourboires.</li>
-            <li><b>Nova IA</b> — Magic Scan menu (vision), génération de descriptions, planning serveurs, chatbot client, finance assistée.</li>
+            <li><b>Nova IA</b> (technologie fournie par NovaTech) — Magic Scan menu (vision), génération de descriptions, planning serveurs, chatbot client, finance assistée. <i>Soumis à une limite raisonnable d'utilisation — voir art. 8 bis.</i></li>
             <li><b>Gestion de stock IA</b> — suivi des ingrédients, alertes de seuil, prédictions.</li>
             <li><b>Réservations</b> — moteur de réservation en ligne, acompte Stripe, politique d'annulation paramétrable.</li>
           </ul>
@@ -473,6 +485,17 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 8 — Disponibilité & support</h2>
           <p className="mb-3">Le Prestataire s'engage sur un <b>taux de disponibilité cible de 99 %</b> calculé sur l'année, hors maintenance planifiée (notifiée 48 h à l'avance) et cas de force majeure. Le support est accessible par email à <b>{vendor.email}</b> du lundi au vendredi, 9h–18h (heure de Paris). Délai de réponse cible : 24 h ouvrées.</p>
 
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 8 bis — Limite raisonnable d'utilisation de l'IA (Fair Use)</h2>
+          <p className="mb-2">Les fonctionnalités d'intelligence artificielle de la Plateforme (Nova IA, Magic Scan, génération de descriptions, chatbot, finance assistée) sont fournies dans la limite d'un <b>usage professionnel raisonnable</b>, défini comme l'usage moyen constaté chez les clients de profil et de volume d'activité comparables.</p>
+          <p className="mb-2">Les modèles d'IA et leur infrastructure sont opérés par notre partenaire technique <b>NovaTech</b>. Leur utilisation excessive génère des coûts d'infrastructure supplémentaires. En conséquence :</p>
+          <ul className="ml-6 mb-2 list-disc">
+            <li>Le Client est informé lorsqu'il approche du seuil de l'usage standard (notification email à 80 % du quota mensuel).</li>
+            <li>Au dépassement du seuil (correspondant approximativement à <b>2 fois l'usage standard</b>), les services IA pourront être <b>temporairement restreints</b> jusqu'au début du mois suivant ou jusqu'à activation d'un quota étendu.</li>
+            <li>Un <b>quota étendu</b> (volume IA supplémentaire) peut être souscrit à tout moment sur devis préalable. Le tarif dépend du volume demandé et est communiqué par email avant facturation.</li>
+            <li>Les autres modules (QR Commande, Caisse, Serveur, Cuisine, Stock hors prédictions IA, Réservations) restent <b>pleinement opérationnels</b> en cas de restriction des fonctions IA.</li>
+          </ul>
+          <p className="mb-3">Le Prestataire s'engage à faire ses meilleurs efforts pour informer le Client en amont et lui proposer des solutions (extension de quota, optimisation d'usage) avant toute restriction effective.</p>
+
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 9 — Obligations du Client</h2>
           <ul className="ml-6 mb-3 list-disc">
             <li>Fournir des informations exactes et tenues à jour (nom commercial, adresse, SIRET, contact).</li>
@@ -487,6 +510,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 11 — Données personnelles (RGPD)</h2>
           <p className="mb-2">Le Prestataire agit en qualité de <b>sous-traitant</b> au sens de l'art. 28 du RGPD pour le compte du Client. Les traitements sont effectués exclusivement aux fins de l'exécution du Contrat. Les données sont hébergées dans l'Union Européenne, chiffrées en transit (TLS 1.3) et au repos.</p>
+          <p className="mb-2"><b>Sous-traitants ultérieurs autorisés</b> (le Client accepte expressément le recours à ces sous-traitants pour l'exécution du service) :</p>
+          <ul className="ml-6 mb-2 list-disc text-xs">
+            <li><b>Railway Corp.</b> (États-Unis, infrastructure déployée en UE) — hébergement applicatif et base de données</li>
+            <li><b>NovaTech</b> — opération des modèles d'intelligence artificielle et de leur infrastructure d'exécution, pour les fonctionnalités IA exclusivement. Les requêtes IA ne contiennent que les données strictement nécessaires (texte de menu, photos, message du client) et ne sont pas utilisées pour entraîner les modèles.</li>
+            <li><b>Stripe Payments Europe Ltd</b> (Irlande) — traitement des paiements et acomptes, lorsque le module Réservations est activé</li>
+            <li><b>Resend Inc.</b> — service d'envoi d'emails transactionnels</li>
+            <li><b>GitHub Inc.</b> — versionnage du code source (aucune donnée client n'y est stockée)</li>
+          </ul>
           <p className="mb-2">Toute personne concernée dispose d'un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité auprès du Client (responsable de traitement). Une demande peut être adressée au délégué à la protection des données du Prestataire : <b>{vendor.email}</b>.</p>
           <p className="mb-3">En cas de violation de données, le Prestataire notifie le Client dans les <b>72 heures</b>. À la fin du Contrat, les données sont restituées au Client puis détruites sous 30 jours, sauf obligation légale de conservation.</p>
 
@@ -597,17 +628,26 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         </div>
       )}
 
-      {/* ===== CONTRAT DE PRESTATION ===== */}
+      {/* ===== CONTRAT DE PRESTATION (transitoire, personne physique) ===== */}
       {docType === "prestation" && (
         <div>
-          <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="bg-amber-50 border-l-4 border-amber-400 p-3 mb-6 rounded-r">
+            <p className="text-xs text-amber-900 leading-relaxed">
+              <b>⚠ Contrat transitoire</b> — Le présent contrat est conclu en attendant l'immatriculation
+              de la société du Prestataire. Une fois celle-ci effective, les Parties conviennent de signer
+              un <b>Contrat d'Abonnement</b> au nom de la société pour formaliser la relation commerciale
+              dans la durée (voir Article 10).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 mb-6">
             <div className="bg-gray-50 p-4 rounded-xl border">
-              <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Le Prestataire</h3>
+              <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Le Prestataire (personne physique)</h3>
               <div className="text-sm space-y-1">
-                <p className="text-gray-500">Raison sociale : <span className="text-black font-bold">{vendor.raisonSociale}</span></p>
-                <p className="text-gray-500">Représentant : <span className="text-black font-bold">{vendor.representant}</span></p>
-                <p className="text-gray-500">SIRET : <span className="text-black font-bold">{vendor.siret}</span></p>
+                <p className="text-gray-500">Nom et prénom : <span className="text-black font-bold">{vendor.representant}</span></p>
+                <p className="text-gray-500">Agissant en qualité de : <span className="text-black font-bold">personne physique, en attente d'immatriculation de la société <i>{vendor.raisonSociale}</i></span></p>
                 <p className="text-gray-500">Adresse : <span className="text-black font-bold">{vendor.address}</span></p>
+                <p className="text-gray-500">N° SIRET : <span className="text-black font-bold">{PH(vendor.siret, "Non encore immatriculé — IMAT en cours")}</span></p>
                 <p className="text-gray-500">Email : <span className="text-black font-bold">{vendor.email}</span></p>
                 <p className="text-gray-500">Téléphone : <span className="text-black font-bold">{vendor.phone}</span></p>
               </div>
@@ -616,21 +656,30 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Le Bénéficiaire</h3>
               <div className="text-sm space-y-2">
                 <p className="text-orange-900">Établissement : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.name || "..."}</span></p>
-                <p className="text-orange-900">Chef / gérant : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.managerName || "..."}</span></p>
+                <p className="text-orange-900">Représentant : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.managerName || "..."}</span></p>
                 <p className="text-orange-900">Adresse : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.address || "..."}</span></p>
                 <p className="text-orange-900">SIRET : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.siret || "..."}</span></p>
+                <p className="text-orange-900">Email : <span className="font-bold bg-white px-1.5 py-0.5 rounded border border-orange-200">{clientData.email || "..."}</span></p>
               </div>
             </div>
           </div>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 1 — Objet de la prestation</h2>
-          <p className="text-sm mb-4 leading-relaxed whitespace-pre-line">{prestation.description}</p>
+          <p className="text-xs text-gray-600 mb-6 italic">Ci-après désignés ensemble « les Parties ». Il a été convenu ce qui suit :</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 2 — Délai de livraison</h2>
-          <p className="text-sm mb-4 leading-relaxed">{prestation.delaiLivraison}</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 1 — Objet de la prestation</h2>
+          <p className="text-sm mb-3 leading-relaxed whitespace-pre-line">{prestation.description}</p>
+          <p className="text-sm mb-3 leading-relaxed">Cette prestation comprend l'accès à la plateforme Ma Table et à l'ensemble de ses modules : Avis Google, QR Commande, Portail Serveur, Cuisine Live, Caisse, Nova IA, Stock IA, Réservations. L'accompagnement technique (formation, mise en service, support) est inclus.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 3 — Rémunération</h2>
-          <table className="w-full text-sm mb-6 border-collapse">
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Durée & reconduction</h2>
+          <p className="text-sm mb-3 leading-relaxed">
+            La prestation est fournie <b>mois par mois, sans engagement de durée</b>. Elle se renouvelle
+            tacitement à chaque période mensuelle, sauf préavis de <b>15 jours</b> notifié par email avant
+            la fin de la période en cours. Aucune indemnité de résiliation n'est due.
+          </p>
+          <p className="text-sm mb-3 leading-relaxed">Délai de mise en service : <b>{prestation.delaiLivraison}</b>.</p>
+
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 3 — Rémunération</h2>
+          <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-black text-white text-left text-xs uppercase tracking-wider">
                 <th className="p-3">Désignation</th>
@@ -639,46 +688,64 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </thead>
             <tbody>
               <tr className="border-b">
-                <td className="p-3"><b>Prestation forfaitaire</b></td>
+                <td className="p-3"><b>Prestation mensuelle — Plan complet MaTable</b><br/><span className="text-xs text-gray-500">Tous modules + accompagnement inclus</span></td>
                 <td className="p-3 text-right">{prestation.montantHT.toFixed(2)} €</td>
               </tr>
               <tr className="bg-gray-50 font-black">
-                <td className="p-3">TOTAL HT</td>
+                <td className="p-3">TOTAL HT / mois</td>
                 <td className="p-3 text-right text-orange-500">{prestation.montantHT.toFixed(2)} €</td>
               </tr>
             </tbody>
           </table>
-          <p className="text-xs text-gray-500 italic mb-4">Modalités : {prestation.modalites}</p>
-          <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI.</p>
+          <p className="text-xs text-gray-500 italic mb-2"><b>Modalités :</b> {prestation.modalites}</p>
+          <p className="text-xs text-gray-500 italic mb-3">TVA non applicable — le Prestataire agissant en qualité de personne physique non assujettie à la TVA dans le cadre de cette prestation transitoire (art. 293B du CGI applicable à l'immatriculation future).</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 4 — Propriété intellectuelle</h2>
-          <p className="text-sm mb-4 leading-relaxed">Les livrables réalisés dans le cadre de la présente prestation deviennent la propriété du Bénéficiaire à compter du paiement intégral du prix convenu.</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 — Limite raisonnable d'utilisation de l'IA</h2>
+          <p className="text-sm mb-3 leading-relaxed">
+            L'accès aux fonctionnalités IA (Nova IA, Magic Scan, descriptions, chatbot, finance assistée) est
+            fourni dans la limite d'un <b>usage professionnel raisonnable</b>. Au-delà d'un seuil correspondant
+            à <b>deux fois la moyenne d'utilisation</b> constatée chez les clients comparables, le service IA pourra être
+            <b> temporairement restreint</b>. Une extension de quota est possible sur devis préalable auprès du Prestataire.
+          </p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 5 — Obligations du Bénéficiaire</h2>
-          <p className="text-sm mb-3 leading-relaxed">Le Bénéficiaire s'engage à fournir au Prestataire tous les éléments, accès et informations nécessaires à la bonne exécution de la prestation, dans les délais convenus. Tout retard dans la fourniture de ces éléments décale d'autant le délai de livraison.</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 5 — Propriété intellectuelle</h2>
+          <p className="text-sm mb-3 leading-relaxed">La plateforme Ma Table et ses composants restent la propriété exclusive du Prestataire. Le Bénéficiaire ne dispose que d'un droit d'usage temporaire pendant la durée de la prestation. Les <b>données saisies par le Bénéficiaire</b> (menu, clients, avis, commandes) restent sa pleine propriété.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 6 — Données personnelles (RGPD)</h2>
-          <p className="text-sm mb-3 leading-relaxed">Si la prestation implique le traitement de données personnelles, le Prestataire agira en tant que sous-traitant au sens de l'art. 28 du RGPD. Les données sont traitées exclusivement aux fins de la prestation, hébergées dans l'UE, et restituées ou détruites à son terme.</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 6 — Obligations du Bénéficiaire</h2>
+          <p className="text-sm mb-3 leading-relaxed">Le Bénéficiaire fournit tous les éléments nécessaires à la mise en service (menu, photos, coordonnées Google Business, etc.). Il conserve la confidentialité de ses identifiants et codes PIN. Il s'engage à un usage conforme à l'objet de la prestation.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 7 — Force majeure</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 7 — Données personnelles (RGPD)</h2>
+          <p className="text-sm mb-3 leading-relaxed">Le Prestataire agit en qualité de sous-traitant au sens de l'art. 28 du RGPD pour les données personnelles confiées par le Bénéficiaire. Les données sont hébergées dans l'Union Européenne (Railway, région Frankfurt) et chiffrées. À la fin de la prestation, elles sont restituées au Bénéficiaire ou détruites sur demande sous 30 jours.</p>
+
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 8 — Force majeure</h2>
           <p className="text-sm mb-3 leading-relaxed">Aucune Partie ne saurait être tenue responsable d'un manquement résultant d'un cas de force majeure au sens de l'art. 1218 du Code civil.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 8 — Résiliation</h2>
-          <p className="text-sm mb-3 leading-relaxed">En cas de manquement grave de l'une des Parties, le Contrat pourra être résilié de plein droit, 15 jours après mise en demeure restée infructueuse. Les sommes déjà versées restent acquises au Prestataire à concurrence du travail effectivement réalisé.</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 9 — Résiliation</h2>
+          <p className="text-sm mb-3 leading-relaxed">Outre la résiliation pour convenance (art. 2 — préavis 15 jours), chaque Partie peut résilier à effet immédiat en cas de manquement grave de l'autre, 15 jours après mise en demeure restée infructueuse. Les sommes déjà versées restent acquises au Prestataire à concurrence des prestations effectivement réalisées.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Article 9 — Loi applicable & juridiction</h2>
-          <p className="text-sm mb-6 leading-relaxed">Le présent Contrat est soumis au droit français. Tout différend non résolu à l'amiable dans un délai de 30 jours sera porté devant les tribunaux compétents du ressort du siège social du Prestataire.</p>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 10 — Transition vers un Contrat d'Abonnement</h2>
+          <p className="text-sm mb-3 leading-relaxed">
+            Dès l'<b>immatriculation effective</b> de la société du Prestataire (obtention du numéro SIRET),
+            les Parties conviennent de signer un <b>Contrat d'Abonnement</b> standard au nom de ladite société,
+            qui remplacera et complétera le présent contrat. Les sommes déjà versées au titre des présentes
+            seront, le cas échéant, imputées sur la première mensualité du nouvel abonnement.
+            Le Bénéficiaire reste libre, à ce moment, de ne pas souscrire au Contrat d'Abonnement
+            (sans pénalité), auquel cas la prestation prend fin à la fin de la période mensuelle en cours.
+          </p>
+
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 11 — Loi applicable & juridiction</h2>
+          <p className="text-sm mb-6 leading-relaxed">Le présent Contrat est soumis au droit français. Tout différend non résolu à l'amiable dans un délai de 30 jours sera porté devant les tribunaux compétents du domicile du Prestataire (personne physique).</p>
 
           <div className="grid grid-cols-2 gap-8 mt-12">
             <div className="border rounded-xl p-4">
               <h3 className="text-xs uppercase tracking-widest text-gray-400 font-black mb-2">Le Prestataire</h3>
-              <p className="text-xs text-gray-500 mb-2">Précédé de « lu et approuvé »</p>
+              <p className="text-xs text-gray-500 mb-2">Précédé de la mention manuscrite « lu et approuvé »</p>
               <div className="border-b h-14 mb-2"></div>
-              <p className="text-xs text-gray-500">{vendor.representant} — Date : {docMeta.date}</p>
+              <p className="text-xs text-gray-500">{vendor.representant} — Personne physique<br/>Date : {docMeta.date}</p>
             </div>
             <div className="border border-orange-200 bg-orange-50/50 rounded-xl p-4">
               <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Le Bénéficiaire</h3>
-              <p className="text-xs text-orange-700 mb-2">Précédé de « lu et approuvé »</p>
+              <p className="text-xs text-orange-700 mb-2">Précédé de la mention manuscrite « lu et approuvé »</p>
               <div className="border-b border-orange-200 h-14 mb-2"></div>
               <p className="text-xs text-orange-900"><span className="font-bold bg-white px-1 rounded">{clientData.managerName || "..."}</span> — Date : {docMeta.date}</p>
             </div>

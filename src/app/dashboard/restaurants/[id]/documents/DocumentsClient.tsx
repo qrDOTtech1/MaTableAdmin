@@ -61,12 +61,12 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     periode: `01/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1} — ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1}`,
   });
 
-  // Pour le contrat de prestation : description libre + montant
+  // Contrat de prestation transitoire (avant IMAT société) — mensuel sans engagement
   const [prestation, setPrestation] = useState({
-    description: "Mise en place et accompagnement de la plateforme Ma Table",
-    montantHT: 1500,
-    modalites: "50% à la signature, 50% à la livraison",
-    delaiLivraison: "30 jours après signature",
+    description: "Mise à disposition mensuelle de la plateforme Ma Table (tous modules) et accompagnement à l'usage. Prestation transitoire conclue en attendant l'immatriculation de la société du Prestataire.",
+    montantHT: 79,
+    modalites: "Paiement mensuel à terme à échoir par virement bancaire ou espèces, le 1er de chaque mois.",
+    delaiLivraison: "Mise en service sous 7 jours après signature et premier paiement.",
   });
 
   const [saving, setSaving] = useState(false);
