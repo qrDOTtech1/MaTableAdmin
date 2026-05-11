@@ -5,13 +5,46 @@ import ArchiveControlsClient from "./ArchiveControlsClient";
 export const dynamic = "force-dynamic";
 
 export default async function GlobalDocumentsPage() {
-  const docs = await prisma.generatedDocument.findMany({
-    include: { restaurant: { select: { id: true, name: true, slug: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-  });
+  // Garde anti-crash : si les tables n'ont pas encore été créées en DB
+  // (migration non appliquée), on affiche une page utile au lieu d'un 500.
+  let docs: any[] = [];
+  let cfg: any = null;
+  let migrationPending = false;
+  try {
+    docs = await prisma.generatedDocument.findMany({
+      include: { restaurant: { select: { id: true, name: true, slug: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 500,
+    });
+    cfg = await prisma.adminConfig.findUnique({ where: { id: "default" } });
+  } catch (e: any) {
+    if (e?.code === "P2021") {
+      migrationPending = true;
+    } else {
+      throw e;
+    }
+  }
 
-  const cfg = await prisma.adminConfig.findUnique({ where: { id: "default" } });
+  if (migrationPending) {
+    return (
+      <div className="p-6 max-w-2xl">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 text-amber-200">
+          <h1 className="text-xl font-bold mb-2">⚠ Migration DB en attente</h1>
+          <p className="text-sm mb-4">
+            Les tables <code className="text-amber-400">GeneratedDocument</code> et
+            <code className="text-amber-400"> AdminConfig</code> n'existent pas encore en base.
+          </p>
+          <p className="text-sm mb-2">Appliquer le SQL fourni :</p>
+          <pre className="bg-black/40 p-3 rounded-lg text-xs font-mono text-amber-100 overflow-x-auto">
+{`psql $DATABASE_URL -f prisma/migrations/add_documents_and_config.sql`}
+          </pre>
+          <p className="text-xs text-amber-300 mt-3 italic">
+            (ou copier-coller le fichier SQL dans la console DB Railway / Neon / Supabase).
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

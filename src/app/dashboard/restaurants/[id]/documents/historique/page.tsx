@@ -18,11 +18,29 @@ export default async function RestaurantClasseurPage({
   });
   if (!restaurant) return notFound();
 
-  const docs = await prisma.generatedDocument.findMany({
-    where: { restaurantId: id },
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
+  let docs: any[] = [];
+  let migrationPending = false;
+  try {
+    docs = await prisma.generatedDocument.findMany({
+      where: { restaurantId: id },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+    });
+  } catch (e: any) {
+    if (e?.code === "P2021") migrationPending = true;
+    else throw e;
+  }
+
+  if (migrationPending) {
+    return (
+      <div className="p-6 max-w-2xl">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6 text-amber-200">
+          <h1 className="text-xl font-bold mb-2">⚠ Migration DB en attente</h1>
+          <p className="text-sm">Appliquez d'abord <code>prisma/migrations/add_documents_and_config.sql</code> sur la base.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
