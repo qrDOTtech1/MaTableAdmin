@@ -417,7 +417,8 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <li>TVA intracom. : {vendor.tvaIntracom || "Non assujetti (art. 293B du CGI)"}</li>
             <li>Email : {vendor.email} · Téléphone : {vendor.phone}</li>
             <li>Directeur de la publication : {vendor.representant}</li>
-            <li>Hébergeur : Vercel Inc. (États-Unis) et Railway Corporation (États-Unis) — bases de données hébergées dans l'Union Européenne</li>
+            <li>Hébergeur : Railway Corp., 251 Little Falls Drive, Wilmington, DE 19808, États-Unis — infrastructure et base de données déployées sur la région européenne (Frankfurt, Allemagne)</li>
+            <li>Code source versionné sur GitHub Inc. (Microsoft Corp.) — accès restreint</li>
           </ul>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Objet</h2>

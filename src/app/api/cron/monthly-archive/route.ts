@@ -5,14 +5,23 @@
  * le mois écoulé, à l'adresse configurée dans AdminConfig.
  *
  * Auth :
- *   - GET : autorisé si User-Agent contient "vercel-cron" (Vercel l'injecte
- *           automatiquement pour les requêtes de cron) OU si session admin.
- *           → Pas de variable d'env à créer.
- *   - POST : session admin obligatoire (utilisé par le bouton "Envoyer maintenant")
+ *   - GET : autorisé si User-Agent contient un mot-clé "cron" reconnu
+ *           (railway-cron, vercel-cron, cron-job.org, easycron, github-actions)
+ *           OU si session admin. Pas de variable d'env à créer.
+ *   - POST : session admin obligatoire (bouton "Envoyer maintenant").
  *
- * Déclenchement :
- *   - Vercel Cron (voir vercel.json) → GET, schedule "0 9 1 * *"
- *   - Bouton "Envoyer maintenant" depuis le dashboard → POST
+ * Mise en place du déclenchement automatique (au choix) :
+ *   1. cron-job.org (gratuit, 1 min à configurer) → créer un job mensuel
+ *      qui ping GET https://<votre-domaine>/api/cron/monthly-archive
+ *   2. Railway : créer un service séparé "monthly-archive-cron" avec
+ *      cronSchedule "0 9 1 * *" et startCommand
+ *      `curl -fsSL https://<votre-domaine>/api/cron/monthly-archive
+ *       -H "User-Agent: railway-cron"`
+ *   3. GitHub Actions : .github/workflows/monthly-archive.yml avec
+ *      schedule cron + curl
+ *
+ * Sinon : utiliser le bouton "Envoyer maintenant" depuis /dashboard/documents
+ * une fois par mois.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
@@ -22,12 +31,18 @@ import { Resend } from "resend";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+const ALLOWED_CRON_AGENTS = [
+  "railway-cron",
+  "vercel-cron",
+  "cron-job.org",
+  "easycron",
+  "github-actions",
+];
+
 function isAuthorized(req: NextRequest, session: any): boolean {
   if (session) return true;
-  // Vercel Cron injecte automatiquement ce User-Agent — pas besoin de secret
-  const ua = req.headers.get("user-agent") ?? "";
-  if (ua.toLowerCase().includes("vercel-cron")) return true;
-  return false;
+  const ua = (req.headers.get("user-agent") ?? "").toLowerCase();
+  return ALLOWED_CRON_AGENTS.some((agent) => ua.includes(agent));
 }
 
 function monthKey(d: Date): string {
