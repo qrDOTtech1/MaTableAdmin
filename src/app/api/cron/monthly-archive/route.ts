@@ -4,15 +4,15 @@
  * Envoie par email un récapitulatif HTML de tous les documents générés
  * le mois écoulé, à l'adresse configurée dans AdminConfig.
  *
- * Sécurisé par un header `Authorization: Bearer ${CRON_SECRET}` (Vercel Cron
- * envoie ce header automatiquement quand CRON_SECRET est défini dans l'env).
- *
- * On peut aussi le déclencher manuellement depuis le dashboard (bouton
- * "Envoyer maintenant") via la route POST sans auth Bearer (session admin OK).
+ * Auth :
+ *   - GET : autorisé si User-Agent contient "vercel-cron" (Vercel l'injecte
+ *           automatiquement pour les requêtes de cron) OU si session admin.
+ *           → Pas de variable d'env à créer.
+ *   - POST : session admin obligatoire (utilisé par le bouton "Envoyer maintenant")
  *
  * Déclenchement :
- *   - Vercel Cron (voir vercel.json) → GET avec Bearer
- *   - Bouton "Envoyer maintenant" depuis le dashboard → POST avec session admin
+ *   - Vercel Cron (voir vercel.json) → GET, schedule "0 9 1 * *"
+ *   - Bouton "Envoyer maintenant" depuis le dashboard → POST
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
@@ -24,10 +24,10 @@ export const maxDuration = 60;
 
 function isAuthorized(req: NextRequest, session: any): boolean {
   if (session) return true;
-  const auth = req.headers.get("authorization") ?? "";
-  const expected = process.env.CRON_SECRET;
-  if (!expected) return false;
-  return auth === `Bearer ${expected}`;
+  // Vercel Cron injecte automatiquement ce User-Agent — pas besoin de secret
+  const ua = req.headers.get("user-agent") ?? "";
+  if (ua.toLowerCase().includes("vercel-cron")) return true;
+  return false;
 }
 
 function monthKey(d: Date): string {
