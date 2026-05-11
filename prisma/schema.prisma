@@ -10,50 +10,51 @@ datasource db {
 }
 
 model Restaurant {
-  id                      String   @id @default(uuid())
-  slug                    String?  @unique
-  name                    String
-  description             String?
-  address                 String?
-  city                    String?
-  postalCode              String?
-  country                 String?  @default("FR")
-  phone                   String?
-  email                   String?
-  website                 String?
-  coverImageId            String?  @unique
-  logoId                  String?  @unique
-  acceptReservations      Boolean  @default(false)
-  depositPerGuestCents    Int      @default(0)
-  avgPrepMinutes          Int      @default(90)
-  reservationLeadMinutes  Int      @default(60)
-  reservationSlotMinutes  Int      @default(30)
-  reservationPolicy       String?
-  tipsEnabled             Boolean  @default(true)
-  serviceCallEnabled      Boolean  @default(true)
-  reviewsEnabled          Boolean  @default(true)
+  id                     String           @id @default(uuid())
+  slug                   String?          @unique
+  name                   String
+  description            String?
+  address                String?
+  city                   String?
+  postalCode             String?
+  country                String?          @default("FR")
+  phone                  String?
+  email                  String?
+  website                String?
+  coverImageId           String?          @unique
+  logoId                 String?          @unique
+  acceptReservations     Boolean          @default(false)
+  depositPerGuestCents   Int              @default(0)
+  avgPrepMinutes         Int              @default(90)
+  reservationLeadMinutes Int              @default(60)
+  reservationSlotMinutes Int              @default(30)
+  reservationPolicy      String?
+  tipsEnabled            Boolean          @default(true)
+  serviceCallEnabled     Boolean          @default(true)
+  reviewsEnabled         Boolean          @default(true)
   // NovaTech IA Subscription
-  subscription            SubscriptionPlan @default(STARTER)
-  ollamaApiKey            String?  // Clé API ollama.com (Bearer token)
-  ollamaLangModel         String?  @default("gpt-oss:120b")       // Modèle langage (chatbot, descriptions, planning)
-  ollamaVisionModel       String?  @default("llama3.2-vision:11b") // Modèle vision (Magic Scan)
-  subscriptionStartedAt   DateTime?
-  subscriptionExpiresAt   DateTime?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @default(now()) @updatedAt
+  subscription           SubscriptionPlan @default(STARTER)
+  ollamaApiKey           String? // Clé API ollama.com (Bearer token)
+  ollamaLangModel        String?          @default("gpt-oss:120b") // Modèle langage (chatbot, descriptions, planning)
+  ollamaVisionModel      String?          @default("llama3.2-vision:11b") // Modèle vision (Magic Scan)
+  subscriptionStartedAt  DateTime?
+  subscriptionExpiresAt  DateTime?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @default(now()) @updatedAt
 
-  users          User[]
-  tables         Table[]
-  menuItems      MenuItem[]
-  servers        Server[]
-  openingHours   OpeningHour[]
-  reservations   Reservation[]
-  serviceCalls   ServiceCall[]
-  dishReviews    DishReview[]
-  serverReviews  ServerReview[]
-  stockMovements StockMovement[]
-  media          Media[]
-  testimonial    Testimonial?
+  users              User[]
+  tables             Table[]
+  menuItems          MenuItem[]
+  servers            Server[]
+  openingHours       OpeningHour[]
+  reservations       Reservation[]
+  serviceCalls       ServiceCall[]
+  dishReviews        DishReview[]
+  serverReviews      ServerReview[]
+  stockMovements     StockMovement[]
+  media              Media[]
+  testimonial        Testimonial?
+  generatedDocuments GeneratedDocument[]
 
   @@index([slug])
 }
@@ -61,9 +62,9 @@ model Restaurant {
 model User {
   id           String      @id @default(uuid())
   email        String      @unique
-  passwordHash String?     // nullable: shared DB with RSMATABLE (social users have no passwordHash)
+  passwordHash String? // nullable: shared DB with RSMATABLE (social users have no passwordHash)
   restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  restaurantId String?     // nullable: social users are not tied to a restaurant
+  restaurantId String? // nullable: social users are not tied to a restaurant
   createdAt    DateTime    @default(now())
 
   @@index([restaurantId])
@@ -87,17 +88,17 @@ model Table {
 }
 
 model TableSession {
-  id              String       @id @default(uuid())
-  table           Table        @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  id              String        @id @default(uuid())
+  table           Table         @relation(fields: [tableId], references: [id], onDelete: Cascade)
   tableId         String
-  active          Boolean      @default(true)
-  createdAt       DateTime     @default(now())
+  active          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
   closedAt        DateTime?
   billRequestedAt DateTime?
   billPaymentMode PaymentMode?
-  tipCents        Int          @default(0)
+  tipCents        Int           @default(0)
   serverId        String?
-  server          Server?      @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  server          Server?       @relation(fields: [serverId], references: [id], onDelete: SetNull)
   orders          Order[]
   serviceCalls    ServiceCall[]
 
@@ -131,23 +132,23 @@ model Order {
 }
 
 model MenuItem {
-  id                String    @id @default(uuid())
+  id                String     @id @default(uuid())
   restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId      String
   name              String
   description       String?
   priceCents        Int
   imageUrl          String?
-  available         Boolean   @default(true)
+  available         Boolean    @default(true)
   category          String?
-  position          Int       @default(0)
-  stockEnabled      Boolean   @default(false)
+  position          Int        @default(0)
+  stockEnabled      Boolean    @default(false)
   stockQty          Int?
-  lowStockThreshold Int?      @default(5)
+  lowStockThreshold Int?       @default(5)
   allergens         Allergen[] @default([])
   diets             Diet[]     @default([])
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @default(now()) @updatedAt
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @default(now()) @updatedAt
 
   modifierGroups ModifierGroup[]
   dishReviews    DishReview[]
@@ -171,24 +172,24 @@ model ModifierGroup {
 }
 
 model ModifierOption {
-  id             String        @id @default(uuid())
-  group          ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId        String
-  name           String
-  priceDeltaCents Int          @default(0)
-  position       Int           @default(0)
-  available      Boolean       @default(true)
+  id              String        @id @default(uuid())
+  group           ModifierGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId         String
+  name            String
+  priceDeltaCents Int           @default(0)
+  position        Int           @default(0)
+  available       Boolean       @default(true)
 
   @@index([groupId])
 }
 
 model Server {
-  id           String     @id @default(uuid())
+  id           String            @id @default(uuid())
   name         String
   photoUrl     String?
-  active       Boolean    @default(true)
-  pin          String?    // 4-digit PIN for server portal login
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  active       Boolean           @default(true)
+  pin          String? // 4-digit PIN for server portal login
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId String
   schedules    ServerSchedule[]
   sessions     TableSession[]
@@ -196,7 +197,7 @@ model Server {
   reviews      ServerReview[]
   notes        ServerNote[]
   challenges   ServerChallenge[]
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime          @default(now())
 
   @@index([restaurantId, active])
 }
@@ -213,20 +214,20 @@ model ServerNote {
 }
 
 model ServerChallenge {
-  id        String   @id @default(uuid())
-  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid())
+  server    Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
   serverId  String
   title     String
-  done      Boolean  @default(false)
+  done      Boolean   @default(false)
   dueDate   DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([serverId])
 }
 
 model ServerSchedule {
-  id        String   @id @default(uuid())
-  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  id        String @id @default(uuid())
+  server    Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
   serverId  String
   dayOfWeek Int
   openMin   Int
@@ -409,9 +410,9 @@ enum Diet {
 }
 
 enum SubscriptionPlan {
-  STARTER   // 49,99€/mois — 30 tables, fonctions de base
-  PRO       // 139,99€/mois — tables illimitées, analytics, export Z
-  PRO_IA    // 299€/mois — tout PRO + NovaTech IA (Magic Scan, Chatbot, Planning IA)
+  STARTER // 49,99€/mois — 30 tables, fonctions de base
+  PRO // 139,99€/mois — tables illimitées, analytics, export Z
+  PRO_IA // 299€/mois — tout PRO + NovaTech IA (Magic Scan, Chatbot, Planning IA)
 }
 
 // ---------------------------------------------------------------------------
@@ -454,4 +455,42 @@ model ReceivedEmail {
 
   @@index([to])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Documents générés (classeur virtuel)
+// ---------------------------------------------------------------------------
+model GeneratedDocument {
+  id              String     @id @default(uuid())
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId    String
+  type            String // 'contrat' | 'prestation' | 'devis' | 'facture' | 'cgvu' | 'onboarding' | 'tarification'
+  number          String // ex. "CONT-2026-042"
+  title           String // libellé lisible "Contrat — Le Bistrot du Coin"
+  totalCents      Int        @default(0) // 0 si non applicable (cgvu, onboarding, tarification)
+  vendor          Json // snapshot prestataire au moment de la génération
+  client          Json // snapshot client
+  data            Json // tout l'état du formulaire (engagement, prestation, docMeta, ...)
+  pdfUrl          String? // URL S3/CDN — optionnel, on stocke d'abord les données seules
+  signedAt        DateTime? // si le doc est signé physiquement
+  createdAt       DateTime   @default(now())
+  createdBy       String? // username admin
+  archivedInMonth String? // "2026-04" — set quand le doc a été inclus dans un envoi archive mensuel
+
+  @@index([restaurantId, createdAt])
+  @@index([type, createdAt])
+  @@index([createdAt])
+  @@index([archivedInMonth])
+}
+
+// ---------------------------------------------------------------------------
+// Configuration admin globale (singleton)
+// ---------------------------------------------------------------------------
+model AdminConfig {
+  id                String    @id @default("default")
+  archiveRecipient  String? // email destinataire des archives mensuelles
+  archiveEnabled    Boolean   @default(false)
+  archiveDayOfMonth Int       @default(1) // jour du mois pour l'envoi
+  lastArchiveSentAt DateTime?
+  updatedAt         DateTime  @updatedAt
 }

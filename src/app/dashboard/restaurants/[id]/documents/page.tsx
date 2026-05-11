@@ -38,9 +38,15 @@ export default async function RestaurantDocumentsPage({
           <h1 className="text-2xl font-bold">Documents contractuels</h1>
           <p className="text-gray-500">Gérer les devis, contrats et factures pour {restaurant.name}</p>
         </div>
+        <a
+          href={`/dashboard/restaurants/${id}/documents/historique`}
+          className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-100 rounded-lg text-sm font-semibold border border-slate-700 transition-colors"
+        >
+          📂 Classeur ({restaurant.name})
+        </a>
       </div>
 
-      <DocumentsClient restaurant={defaultRestaurantData} />
+      <DocumentsClient restaurantId={id} restaurant={defaultRestaurantData} />
     </div>
   );
 }
