@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Doc = {
   id: string;
@@ -47,9 +48,12 @@ export default function DocumentsListClient({
   documents: Doc[];
   hideRestaurantColumn?: boolean;
 }) {
+  const router = useRouter();
   const [docs, setDocs] = useState(documents);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<"list" | "folders">(hideRestaurantColumn ? "list" : "folders");
+  const [openClients, setOpenClients] = useState<Record<string, boolean>>({});
 
   const filtered = useMemo(() => {
     return docs.filter((d) => {
@@ -62,6 +66,21 @@ export default function DocumentsListClient({
       return true;
     });
   }, [docs, filter, search]);
+
+  // Groupement par client (pour la vue "Dossiers")
+  const byClient = useMemo(() => {
+    const groups = new Map<string, { name: string; docs: Doc[]; total: number }>();
+    for (const d of filtered) {
+      const key = d.restaurantId || "_orphan";
+      if (!groups.has(key)) groups.set(key, { name: d.restaurantName || "—", docs: [], total: 0 });
+      const g = groups.get(key)!;
+      g.docs.push(d);
+      g.total += d.totalCents;
+    }
+    return Array.from(groups.entries())
+      .map(([id, g]) => ({ id, ...g }))
+      .sort((a, b) => b.total - a.total);
+  }, [filtered]);
 
   const totals = useMemo(() => {
     const sum = filtered.reduce((acc, d) => acc + d.totalCents, 0);
@@ -89,7 +108,7 @@ export default function DocumentsListClient({
 
   return (
     <div className="space-y-4">
-      {/* Filtres */}
+      {/* Filtres + toggle vue */}
       <div className="flex gap-3 flex-wrap items-center bg-slate-900 p-4 rounded-xl border border-slate-800">
         <input
           type="text"
@@ -108,13 +127,118 @@ export default function DocumentsListClient({
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
+        {!hideRestaurantColumn && (
+          <div className="flex bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+            <button
+              onClick={() => setView("folders")}
+              className={`px-3 py-2 text-xs font-semibold transition-colors ${view === "folders" ? "bg-orange-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              📁 Dossiers
+            </button>
+            <button
+              onClick={() => setView("list")}
+              className={`px-3 py-2 text-xs font-semibold transition-colors ${view === "list" ? "bg-orange-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              ☰ Liste
+            </button>
+          </div>
+        )}
         <div className="text-xs text-slate-500">
           <b className="text-slate-300">{totals.count}</b> doc{totals.count > 1 ? "s" : ""} ·
           Total HT : <b className="text-orange-400">{euros(totals.sum)}</b>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Vue Dossiers : un dossier par client */}
+      {view === "folders" && !hideRestaurantColumn && (
+        <div className="space-y-3">
+          {byClient.length === 0 ? (
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center text-slate-500">
+              Aucun document. Créez-en un depuis la fiche d'un restaurant.
+            </div>
+          ) : byClient.map((group) => {
+            const open = !!openClients[group.id];
+            return (
+              <div key={group.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenClients((s) => ({ ...s, [group.id]: !s[group.id] }))}
+                  className="w-full flex items-center justify-between p-4 hover:bg-slate-800/50 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{open ? "📂" : "📁"}</span>
+                    <div>
+                      <div className="font-bold text-slate-100">{group.name}</div>
+                      <div className="text-xs text-slate-500">
+                        {group.docs.length} document{group.docs.length > 1 ? "s" : ""} ·
+                        Total HT : <b className="text-orange-400">{euros(group.total)}</b>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/dashboard/restaurants/${group.id}/documents`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-xs px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 rounded-lg font-semibold"
+                    >
+                      + Nouveau
+                    </Link>
+                    <span className="text-slate-500">{open ? "▾" : "▸"}</span>
+                  </div>
+                </button>
+                {open && (
+                  <div className="border-t border-slate-800">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-800/30 text-slate-400 text-xs uppercase tracking-wider">
+                        <tr>
+                          <th className="px-4 py-2 text-left">N°</th>
+                          <th className="px-4 py-2 text-left">Type</th>
+                          <th className="px-4 py-2 text-left">Titre</th>
+                          <th className="px-4 py-2 text-right">Montant HT</th>
+                          <th className="px-4 py-2 text-left">Date</th>
+                          <th className="px-4 py-2 text-center">Signé</th>
+                          <th className="px-4 py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.docs.map((d) => (
+                          <tr
+                            key={d.id}
+                            onClick={() => router.push(`/dashboard/documents/${d.id}`)}
+                            className="border-t border-slate-800 hover:bg-slate-800/50 cursor-pointer"
+                          >
+                            <td className="px-4 py-2.5 font-mono text-slate-300">{d.number}</td>
+                            <td className="px-4 py-2.5">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold border ${TYPE_COLORS[d.type] ?? ""}`}>
+                                {TYPE_LABELS[d.type] ?? d.type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-slate-300 max-w-md truncate">{d.title}</td>
+                            <td className="px-4 py-2.5 text-right text-slate-200 font-semibold">
+                              {d.totalCents > 0 ? euros(d.totalCents) : "—"}
+                            </td>
+                            <td className="px-4 py-2.5 text-slate-400 text-xs">
+                              {new Date(d.createdAt).toLocaleDateString("fr-FR")}
+                            </td>
+                            <td className="px-4 py-2.5 text-center">
+                              {d.signedAt ? <span className="text-emerald-400">✓</span> : <span className="text-slate-600">○</span>}
+                            </td>
+                            <td className="px-4 py-2.5 text-right text-xs text-orange-400 hover:text-orange-300">
+                              Ouvrir →
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Table — vue Liste plate */}
+      {(view === "list" || hideRestaurantColumn) && (
       <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase tracking-wider">
@@ -134,7 +258,11 @@ export default function DocumentsListClient({
             {filtered.length === 0 ? (
               <tr><td colSpan={9} className="px-4 py-12 text-center text-slate-500">Aucun document.</td></tr>
             ) : filtered.map((d) => (
-              <tr key={d.id} className="border-t border-slate-800 hover:bg-slate-800/30">
+              <tr
+                key={d.id}
+                onClick={() => router.push(`/dashboard/documents/${d.id}`)}
+                className="border-t border-slate-800 hover:bg-slate-800/50 cursor-pointer"
+              >
                 <td className="px-4 py-3 font-mono text-slate-300">{d.number}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-1 rounded text-xs font-semibold border ${TYPE_COLORS[d.type] ?? ""}`}>
@@ -143,7 +271,11 @@ export default function DocumentsListClient({
                 </td>
                 {!hideRestaurantColumn && (
                   <td className="px-4 py-3 text-slate-200">
-                    <Link href={`/dashboard/restaurants/${d.restaurantId}`} className="hover:text-orange-400">
+                    <Link
+                      href={`/dashboard/restaurants/${d.restaurantId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-orange-400"
+                    >
                       {d.restaurantName}
                     </Link>
                   </td>
@@ -157,7 +289,7 @@ export default function DocumentsListClient({
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button
-                    onClick={() => toggleSigned(d)}
+                    onClick={(e) => { e.stopPropagation(); toggleSigned(d); }}
                     className={`text-lg ${d.signedAt ? "text-emerald-400" : "text-slate-600 hover:text-slate-400"}`}
                     title={d.signedAt ? `Signé le ${new Date(d.signedAt).toLocaleDateString("fr-FR")}` : "Marquer comme signé"}
                   >
@@ -169,7 +301,7 @@ export default function DocumentsListClient({
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
-                    onClick={() => handleDelete(d.id)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(d.id); }}
                     className="text-red-400 hover:text-red-300 text-xs"
                   >
                     Supprimer
@@ -180,6 +312,7 @@ export default function DocumentsListClient({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }
