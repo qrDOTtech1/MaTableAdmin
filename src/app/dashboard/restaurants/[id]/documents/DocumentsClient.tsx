@@ -29,7 +29,7 @@ const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 pl
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
-  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification">("contrat");
+  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "flyer">("contrat");
   const [engagement, setEngagement] = useState<"3m" | "6m" | "9m" | "12m" | "12a">("12m");
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +80,8 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     cgvu: "CGV / CGU",
     onboarding: "Fiche Onboarding",
     tarification: "Fiche Tarification & Suivi",
+    plaquette: "Plaquette commerciale",
+    flyer: "Flyer démo",
   };
 
   const saveToClasseur = async () => {
@@ -153,13 +155,21 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
               onChange={(e) => setDocType(e.target.value as any)}
               className={INPUT_CLS}
             >
-              <option value="contrat">Contrat d'Abonnement</option>
-              <option value="prestation">Contrat de Prestation</option>
-              <option value="devis">Devis</option>
-              <option value="facture">Facture</option>
-              <option value="cgvu">CGV / CGU</option>
-              <option value="onboarding">Fiche Onboarding</option>
-              <option value="tarification">Fiche Tarification & Suivi</option>
+              <optgroup label="📑 Contrats & Facturation">
+                <option value="contrat">Contrat d'Abonnement</option>
+                <option value="prestation">Contrat de Prestation (transitoire)</option>
+                <option value="devis">Devis</option>
+                <option value="facture">Facture</option>
+              </optgroup>
+              <optgroup label="📋 Documents légaux & internes">
+                <option value="cgvu">CGV / CGU</option>
+                <option value="onboarding">Fiche Onboarding</option>
+                <option value="tarification">Fiche Tarification & Suivi</option>
+              </optgroup>
+              <optgroup label="🎯 Commercial (à laisser au prospect)">
+                <option value="plaquette">Plaquette commerciale</option>
+                <option value="flyer">Flyer démo</option>
+              </optgroup>
             </select>
           </div>
 

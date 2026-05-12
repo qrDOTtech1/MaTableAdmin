@@ -25,6 +25,8 @@ const TYPE_LABELS: Record<string, string> = {
   cgvu: "CGV/CGU",
   onboarding: "Onboarding",
   tarification: "Tarification",
+  plaquette: "Plaquette",
+  flyer: "Flyer",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -35,6 +37,8 @@ const TYPE_COLORS: Record<string, string> = {
   cgvu: "bg-slate-500/10 text-slate-400 border-slate-500/30",
   onboarding: "bg-amber-500/10 text-amber-400 border-amber-500/30",
   tarification: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+  plaquette: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30",
+  flyer: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
 };
 
 function euros(cents: number) {
