@@ -126,6 +126,124 @@ export type Vendor = {
 const PH = (v: string | undefined, label: string) =>
   (v && v.trim().length > 0) ? v : `[${label} — à compléter]`;
 
+// ───────────────────────────────────────────────────────────────────────────
+// Carte flyer générique — format A5 paysage (210×148.5 mm)
+// Non personnalisée, prête à imprimer en masse pour distribution.
+// ───────────────────────────────────────────────────────────────────────────
+function FlyerCard({ vendor }: { vendor: Vendor }) {
+  return (
+    <div
+      style={{
+        width: "100%",            // remplit la largeur A4 (210mm)
+        height: "138mm",          // ≈ A5 paysage (148.5) − marges de coupe
+        padding: "8mm 10mm",
+        boxSizing: "border-box",
+        border: "1px solid #fed7aa",
+        borderRadius: "4mm",
+        position: "relative",
+        background: "white",
+        fontFamily: "Arial, sans-serif",
+        color: "#1a1a1a",
+        display: "flex",
+        flexDirection: "row",
+        gap: "8mm",
+      }}
+    >
+      {/* Coin gauche : pitch */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <div>
+          <p style={{ fontSize: "9px", letterSpacing: "3px", color: "#f97316", fontWeight: 900, textTransform: "uppercase", margin: 0 }}>
+            Ma · Table
+          </p>
+          <h1 style={{ fontSize: "26px", fontWeight: 900, lineHeight: 1.05, margin: "6px 0 0 0" }}>
+            Triplez vos avis<br/>Google.<br/>
+            <span style={{ color: "#f97316" }}>Zéro effort.</span>
+          </h1>
+
+          <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "5px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "16px" }}>⭐</span>
+              <span style={{ fontSize: "11px" }}><b>+200 %</b> d'avis Google authentiques</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "16px" }}>⚡</span>
+              <span style={{ fontSize: "11px" }}><b>Commande à table</b> par QR — service +30 %</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "16px" }}>🤖</span>
+              <span style={{ fontSize: "11px" }}><b>Nova IA</b> incluse — menu, descriptions, finance</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "16px" }}>💰</span>
+              <span style={{ fontSize: "11px" }}><b>+15 %</b> de pourboires moyens</span>
+            </div>
+          </div>
+        </div>
+        <p style={{ fontSize: "8px", color: "#9ca3af", fontStyle: "italic", margin: 0 }}>
+          Plateforme tout-en-un · Mise en service sous 7 jours · matable.pro
+        </p>
+      </div>
+
+      {/* Coin droit : prix + CTA */}
+      <div style={{
+        width: "62mm",
+        background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)",
+        border: "2px solid #f97316",
+        borderRadius: "3mm",
+        padding: "8mm 6mm",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        alignItems: "center",
+        textAlign: "center",
+      }}>
+        <div>
+          <p style={{ fontSize: "8px", color: "#9a3412", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 900, margin: 0 }}>Tout inclus à partir de</p>
+          <p style={{ fontSize: "42px", color: "#f97316", fontWeight: 900, lineHeight: 1, margin: "4px 0" }}>79 €</p>
+          <p style={{ fontSize: "10px", color: "#4b5563", margin: 0 }}>HT / mois</p>
+        </div>
+
+        <div style={{ marginTop: "8px" }}>
+          <p style={{ fontSize: "8px", color: "#9a3412", letterSpacing: "1.5px", textTransform: "uppercase", fontWeight: 700, margin: 0 }}>Démo gratuite · 15 min</p>
+          <p style={{ fontSize: "16px", color: "#111827", fontWeight: 900, margin: "4px 0 0 0" }}>📞 {vendor.phone}</p>
+          <p style={{ fontSize: "9px", color: "#f97316", fontWeight: 700, margin: "2px 0 0 0" }}>{vendor.email}</p>
+          <p style={{ fontSize: "8px", color: "#6b7280", fontStyle: "italic", margin: "3px 0 0 0" }}>Demandez {vendor.representant}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Feuille A4 portrait avec 2 flyers + ligne de coupe pointillée
+// L'utilisateur imprime 1 page = obtient 2 flyers à découper.
+// Pour 50 flyers → 25 copies dans le dialog d'impression.
+// ───────────────────────────────────────────────────────────────────────────
+function FlyerSheet({ vendor }: { vendor: Vendor }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0, margin: "-12mm -6mm" }}>
+      <FlyerCard vendor={vendor} />
+      {/* Ligne de coupe — pointillés + ciseau */}
+      <div style={{
+        position: "relative",
+        height: "8mm",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        margin: "2mm 0",
+      }}>
+        <div style={{ flex: 1, borderTop: "1.5px dashed #cbd5e1" }} />
+        <span style={{ padding: "0 6px", fontSize: "10px", color: "#94a3b8" }}>✂  découper</span>
+        <div style={{ flex: 1, borderTop: "1.5px dashed #cbd5e1" }} />
+      </div>
+      <FlyerCard vendor={vendor} />
+      <p style={{ fontSize: "8px", color: "#cbd5e1", fontStyle: "italic", textAlign: "center", marginTop: "6mm" }}>
+        Pour imprimer une stack de 50 flyers : choisir <b>25 copies</b> dans le dialog d'impression. Recto seul.
+      </p>
+    </div>
+  );
+}
+
 export type ClientData = {
   name: string;
   address: string;
@@ -1065,66 +1183,9 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         </div>
       )}
 
-      {/* ===== FLYER DÉMO (court, punchy, format à laisser) ===== */}
+      {/* ===== FLYER DÉMO — A5 paysage générique, 2 par A4 portrait ===== */}
       {docType === "flyer" && (
-        <div>
-          {/* Méga-hero */}
-          <div className="text-center mb-8 mt-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-orange-500 font-black mb-2">Ma Table — Restaurant nouvelle génération</p>
-            <h1 className="text-5xl font-black leading-tight mb-2">
-              +200 % d'avis Google.<br/>
-              <span className="text-orange-500">Zéro effort.</span>
-            </h1>
-            {clientData.name && (
-              <p className="text-sm text-gray-600 mt-3">Préparé pour <b className="text-gray-900">{clientData.name}</b></p>
-            )}
-          </div>
-
-          {/* 3 promesses */}
-          <div className="space-y-3 mb-8">
-            <div className="flex items-start gap-3 border-l-4 border-orange-500 bg-orange-50/40 p-3 rounded-r-lg">
-              <div className="text-3xl">⭐</div>
-              <div>
-                <p className="font-black">Triplez vos avis Google</p>
-                <p className="text-sm text-gray-600">Nova IA récolte les avis à la fin du repas en 30 secondes.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 border-l-4 border-orange-500 bg-orange-50/40 p-3 rounded-r-lg">
-              <div className="text-3xl">⚡</div>
-              <div>
-                <p className="font-black">Servez 30 % plus vite</p>
-                <p className="text-sm text-gray-600">Les clients commandent depuis leur table, sans attendre.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 border-l-4 border-orange-500 bg-orange-50/40 p-3 rounded-r-lg">
-              <div className="text-3xl">💰</div>
-              <div>
-                <p className="font-black">+15 % de pourboires</p>
-                <p className="text-sm text-gray-600">Suggéré automatiquement au paiement digital, sans pression.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Big price */}
-          <div className="text-center my-8">
-            <p className="text-xs uppercase tracking-widest text-gray-500">À partir de</p>
-            <p className="text-6xl font-black text-orange-500">79 €</p>
-            <p className="text-sm text-gray-600">HT / mois — tout inclus</p>
-          </div>
-
-          {/* Big CTA */}
-          <div className="bg-orange-500 text-white rounded-2xl p-6 text-center mt-8">
-            <p className="text-xs uppercase tracking-widest opacity-90 mb-2">Démo gratuite — 15 minutes</p>
-            <p className="text-2xl font-black mb-3">Appelez-nous</p>
-            <p className="text-3xl font-black">{vendor.phone}</p>
-            <p className="text-sm mt-2 opacity-95">{vendor.email}</p>
-            <p className="text-xs italic mt-3 opacity-90">Demandez {vendor.representant}</p>
-          </div>
-
-          <p className="text-xs text-gray-500 italic text-center mt-6">
-            Réf. {docMeta.numero} · {docMeta.date} · matable.pro
-          </p>
-        </div>
+        <FlyerSheet vendor={vendor} />
       )}
 
       </div>{/* /contenu zIndex 1 */}
