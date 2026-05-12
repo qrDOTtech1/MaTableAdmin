@@ -29,6 +29,7 @@ const TYPE_LABELS: Record<string, string> = {
   "plaquette-eco": "Plaq. éco",
   "plaquette-premium": "Plaq. premium",
   "plaquette-compact": "Plaq. A5",
+  "plaquette-chaine": "Plaq. Chaîne",
   flyer: "Flyer",
 };
 
@@ -44,6 +45,7 @@ const TYPE_COLORS: Record<string, string> = {
   "plaquette-eco": "bg-lime-500/10 text-lime-400 border-lime-500/30",
   "plaquette-premium": "bg-violet-500/10 text-violet-400 border-violet-500/30",
   "plaquette-compact": "bg-pink-500/10 text-pink-400 border-pink-500/30",
+  "plaquette-chaine": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
   flyer: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
 };
 

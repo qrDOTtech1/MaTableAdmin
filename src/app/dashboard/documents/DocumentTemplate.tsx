@@ -289,7 +289,7 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "flyer";
+export type DocType = "contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer";
 
 type Props = {
   docType: DocType;
@@ -346,7 +346,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       </div>
 
       {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
-      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "flyer" && (
+      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
           {docType === "contrat" && "Contrat d'Abonnement — Plateforme Ma Table"}
           {docType === "prestation" && "Contrat de Prestation — Ma Table"}
@@ -1594,6 +1594,112 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           <p className="text-[8px] text-gray-400 text-center mt-3">
             {vendor.raisonSociale} · matable.pro · Réf. {docMeta.numero}
+          </p>
+        </div>
+      )}
+
+      {/* ===== PLAQUETTE CHAÎNE — multi-établissements, sur devis ===== */}
+      {docType === "plaquette-chaine" && (
+        <div>
+          {/* Hero personnalisé groupe */}
+          <div className="bg-gradient-to-br from-orange-50 to-white border-2 border-orange-500 rounded-2xl p-6 mb-6">
+            <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Proposition Groupe / Chaîne — préparée pour</p>
+            <p className="text-2xl font-black text-gray-900">{clientData.name || "Votre groupe de restauration"}</p>
+            {clientData.managerName && (
+              <p className="text-sm text-gray-600 mt-1">À l'attention de <b className="text-gray-900">{clientData.managerName}</b></p>
+            )}
+            <h1 className="text-3xl font-black mt-5 leading-tight">
+              Une plateforme unique<br/>
+              <span className="text-orange-500">pour tous vos établissements.</span>
+            </h1>
+          </div>
+
+          {/* Pitch */}
+          <p className="text-sm leading-relaxed mb-5 text-gray-700">
+            Ma Table propose un <b>mode Chaîne dédié</b> aux groupes opérant plusieurs établissements.
+            Chaque restaurant garde son autonomie opérationnelle (équipes, menu, caisse, tables) mais
+            l'ensemble est piloté depuis un <b>dashboard central</b> avec carte interactive,
+            statistiques consolidées et déploiement coordonné.
+          </p>
+
+          {/* Différenciants chaîne */}
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Le mode Chaîne — Spécificités</h2>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="border border-orange-200 bg-orange-50/40 rounded-xl p-3">
+              <div className="text-2xl mb-1">🗺️</div>
+              <p className="font-black text-sm">Carte interactive du groupe</p>
+              <p className="text-xs text-gray-600">Tous vos établissements positionnés sur une carte unique, accessible publiquement à votre clientèle.</p>
+            </div>
+            <div className="border border-orange-200 bg-orange-50/40 rounded-xl p-3">
+              <div className="text-2xl mb-1">📊</div>
+              <p className="font-black text-sm">Statistiques consolidées</p>
+              <p className="text-xs text-gray-600">CA, avis Google, tickets moyens, top plats — tout le groupe en un coup d'œil.</p>
+            </div>
+            <div className="border border-orange-200 bg-orange-50/40 rounded-xl p-3">
+              <div className="text-2xl mb-1">🏷️</div>
+              <p className="font-black text-sm">Identité de marque homogène</p>
+              <p className="text-xs text-gray-600">Logo, charte, mentions légales, politique de confidentialité — appliqués automatiquement à toutes les fiches.</p>
+            </div>
+            <div className="border border-orange-200 bg-orange-50/40 rounded-xl p-3">
+              <div className="text-2xl mb-1">⚙️</div>
+              <p className="font-black text-sm">Déploiement coordonné</p>
+              <p className="text-xs text-gray-600">Ouverture d'un nouvel établissement : modules pré-configurés, équipes formées en 1 visio.</p>
+            </div>
+            <div className="border border-orange-200 bg-orange-50/40 rounded-xl p-3">
+              <div className="text-2xl mb-1">🤝</div>
+              <p className="font-black text-sm">Account Manager dédié</p>
+              <p className="text-xs text-gray-600">Un interlocuteur unique pour toute la chaîne, joignable en direct par téléphone et email prioritaire.</p>
+            </div>
+            <div className="border border-orange-200 bg-orange-50/40 rounded-xl p-3">
+              <div className="text-2xl mb-1">📑</div>
+              <p className="font-black text-sm">Contrat-cadre unique</p>
+              <p className="text-xs text-gray-600">Un seul contrat groupe + bons de commande individuels par établissement.</p>
+            </div>
+          </div>
+
+          {/* Modules — comme les restos individuels */}
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Modules disponibles</h2>
+          <p className="text-xs text-gray-600 mb-3">Les mêmes 7 modules que l'offre Restaurant individuel, activables au choix par établissement :</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-6">
+            {MODULES.map((m) => (
+              <div key={m.id} className="flex items-center gap-2">
+                <span className="text-orange-500 font-black">›</span>
+                <span><b>{m.name}</b>{m.required && <span className="text-orange-600 italic"> · requis</span>}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Tarification — SUR DEVIS, mise en avant */}
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-6 mb-4">
+            <p className="text-xs uppercase tracking-[0.3em] opacity-90 font-bold mb-2">Tarification</p>
+            <p className="text-4xl font-black mb-2">Sur devis personnalisé</p>
+            <p className="text-sm opacity-95 mb-3">
+              Le tarif chaîne est étudié au cas par cas en fonction de :
+            </p>
+            <ul className="text-sm space-y-1 ml-4">
+              <li>· nombre d'établissements à équiper</li>
+              <li>· modules retenus par établissement</li>
+              <li>· durée d'engagement groupe</li>
+              <li>· spécificités d'identité et de déploiement</li>
+            </ul>
+            <p className="text-xs italic opacity-90 mt-3 pt-3 border-t border-white/20">
+              Dégressivité significative à partir de 3 établissements. Devis reçu sous 48h après prise de contact.
+            </p>
+          </div>
+
+          {/* CTA */}
+          <div className="border-2 border-dashed border-orange-400 rounded-xl p-5 text-center">
+            <p className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-2">Demande de devis — RDV groupe</p>
+            <p className="text-sm mb-3">Échange visio ou sur place pour cadrer votre projet et vous remettre un devis chiffré.</p>
+            <p className="text-lg font-black text-gray-900">📞 {vendor.phone}</p>
+            <p className="text-sm text-orange-600 font-bold">✉ {vendor.email}</p>
+            <p className="text-xs text-gray-500 italic mt-2">
+              Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> — Réf. {docMeta.numero}
+            </p>
+          </div>
+
+          <p className="text-xs text-gray-500 italic text-center mt-4">
+            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · matable.pro
           </p>
         </div>
       )}

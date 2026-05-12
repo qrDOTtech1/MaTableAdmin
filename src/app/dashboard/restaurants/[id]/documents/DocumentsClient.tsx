@@ -30,7 +30,7 @@ const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 pl
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
-  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "flyer">("contrat");
+  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer">("contrat");
   const [engagement, setEngagement] = useState<DurationKey>("12m");
   // Modules sélectionnés — "avis" est requis donc toujours inclus
   const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
@@ -94,6 +94,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     "plaquette-eco": "Plaquette éco",
     "plaquette-premium": "Plaquette premium",
     "plaquette-compact": "Plaquette compacte A5",
+    "plaquette-chaine": "Plaquette Chaîne (sur devis)",
     flyer: "Flyer démo",
   };
 
@@ -177,6 +178,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
                 <option value="plaquette-eco">Plaquette — Éco encre (A4 perso)</option>
                 <option value="plaquette-premium">Plaquette — Premium (A4 perso, gros prospect)</option>
                 <option value="plaquette-compact">Plaquette — Compacte A5 (porte-à-porte)</option>
+                <option value="plaquette-chaine">Plaquette — Chaîne / Groupe (sur devis)</option>
                 <option value="flyer">Flyer démo (A4, 2 par page, générique)</option>
               </optgroup>
             </select>
