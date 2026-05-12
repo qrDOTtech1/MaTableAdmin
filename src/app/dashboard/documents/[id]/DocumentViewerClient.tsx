@@ -8,8 +8,8 @@ import DocumentTemplate, {
   type ClientData,
   type DocMeta,
   type Prestation,
-  computePriceInfo,
 } from "../DocumentTemplate";
+import { computeQuote, type DurationKey } from "../pricing";
 import { printDocumentNode } from "../printUtil";
 
 type Doc = {
@@ -19,7 +19,7 @@ type Doc = {
   title: string;
   vendor: Vendor;
   client: ClientData;
-  data: { engagement?: string; docMeta?: DocMeta; prestation?: Prestation };
+  data: { engagement?: string; selectedModules?: string[]; docMeta?: DocMeta; prestation?: Prestation };
   restaurantName: string;
   signedAt: string | null;
 };
@@ -30,7 +30,9 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
   const [busy, setBusy] = useState<"pdf" | "sign" | "delete" | null>(null);
   const [signed, setSigned] = useState<string | null>(doc.signedAt);
 
-  const engagement = doc.data?.engagement ?? "12m";
+  const engagement = (doc.data?.engagement ?? "12m") as DurationKey;
+  // Rétro-compat : si selectedModules absent (anciens docs), on suppose le plan "avis" seul
+  const selectedModules = doc.data?.selectedModules ?? ["avis"];
   const docMeta: DocMeta = doc.data?.docMeta ?? {
     numero: doc.number,
     date: new Date().toLocaleDateString("fr-FR"),
@@ -44,7 +46,7 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
     modalites: "",
     delaiLivraison: "",
   };
-  const priceInfo = computePriceInfo(engagement);
+  const priceInfo = computeQuote(selectedModules, engagement);
 
   const exportPDF = () => {
     const element = printRef.current;

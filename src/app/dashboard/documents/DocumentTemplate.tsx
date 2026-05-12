@@ -1,6 +1,8 @@
 "use client";
 
 import { forwardRef } from "react";
+import { computeQuote, MODULES, DURATIONS, eur } from "./pricing";
+import type { DurationKey, ModuleId, QuoteLine, Quote } from "./pricing";
 
 // ───────────────────────────────────────────────────────────────────────────
 // Bannière latérale décorative — signature visuelle MaTable (6 mm)
@@ -270,9 +272,20 @@ export type Prestation = {
 };
 
 export type PriceInfo = {
+  // Champs historiques (rétro-compat)
   monthly: number;
   total: number;
   mult: string;
+  // Champs détaillés (nouveaux — voir pricing.ts)
+  modules?: Array<{ id: string; name: string; desc: string; basePrice: number; unitPrice: number; required: boolean }>;
+  subtotal?: number;
+  volumePercent?: number;
+  volumeAmount?: number;
+  durationKey?: string;
+  durationLabel?: string;
+  realMult?: number;
+  isAnnualPay?: boolean;
+  annualPayTotal?: number;
 };
 
 export type DocType = "contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "flyer";
@@ -378,27 +391,53 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 1 — Objet du contrat</h2>
           <p className="text-sm mb-3 leading-relaxed">Le présent contrat (« <b>le Contrat</b> ») a pour objet de définir les conditions dans lesquelles le Prestataire met à disposition du Client, sous forme de service en ligne (SaaS), l'accès à la plateforme <b>Ma Table</b> ainsi qu'aux modules choisis. Le Prestataire conserve la pleine propriété de la plateforme, de son code et de ses contenus.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Modules & Tarifs</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Modules souscrits & Tarifs</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
-                <th className="p-3">Module</th>
-                <th className="p-3 text-right">Prix HT/mois</th>
+                <th className="p-3">Module souscrit</th>
+                <th className="p-3 text-right">Prix HT / mois</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b"><td className="p-3"><b>Avis Google & Réputation</b><br/><span className="text-xs text-gray-500">Conversation IA post-repas, génération d'avis Google authentiques</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>QR Codes & Commande à table</b><br/><span className="text-xs text-gray-500">Génération QR par table, commande directe par les clients</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Portail Serveur</b><br/><span className="text-xs text-gray-500">Prise de commande mobile, suivi des tables, attribution serveur</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Cuisine Live</b><br/><span className="text-xs text-gray-500">Écran cuisine temps réel, statuts plats, ruptures</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Caisse intégrée</b><br/><span className="text-xs text-gray-500">Encaissement par session, modes de paiement, pourboires</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Nova IA — Assistant complet</b> <span className="text-xs text-gray-500">(par NovaTech)</span><br/><span className="text-xs text-gray-500">Magic Scan menu, descriptions, planning, chatbot, finance IA — usage standard inclus (voir art. 5 bis)</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Gestion de stock IA</b><br/><span className="text-xs text-gray-500">Suivi des ingrédients, alertes seuils, prédictions</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Réservations en ligne</b><br/><span className="text-xs text-gray-500">Calendrier, acompte Stripe, politique d'annulation</span></td><td className="p-3 text-right">Inclus</td></tr>
-              <tr className="bg-gray-50 font-black"><td className="p-3">TOTAL MENSUEL HT</td><td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td></tr>
+              {(priceInfo.modules ?? []).map((m) => (
+                <tr key={m.id} className="border-b">
+                  <td className="p-3">
+                    <b>{m.name}</b>{m.required && <span className="text-xs text-orange-600 italic"> · requis</span>}
+                    {m.id === "finance" || m.id === "stock" || m.id === "contab" ? <span className="text-xs text-gray-500"> (NovaTech IA — voir art. 4 bis)</span> : null}
+                    <br/><span className="text-xs text-gray-500">{m.desc}</span>
+                  </td>
+                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
+                </tr>
+              ))}
+              <tr className="border-b text-xs">
+                <td className="p-3 text-gray-500 text-right">Sous-total HT mensuel ({priceInfo.modules?.length ?? 0} module{(priceInfo.modules?.length ?? 0) > 1 ? "s" : ""}) — engagement {priceInfo.durationLabel ?? "12 mois"}</td>
+                <td className="p-3 text-right">{(priceInfo.subtotal ?? priceInfo.monthly).toFixed(2)} €</td>
+              </tr>
+              {(priceInfo.volumePercent ?? 0) > 0 && (
+                <tr className="border-b text-xs text-emerald-700">
+                  <td className="p-3 text-right">Remise volume ({priceInfo.volumePercent} %)</td>
+                  <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
+                </tr>
+              )}
+              <tr className="bg-gray-50 font-black">
+                <td className="p-3">TOTAL MENSUEL HT</td>
+                <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
+              </tr>
+              {priceInfo.isAnnualPay && (
+                <tr className="bg-orange-50/40 text-xs">
+                  <td className="p-3 text-right text-orange-700">Paiement annuel à la signature (12 mois)</td>
+                  <td className="p-3 text-right font-black text-orange-700">{(priceInfo.annualPayTotal ?? priceInfo.monthly * 12).toFixed(2)} €</td>
+                </tr>
+              )}
             </tbody>
           </table>
-          <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI. Hébergement, mises à jour et support inclus.</p>
+          <p className="text-xs text-gray-500 italic mb-4">
+            TVA non applicable, art. 293B du CGI. Hébergement, mises à jour et support inclus.
+            {priceInfo.durationKey && priceInfo.realMult && priceInfo.realMult !== 1 && (
+              <> Tarifs unitaires calculés avec le multiplicateur de durée {priceInfo.durationKey} (×{priceInfo.realMult.toFixed(2)}).</>
+            )}
+          </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 3 — Durée & Engagement</h2>
           <p className="text-sm mb-3 leading-relaxed">Le Contrat est conclu pour une durée ferme minimale de <b className="text-orange-700 bg-orange-50 px-1">{engagement.replace('m', ' mois').replace('a', ' mois (paiement annuel)')}</b> à compter de sa date de signature, période durant laquelle aucune résiliation anticipée n'est possible sauf cas prévus à l'article 9. À l'issue de cette période, le Contrat se renouvelle <b>tacitement par périodes successives d'un mois</b>, sauf résiliation notifiée par l'une des Parties au moins 30 jours avant l'échéance, par email avec accusé de réception.</p>
@@ -504,16 +543,30 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="p-3">
-                  <b>Abonnement Ma Table — Plan complet</b><br/>
-                  <span className="text-xs text-gray-500">Avis, QR, Serveur, Cuisine, Caisse, Nova IA, Stock, Réservations</span>
-                </td>
-                <td className="p-3">{docMeta.periode}</td>
-                <td className="p-3 text-center">1</td>
-                <td className="p-3 text-right">{priceInfo.monthly.toFixed(2)} €</td>
-                <td className="p-3 text-right">{priceInfo.monthly.toFixed(2)} €</td>
-              </tr>
+              {(priceInfo.modules ?? []).map((m) => (
+                <tr key={m.id} className="border-b">
+                  <td className="p-3">
+                    <b>{m.name}</b><br/>
+                    <span className="text-xs text-gray-500">{m.desc}</span>
+                  </td>
+                  <td className="p-3">{docMeta.periode}</td>
+                  <td className="p-3 text-center">1</td>
+                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
+                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
+                </tr>
+              ))}
+              {(priceInfo.volumePercent ?? 0) > 0 && (
+                <>
+                  <tr className="border-b text-xs">
+                    <td colSpan={4} className="p-3 text-right text-gray-600">Sous-total HT</td>
+                    <td className="p-3 text-right">{(priceInfo.subtotal ?? priceInfo.monthly).toFixed(2)} €</td>
+                  </tr>
+                  <tr className="border-b text-xs text-emerald-700">
+                    <td colSpan={4} className="p-3 text-right">Remise volume — {priceInfo.modules?.length} modules ({priceInfo.volumePercent} %)</td>
+                    <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
+                  </tr>
+                </>
+              )}
               <tr className="border-b">
                 <td colSpan={4} className="p-3 text-right font-bold">Total HT</td>
                 <td className="p-3 text-right font-bold">{priceInfo.monthly.toFixed(2)} €</td>
@@ -585,36 +638,53 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Objet</h2>
-          <p className="text-sm mb-4 leading-relaxed">Mise à disposition de la plateforme SaaS <b>Ma Table</b> — plan complet incluant l'ensemble des modules : Avis Google, QR Commande, Portail Serveur, Cuisine Live, Caisse, Nova IA, Stock, Réservations. Hébergement, mises à jour et support inclus.</p>
+          <p className="text-sm mb-4 leading-relaxed">Mise à disposition de la plateforme SaaS <b>Ma Table</b> sur les modules sélectionnés ci-dessous. Hébergement, mises à jour et support inclus.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Détail tarifaire</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Détail tarifaire — engagement <span className="text-orange-700">{priceInfo.durationLabel ?? engagement}</span></h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
-                <th className="p-3">Description</th>
-                <th className="p-3">Engagement</th>
-                <th className="p-3 text-right">Prix HT/mois</th>
-                <th className="p-3 text-right">Total HT période</th>
+                <th className="p-3">Module</th>
+                <th className="p-3 text-right">Prix HT / mois</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b">
-                <td className="p-3"><b>Abonnement Ma Table — Plan complet</b><br/><span className="text-xs text-gray-500">Tous modules inclus</span></td>
-                <td className="p-3 text-orange-700 font-bold">{engagement.replace("m", " mois").replace("12a", "12 mois (annuel)")}</td>
-                <td className="p-3 text-right">{priceInfo.monthly.toFixed(2)} €</td>
-                <td className="p-3 text-right">{priceInfo.total.toFixed(2)} €</td>
+              {(priceInfo.modules ?? []).map((m) => (
+                <tr key={m.id} className="border-b">
+                  <td className="p-3"><b>{m.name}</b>{m.required && <span className="text-xs italic text-orange-600"> · requis</span>}<br/><span className="text-xs text-gray-500">{m.desc}</span></td>
+                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
+                </tr>
+              ))}
+              <tr className="border-b text-xs">
+                <td className="p-3 text-right text-gray-600">Sous-total HT mensuel ({priceInfo.modules?.length ?? 0} module{(priceInfo.modules?.length ?? 0) > 1 ? "s" : ""})</td>
+                <td className="p-3 text-right">{(priceInfo.subtotal ?? priceInfo.monthly).toFixed(2)} €</td>
               </tr>
-              {engagement !== "12m" && (
+              {(priceInfo.volumePercent ?? 0) > 0 && (
+                <tr className="border-b text-xs text-emerald-700">
+                  <td className="p-3 text-right">Remise volume ({priceInfo.volumePercent} %)</td>
+                  <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
+                </tr>
+              )}
+              {priceInfo.realMult && priceInfo.realMult !== 1 && (
                 <tr className="border-b text-xs text-gray-500 italic">
-                  <td colSpan={3} className="p-3 text-right">Effet engagement par rapport au tarif de référence 12 mois</td>
+                  <td className="p-3 text-right">Effet engagement vs 12 mois de référence</td>
                   <td className="p-3 text-right">{priceInfo.mult}</td>
                 </tr>
               )}
               <tr className="bg-gray-50 font-black">
-                <td colSpan={2} className="p-3 text-right">Mensualité HT</td>
+                <td className="p-3 text-right">Mensualité HT à régler</td>
                 <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
-                <td className="p-3 text-right text-orange-500">{priceInfo.total.toFixed(2)} €</td>
               </tr>
+              <tr className="bg-orange-50/50 text-sm">
+                <td className="p-3 text-right text-orange-900">Total HT sur la période d'engagement</td>
+                <td className="p-3 text-right font-black text-orange-700">{priceInfo.total.toFixed(2)} €</td>
+              </tr>
+              {priceInfo.isAnnualPay && (
+                <tr className="border-t-2 border-orange-500 text-sm">
+                  <td className="p-3 text-right text-orange-700">→ À régler en une fois à la signature (paiement annuel)</td>
+                  <td className="p-3 text-right font-black text-orange-700">{(priceInfo.annualPayTotal ?? priceInfo.monthly * 12).toFixed(2)} €</td>
+                </tr>
+              )}
             </tbody>
           </table>
           <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI.</p>
@@ -1004,36 +1074,62 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
               <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Tarification active</h3>
               <div className="text-sm space-y-1">
-                <p className="text-orange-900">Engagement : <b>{engagement}</b></p>
+                <p className="text-orange-900">Engagement : <b>{priceInfo.durationLabel ?? engagement}</b></p>
+                <p className="text-orange-900">Modules : <b>{priceInfo.modules?.length ?? 1}</b></p>
                 <p className="text-orange-900">Mensualité HT : <b>{priceInfo.monthly.toFixed(2)} €</b></p>
                 <p className="text-orange-900">Total période : <b>{priceInfo.total.toFixed(2)} €</b></p>
+                {(priceInfo.volumePercent ?? 0) > 0 && (
+                  <p className="text-orange-900 text-xs">Remise volume : <b>{priceInfo.volumePercent} %</b></p>
+                )}
                 <p className="text-orange-900 text-xs italic">Maj. engagement : {priceInfo.mult}</p>
               </div>
             </div>
           </div>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Modules inclus dans l'abonnement</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Modules souscrits par ce client</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
                 <th className="p-3">Module</th>
                 <th className="p-3 text-center">Statut</th>
-                <th className="p-3">Détails</th>
+                <th className="p-3 text-right">Prix HT/mois</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b"><td className="p-3"><b>Avis Google & Réputation</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">IA conversationnelle post-repas, publication assistée</td></tr>
-              <tr className="border-b"><td className="p-3"><b>QR Codes & Commande à table</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">QR illimités, commande client autonome</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Portail Serveur</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">App mobile équipe, attribution table, sessions</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Cuisine Live</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">Écran cuisine temps réel, statuts plats</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Caisse intégrée</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">Fermeture sessions, modes paiement, pourboires</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Nova IA</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">Magic Scan, descriptions, planning, chatbot, finance</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Gestion de stock IA</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">Suivi ingrédients, alertes, prédictions</td></tr>
-              <tr className="border-b"><td className="p-3"><b>Réservations en ligne</b></td><td className="p-3 text-center text-emerald-600">✓ Actif</td><td className="p-3 text-xs text-gray-500">Calendrier, acompte Stripe, politique annulation</td></tr>
-              <tr className="bg-orange-50 font-black"><td className="p-3">TOTAL HT mensuel</td><td className="p-3 text-center">—</td><td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td></tr>
+              {/* Affiche TOUS les modules de la grille pour montrer l'état complet du client */}
+              {MODULES.map((mod) => {
+                const subscribed = priceInfo.modules?.find((m) => m.id === mod.id);
+                return (
+                  <tr key={mod.id} className="border-b">
+                    <td className="p-3">
+                      <b>{mod.name}</b>{mod.required && <span className="text-xs italic text-orange-600"> · requis</span>}<br/>
+                      <span className="text-xs text-gray-500">{mod.desc}</span>
+                    </td>
+                    <td className={`p-3 text-center ${subscribed ? "text-emerald-600 font-bold" : "text-gray-400"}`}>
+                      {subscribed ? "✓ Actif" : "— Inactif"}
+                    </td>
+                    <td className="p-3 text-right">
+                      {subscribed ? `${subscribed.unitPrice.toFixed(2)} €` : <span className="text-gray-400">—</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+              {(priceInfo.volumePercent ?? 0) > 0 && (
+                <tr className="border-b text-xs text-emerald-700">
+                  <td colSpan={2} className="p-3 text-right">Remise volume ({priceInfo.modules?.length} modules · {priceInfo.volumePercent} %)</td>
+                  <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
+                </tr>
+              )}
+              <tr className="bg-orange-50 font-black">
+                <td colSpan={2} className="p-3 text-right">TOTAL HT MENSUEL</td>
+                <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
+              </tr>
             </tbody>
           </table>
-          <p className="text-xs text-gray-500 italic mb-4">Plan complet : tous les modules sont inclus dans l'abonnement, sans surcoût par module ou par utilisateur.</p>
+          <p className="text-xs text-gray-500 italic mb-4">
+            Engagement actuel : <b>{priceInfo.durationLabel ?? engagement}</b> · Multiplicateur durée : ×{priceInfo.realMult?.toFixed(2) ?? "1.00"}.
+            Pour modifier les modules ou la durée d'engagement, contactez votre Account Manager.
+          </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Suivi des paiements</h2>
           <table className="w-full text-sm mb-6 border-collapse">
@@ -1195,14 +1291,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
 export default DocumentTemplate;
 
-// Helper : reconstruit priceInfo selon l'engagement (logique partagée)
+// Re-exports depuis pricing.ts pour rétro-compatibilité avec les imports
+// existants ailleurs dans le code (DocumentsClient, DocumentViewerClient).
+export { computeQuote, MODULES, DURATIONS, eur };
+export type { DurationKey, ModuleId, QuoteLine, Quote };
+
+// Fallback : calcule un priceInfo en supposant que seul le module "avis" est actif
+// (= configuration minimale). Utilisé pour les anciens documents sauvegardés
+// qui n'ont pas encore de `selectedModules` en data.
 export function computePriceInfo(engagement: string): PriceInfo {
-  switch (engagement) {
-    case "3m": return { monthly: 84.53, total: 253.59, mult: "+7%" };
-    case "6m": return { monthly: 82.95, total: 497.70, mult: "+5%" };
-    case "9m": return { monthly: 81.37, total: 732.33, mult: "+3%" };
-    case "12a": return { monthly: 75.05, total: 900.60, mult: "-5%" };
-    case "12m":
-    default: return { monthly: 79.00, total: 948.00, mult: "0%" };
-  }
+  return computeQuote(["avis"], (engagement as any) ?? "12m");
 }

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import DocumentTemplate, { type DocType } from "../../../documents/DocumentTemplate";
 import { printDocumentNode } from "../../../documents/printUtil";
+import { computeQuote, MODULES, DURATIONS, type DurationKey } from "../../../documents/pricing";
 
 type RestaurantData = {
   name: string;
@@ -30,8 +31,17 @@ const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
   const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "flyer">("contrat");
-  const [engagement, setEngagement] = useState<"3m" | "6m" | "9m" | "12m" | "12a">("12m");
+  const [engagement, setEngagement] = useState<DurationKey>("12m");
+  // Modules sélectionnés — "avis" est requis donc toujours inclus
+  const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
   const printRef = useRef<HTMLDivElement>(null);
+
+  const toggleModule = (id: string) => {
+    if (id === "avis") return; // requis, ne se désélectionne pas
+    setSelectedModules((cur) =>
+      cur.includes(id) ? cur.filter((m) => m !== id) : [...cur, id]
+    );
+  };
 
   // États éditables — Client (le restaurant / l'établissement)
   const [clientData, setClientData] = useState(restaurant);
@@ -96,6 +106,8 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
         totalCents = Math.round(priceInfo.total * 100);
       } else if (docType === "prestation") {
         totalCents = Math.round(prestation.montantHT * 100);
+      } else if (docType === "tarification") {
+        totalCents = Math.round(priceInfo.monthly * 100);
       }
       const title = `${typeLabels[docType] ?? docType} — ${clientData.name || "Sans nom"}`;
       const res = await fetch("/api/documents", {
@@ -109,7 +121,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           totalCents,
           vendor,
           client: clientData,
-          data: { engagement, docMeta, prestation },
+          data: { engagement, selectedModules, docMeta, prestation },
         }),
       });
       const data = await res.json();
@@ -129,17 +141,8 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     printDocumentNode(element, `${docMeta.numero} — ${clientData.name || "MaTable"}`);
   };
 
-  const getPrice = () => {
-    switch (engagement) {
-      case "3m": return { monthly: 84.53, total: 253.59, mult: "+7%" };
-      case "6m": return { monthly: 82.95, total: 497.70, mult: "+5%" };
-      case "9m": return { monthly: 81.37, total: 732.33, mult: "+3%" };
-      case "12m": return { monthly: 79.00, total: 948.00, mult: "0%" };
-      case "12a": return { monthly: 75.05, total: 900.60, mult: "-5%" };
-    }
-  };
-
-  const priceInfo = getPrice();
+  // Quote complet calculé en direct depuis les modules + engagement sélectionnés
+  const priceInfo = computeQuote(selectedModules, engagement);
 
   return (
     <div className="flex gap-8 items-start">
@@ -173,21 +176,66 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
             </select>
           </div>
 
-          {(docType === "contrat" || docType === "devis") && (
-            <div>
-              <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Engagement</label>
-              <select
-                value={engagement}
-                onChange={(e) => setEngagement(e.target.value as any)}
-                className={INPUT_CLS}
-              >
-                <option value="3m">3 mois (+7%)</option>
-                <option value="6m">6 mois (+5%)</option>
-                <option value="9m">9 mois (+3%)</option>
-                <option value="12m">12 mois (0% - Réf)</option>
-                <option value="12a">12 mois annuel (-5%)</option>
-              </select>
-            </div>
+          {(docType === "contrat" || docType === "devis" || docType === "facture" || docType === "tarification") && (
+            <>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Engagement</label>
+                <select
+                  value={engagement}
+                  onChange={(e) => setEngagement(e.target.value as any)}
+                  className={INPUT_CLS}
+                >
+                  {DURATIONS.map((d) => (
+                    <option key={d.key} value={d.key}>{d.label} — {d.sub} (×{d.realMult.toFixed(2)})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800">
+                <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Modules souscrits</label>
+                <div className="space-y-1.5">
+                  {MODULES.map((m) => {
+                    const isSelected = selectedModules.includes(m.id);
+                    return (
+                      <label
+                        key={m.id}
+                        className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-colors text-xs ${
+                          isSelected ? "bg-orange-500/10 border border-orange-500/30" : "bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800"
+                        } ${m.required ? "opacity-90 cursor-default" : ""}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleModule(m.id)}
+                          disabled={m.required}
+                          className="mt-0.5 accent-orange-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="font-bold text-slate-100">{m.name}</span>
+                            <span className="text-orange-400 font-mono text-[10px] whitespace-nowrap">{m.price} €</span>
+                          </div>
+                          {m.required && <span className="text-[9px] uppercase text-orange-400 tracking-wider">Requis</span>}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                {/* Récap live du total */}
+                <div className="mt-3 p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs">
+                  <div className="flex justify-between text-slate-400"><span>Sous-total HT</span><span>{priceInfo.subtotal?.toFixed(2)} €</span></div>
+                  {(priceInfo.volumePercent ?? 0) > 0 && (
+                    <div className="flex justify-between text-emerald-400"><span>Remise volume ({priceInfo.volumePercent} %)</span><span>−{priceInfo.volumeAmount?.toFixed(2)} €</span></div>
+                  )}
+                  <div className="flex justify-between text-orange-400 font-black border-t border-slate-700 mt-1 pt-1"><span>HT / mois</span><span>{priceInfo.monthly.toFixed(2)} €</span></div>
+                  <div className="flex justify-between text-slate-500 text-[10px]"><span>Total période ({priceInfo.durationLabel})</span><span>{priceInfo.total.toFixed(2)} €</span></div>
+                  {priceInfo.isAnnualPay && (
+                    <div className="flex justify-between text-orange-300 text-[10px] mt-1"><span>→ Annuel à la signature</span><span>{priceInfo.annualPayTotal?.toFixed(2)} €</span></div>
+                  )}
+                </div>
+              </div>
+            </>
           )}
 
           <div className="pt-4 border-t border-slate-800">
