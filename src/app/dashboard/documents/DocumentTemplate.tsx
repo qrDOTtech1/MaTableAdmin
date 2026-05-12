@@ -200,9 +200,10 @@ function FlyerCard({ vendor }: { vendor: Vendor }) {
         textAlign: "center",
       }}>
         <div>
-          <p style={{ fontSize: "8px", color: "#9a3412", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 900, margin: 0 }}>Tout inclus à partir de</p>
+          <p style={{ fontSize: "8px", color: "#9a3412", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 900, margin: 0 }}>Modulaire dès</p>
           <p style={{ fontSize: "42px", color: "#f97316", fontWeight: 900, lineHeight: 1, margin: "4px 0" }}>79 €</p>
           <p style={{ fontSize: "10px", color: "#4b5563", margin: 0 }}>HT / mois</p>
+          <p style={{ fontSize: "8px", color: "#6b7280", margin: "2px 0 0 0", fontStyle: "italic" }}>7 modules · jusqu'à −20 % volume</p>
         </div>
 
         <div style={{ marginTop: "8px" }}>
@@ -1250,12 +1251,28 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </div>
           </div>
 
-          {/* Tarif unique */}
-          <div className="bg-orange-50/60 border-2 border-orange-500 rounded-2xl p-5 mb-6 text-center">
-            <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Tarif unique tout inclus</p>
-            <p className="text-4xl font-black text-orange-500 mt-1">79 € HT / mois</p>
-            <p className="text-xs text-gray-600 mt-1">Tous modules · hébergement · mises à jour · support · sans frais d'installation</p>
-            <p className="text-xs text-gray-500 italic mt-2">Engagement 12 mois — paiement annuel à −5 %</p>
+          {/* Grille tarifaire — modules à la carte */}
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-3">Tarifs à la carte (HT/mois, engagement 12 mois)</h2>
+          <table className="w-full text-xs mb-3 border-collapse">
+            <tbody>
+              {MODULES.map((m) => (
+                <tr key={m.id} className="border-b border-gray-200">
+                  <td className="py-1.5"><b>{m.name}</b>{m.required && <span className="text-orange-600 italic"> · requis</span>}</td>
+                  <td className="py-1.5 text-right font-bold text-gray-900">{m.price} €</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-4 mb-6 text-sm">
+            <p className="font-black text-orange-600 mb-2">💡 Cumulez les modules pour bénéficier de remises :</p>
+            <div className="grid grid-cols-3 gap-2 text-xs text-gray-700">
+              <div><b className="text-emerald-600">−10 %</b> dès 2 modules</div>
+              <div><b className="text-emerald-600">−15 %</b> dès 3 modules</div>
+              <div><b className="text-emerald-600">−20 %</b> dès 4 modules</div>
+            </div>
+            <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-orange-200">
+              <b>Engagement</b> : 3 mois (+7 %) · 6 mois (+5 %) · 9 mois (+3 %) · <b>12 mois (réf)</b> · 12 mois en paiement annuel (<b className="text-emerald-700">−5 %</b>)
+            </p>
           </div>
 
           {/* CTA */}
@@ -1323,24 +1340,36 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             Votre équipe ne fait <b>rien de plus</b> : tout est automatique.
           </p>
 
-          {/* Tableau inclus — lignes seules, sans fond */}
-          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Tout inclus dans votre abonnement</p>
-          <ul className="text-sm space-y-1.5 mb-6">
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Avis Google automatisés (Nova IA)</li>
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> QR codes & commande à table illimités</li>
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Portail Serveur · Cuisine Live · Caisse</li>
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Magic Scan menu · Descriptions IA · Planning</li>
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Gestion de stock IA · Finance assistée</li>
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Réservations en ligne (Stripe inclus)</li>
-            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Hébergement · Mises à jour · Support</li>
-          </ul>
+          {/* Modules disponibles — liste avec prix, fond blanc */}
+          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Modules à la carte — tarifs HT/mois (12 mois de réf.)</p>
+          <table className="w-full text-sm mb-4">
+            <tbody>
+              {MODULES.map((m) => (
+                <tr key={m.id} className="border-b border-gray-200">
+                  <td className="py-1.5"><span className="text-orange-500 font-black">›</span> <b>{m.name}</b>{m.required && <span className="text-orange-600 italic text-xs"> · requis</span>}</td>
+                  <td className="py-1.5 text-right font-bold">{m.price} €</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <p className="text-xs text-gray-700 mb-6 leading-relaxed">
+            <b className="text-orange-600">Cumulez plusieurs modules</b> : −10 % dès 2 · −15 % dès 3 · <b>−20 % dès 4</b>.
+            <b className="text-orange-600 ml-1">Engagement</b> : 3 m (+7 %) · 6 m (+5 %) · 9 m (+3 %) · 12 m réf · 12 m annuel (−5 %).
+          </p>
 
           <div className="h-px bg-gray-300 mb-6" />
 
-          {/* Prix : juste typo, pas de bloc */}
-          <div className="flex items-baseline justify-between mb-8">
-            <p className="text-sm text-gray-700">À partir de</p>
-            <p className="text-3xl font-black text-orange-500">79 € HT / mois</p>
+          {/* Prix d'entrée + tarif tout activé */}
+          <div className="mb-8 text-sm">
+            <div className="flex items-baseline justify-between">
+              <p className="text-gray-700">Configuration minimale (Avis Google seul)</p>
+              <p className="text-2xl font-black text-orange-500">79 € HT/mois</p>
+            </div>
+            <div className="flex items-baseline justify-between mt-1 text-xs text-gray-500">
+              <p>Tous modules activés (−20 % volume)</p>
+              <p className="font-bold">482,40 € HT/mois</p>
+            </div>
           </div>
 
           {/* CTA — SEULE zone colorée du doc */}
@@ -1428,16 +1457,56 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             ))}
           </div>
 
-          {/* Tarif */}
-          <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-5 mb-4">
-            <div className="flex items-baseline justify-between mb-2">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Tarif unique tout inclus</p>
-              <p className="text-3xl font-black text-orange-500">79 € HT/mois</p>
+          {/* Grille tarifaire complète + offres */}
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Grille tarifaire — sur-mesure modulaire</h2>
+          <table className="w-full text-xs mb-3 border-collapse">
+            <thead>
+              <tr className="bg-orange-50 text-orange-900 border-y-2 border-orange-500">
+                <th className="p-2 text-left">Module</th>
+                <th className="p-2 text-right">HT/mois (12 m)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {MODULES.map((m) => (
+                <tr key={m.id} className="border-b border-gray-200">
+                  <td className="p-2"><b>{m.name}</b>{m.required && <span className="text-orange-600 italic text-[10px]"> · requis</span>}<br/><span className="text-[10px] text-gray-500">{m.desc.slice(0, 80)}…</span></td>
+                  <td className="p-2 text-right font-bold">{m.price} €</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="border border-orange-200 bg-orange-50/40 rounded-lg p-3">
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Remises volume</p>
+              <ul className="text-xs space-y-1">
+                <li>· 2 modules — <b className="text-emerald-700">−10 %</b></li>
+                <li>· 3 modules — <b className="text-emerald-700">−15 %</b></li>
+                <li>· 4 modules et + — <b className="text-emerald-700">−20 %</b></li>
+              </ul>
             </div>
-            <p className="text-xs text-gray-600">
-              Engagement 12 mois. Paiement annuel à <b>−5 %</b>. Tarifs dégressifs sur volume de modules.
-              Mise en service sous 7 jours.
-            </p>
+            <div className="border border-orange-200 bg-orange-50/40 rounded-lg p-3">
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Engagement</p>
+              <ul className="text-xs space-y-1">
+                <li>· 3 mois (+7 %) — sans risque</li>
+                <li>· 6 mois (+5 %) · 9 mois (+3 %)</li>
+                <li>· <b>12 mois — référence</b></li>
+                <li>· 12 mois annuel — <b className="text-emerald-700">−5 %</b></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-4 mb-4 text-sm">
+            <div className="flex items-baseline justify-between">
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Exemples de configurations</p>
+            </div>
+            <div className="mt-2 space-y-1 text-xs text-gray-700">
+              <div className="flex justify-between"><span>Avis Google seul (entrée de gamme)</span><b className="text-gray-900">79 € HT/mois</b></div>
+              <div className="flex justify-between"><span>Avis + QR Commande (pack vitrine)</span><b className="text-gray-900">160,20 € HT/mois</b></div>
+              <div className="flex justify-between"><span>Avis + QR + Serveur (pack salle)</span><b className="text-gray-900">209,95 € HT/mois</b></div>
+              <div className="flex justify-between"><span>Pack complet 7 modules (−20 %)</span><b className="text-orange-600">482,40 € HT/mois</b></div>
+            </div>
+            <p className="text-[10px] text-gray-500 italic mt-2 pt-2 border-t border-orange-200">Tarifs base 12 mois. Mise en service sous 7 jours. Aucun frais d'installation.</p>
           </div>
 
           {/* CTA premium */}
@@ -1489,18 +1558,31 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </div>
           </div>
 
-          <ul className="text-xs space-y-1 mb-4">
-            <li><b className="text-orange-500">›</b> Avis Google automatisés</li>
-            <li><b className="text-orange-500">›</b> QR · Commande · Paiement</li>
-            <li><b className="text-orange-500">›</b> Serveur · Cuisine · Caisse</li>
-            <li><b className="text-orange-500">›</b> Nova IA complète</li>
-            <li><b className="text-orange-500">›</b> Stock · Finance · Contab</li>
-            <li><b className="text-orange-500">›</b> Réservations</li>
-          </ul>
+          <p className="text-[10px] uppercase tracking-wider text-orange-500 font-black mb-1">Modules à la carte — HT/mois</p>
+          <table className="w-full text-[10px] mb-3">
+            <tbody>
+              {MODULES.map((m) => (
+                <tr key={m.id} className="border-b border-gray-200">
+                  <td className="py-0.5"><b className="text-orange-500">›</b> {m.name}{m.required && <span className="text-orange-600 italic"> ·req.</span>}</td>
+                  <td className="py-0.5 text-right font-bold">{m.price} €</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-          <div className="flex items-baseline justify-between border-y border-gray-300 py-2 mb-4">
-            <p className="text-xs text-gray-700">Tout inclus dès</p>
-            <p className="text-2xl font-black text-orange-500">79 € HT/mois</p>
+          <p className="text-[10px] text-gray-700 mb-3 leading-snug">
+            <b>Cumulez</b> : −10 % à −20 %. <b>Engagement</b> : 3 m (+7 %) à 12 m annuel (−5 %).
+          </p>
+
+          <div className="border-y border-gray-300 py-2 mb-4 text-xs">
+            <div className="flex items-baseline justify-between">
+              <span className="text-gray-700">Dès</span>
+              <b className="text-xl text-orange-500">79 € HT/mois</b>
+            </div>
+            <div className="flex items-baseline justify-between text-[10px] text-gray-500">
+              <span>Tout activé</span>
+              <span>482,40 € HT/mois</span>
+            </div>
           </div>
 
           <div className="border-2 border-orange-500 rounded-lg p-3 text-center">
