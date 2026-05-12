@@ -288,7 +288,7 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "flyer";
+export type DocType = "contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "flyer";
 
 type Props = {
   docType: DocType;
@@ -344,8 +344,8 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         </div>
       </div>
 
-      {/* Pour plaquette et flyer : pas de titre rigide, le template gère son propre hero */}
-      {docType !== "plaquette" && docType !== "flyer" && (
+      {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
+      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "flyer" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
           {docType === "contrat" && "Contrat d'Abonnement — Plateforme Ma Table"}
           {docType === "prestation" && "Contrat de Prestation — Ma Table"}
@@ -1275,6 +1275,243 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           <p className="text-xs text-gray-500 italic text-center mt-4">
             {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · matable.pro
+          </p>
+        </div>
+      )}
+
+      {/* ===== PLAQUETTE ÉCO — minimaliste, économe en encre ===== */}
+      {docType === "plaquette-eco" && (
+        <div>
+          {/* Hero ultra-épuré : tout en typo, fond blanc */}
+          <div className="mb-8">
+            <p className="text-xs uppercase tracking-[0.3em] text-orange-500 font-black">Préparé pour</p>
+            <p className="text-xl font-black text-gray-900 mt-1">{clientData.name || "Votre établissement"}</p>
+            {clientData.managerName && (
+              <p className="text-sm text-gray-500 mt-0.5">À l'attention de <b className="text-gray-700">{clientData.managerName}</b></p>
+            )}
+          </div>
+
+          <h1 className="text-4xl font-black leading-[1.05] mb-6">
+            Triplez vos avis Google.<br/>
+            <span className="text-orange-500">Sans effort.</span>
+          </h1>
+
+          <div className="h-px bg-gray-300 mb-6" />
+
+          {/* 3 chiffres clés en typo, pas de fond */}
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <div>
+              <p className="text-4xl font-black text-gray-900">+200<span className="text-orange-500">%</span></p>
+              <p className="text-xs uppercase tracking-wider text-gray-500 mt-1">Avis Google</p>
+            </div>
+            <div>
+              <p className="text-4xl font-black text-gray-900">+30<span className="text-orange-500">%</span></p>
+              <p className="text-xs uppercase tracking-wider text-gray-500 mt-1">Service plus rapide</p>
+            </div>
+            <div>
+              <p className="text-4xl font-black text-gray-900">+15<span className="text-orange-500">%</span></p>
+              <p className="text-xs uppercase tracking-wider text-gray-500 mt-1">Pourboires</p>
+            </div>
+          </div>
+
+          <div className="h-px bg-gray-300 mb-6" />
+
+          {/* Le constat (texte fluide, économe) */}
+          <p className="text-sm leading-relaxed mb-6 text-gray-700">
+            <b className="text-gray-900">70 % de vos clients satisfaits</b> ne laissent jamais d'avis Google — par oubli.
+            Nova IA leur propose à la fin du repas de partager leur expérience en 30 secondes, directement publié.
+            Votre équipe ne fait <b>rien de plus</b> : tout est automatique.
+          </p>
+
+          {/* Tableau inclus — lignes seules, sans fond */}
+          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Tout inclus dans votre abonnement</p>
+          <ul className="text-sm space-y-1.5 mb-6">
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Avis Google automatisés (Nova IA)</li>
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> QR codes & commande à table illimités</li>
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Portail Serveur · Cuisine Live · Caisse</li>
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Magic Scan menu · Descriptions IA · Planning</li>
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Gestion de stock IA · Finance assistée</li>
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Réservations en ligne (Stripe inclus)</li>
+            <li className="flex items-center gap-2"><span className="text-orange-500 font-black">›</span> Hébergement · Mises à jour · Support</li>
+          </ul>
+
+          <div className="h-px bg-gray-300 mb-6" />
+
+          {/* Prix : juste typo, pas de bloc */}
+          <div className="flex items-baseline justify-between mb-8">
+            <p className="text-sm text-gray-700">À partir de</p>
+            <p className="text-3xl font-black text-orange-500">79 € HT / mois</p>
+          </div>
+
+          {/* CTA — SEULE zone colorée du doc */}
+          <div className="border-2 border-orange-500 rounded-xl p-4 text-center">
+            <p className="text-xs uppercase tracking-widest text-orange-600 font-bold mb-1">Démo gratuite · 15 min · sans engagement</p>
+            <p className="text-2xl font-black text-gray-900 mt-2">📞 {vendor.phone}</p>
+            <p className="text-sm text-orange-600 font-bold mt-1">{vendor.email}</p>
+            <p className="text-xs text-gray-500 italic mt-2">Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> · Réf. {docMeta.numero}</p>
+          </div>
+
+          <p className="text-[10px] text-gray-400 text-center mt-4">
+            {vendor.raisonSociale} · matable.pro
+          </p>
+        </div>
+      )}
+
+      {/* ===== PLAQUETTE PREMIUM — pour gros prospects ===== */}
+      {docType === "plaquette-premium" && (
+        <div>
+          {/* Hero avec liseré couleur */}
+          <div className="border-l-4 border-orange-500 pl-4 mb-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-orange-600 font-black mb-1">Proposition personnalisée pour</p>
+            <p className="text-3xl font-black text-gray-900">{clientData.name || "Votre établissement"}</p>
+            {clientData.managerName && (
+              <p className="text-sm text-gray-600 mt-1">À l'attention de <b className="text-gray-900">{clientData.managerName}</b> · Établie le {docMeta.date}</p>
+            )}
+          </div>
+
+          <h1 className="text-3xl font-black leading-tight mb-4">
+            La plateforme tout-en-un<br/>
+            <span className="text-orange-500">pour les restaurateurs ambitieux.</span>
+          </h1>
+
+          <p className="text-sm leading-relaxed text-gray-700 mb-6">
+            Ma Table digitalise <b>l'intégralité de votre exploitation</b> — de la prise de commande aux avis Google,
+            en passant par la caisse, le stock et la finance — dans une seule plateforme cohérente, opérée
+            avec l'intelligence artificielle de <b className="text-gray-900">NovaTech</b>.
+          </p>
+
+          {/* Différenciants */}
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Pourquoi Ma Table plutôt qu'un autre</h2>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="border border-gray-200 rounded-lg p-3">
+              <p className="font-black text-sm text-gray-900 mb-1">🎯 Une seule plateforme</p>
+              <p className="text-xs text-gray-600">Avis, caisse, cuisine, stock, finance — tout connecté. Pas de jonglage entre 5 outils.</p>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-3">
+              <p className="font-black text-sm text-gray-900 mb-1">🤖 IA professionnelle</p>
+              <p className="text-xs text-gray-600">Modèles NovaTech entraînés sur la restauration. Pas un chatbot générique recyclé.</p>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-3">
+              <p className="font-black text-sm text-gray-900 mb-1">💶 Sans engagement caché</p>
+              <p className="text-xs text-gray-600">Engagement libre 3 à 12 mois. Préavis 30 jours. Aucun frais d'installation.</p>
+            </div>
+            <div className="border border-gray-200 rounded-lg p-3">
+              <p className="font-black text-sm text-gray-900 mb-1">🇫🇷 Souveraineté des données</p>
+              <p className="text-xs text-gray-600">Hébergement UE (Frankfurt). Vos données restent votre propriété.</p>
+            </div>
+          </div>
+
+          {/* Témoignages */}
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Ils nous ont fait confiance</h2>
+          <div className="space-y-3 mb-6">
+            <blockquote className="bg-orange-50/40 border-l-4 border-orange-400 p-3 rounded-r">
+              <p className="text-sm text-gray-800 italic leading-relaxed">
+                « Nous étions à 4,2 sur Google. Trois mois plus tard, 4,7. Et surtout, nos clients commandent
+                sans attendre — l'équipe de salle est libérée pour vraiment servir. »
+              </p>
+              <p className="text-xs text-gray-600 mt-2 font-bold">— Restaurant pilote, Pays de la Loire</p>
+            </blockquote>
+            <blockquote className="bg-orange-50/40 border-l-4 border-orange-400 p-3 rounded-r">
+              <p className="text-sm text-gray-800 italic leading-relaxed">
+                « Le Magic Scan a digitalisé notre carte en 10 minutes. Les descriptions IA sont meilleures
+                que ce qu'on aurait écrit nous-mêmes. »
+              </p>
+              <p className="text-xs text-gray-600 mt-2 font-bold">— Bistrot urbain, Région Lyonnaise</p>
+            </blockquote>
+          </div>
+
+          {/* Stack technique (rassurance) */}
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Notre stack technique</h2>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {["NovaTech (IA)", "Railway (UE)", "Stripe", "Resend", "GitHub", "TLS 1.3"].map((p) => (
+              <span key={p} className="text-xs px-3 py-1 bg-gray-100 border border-gray-200 rounded-full font-bold text-gray-700">{p}</span>
+            ))}
+          </div>
+
+          {/* Tarif */}
+          <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-5 mb-4">
+            <div className="flex items-baseline justify-between mb-2">
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Tarif unique tout inclus</p>
+              <p className="text-3xl font-black text-orange-500">79 € HT/mois</p>
+            </div>
+            <p className="text-xs text-gray-600">
+              Engagement 12 mois. Paiement annuel à <b>−5 %</b>. Tarifs dégressifs sur volume de modules.
+              Mise en service sous 7 jours.
+            </p>
+          </div>
+
+          {/* CTA premium */}
+          <div className="border-2 border-orange-500 bg-orange-50/30 rounded-xl p-5 text-center">
+            <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Démo personnalisée — 30 minutes sur place</p>
+            <p className="text-xl font-black text-gray-900">{vendor.representant}</p>
+            <p className="text-lg font-bold text-gray-900 mt-1">📞 {vendor.phone}</p>
+            <p className="text-sm text-orange-600 font-bold">{vendor.email}</p>
+            <p className="text-xs text-gray-500 italic mt-2">Réf. {docMeta.numero} · Cette proposition est valable jusqu'au {docMeta.validite}</p>
+          </div>
+
+          <p className="text-[10px] text-gray-400 text-center mt-4">
+            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · {vendor.address} · matable.pro
+          </p>
+        </div>
+      )}
+
+      {/* ===== PLAQUETTE COMPACTE — A5 portrait (148×210 mm) pour porte-à-porte ===== */}
+      {docType === "plaquette-compact" && (
+        <div style={{ maxWidth: "148mm", margin: "0 auto", minHeight: "260mm" }}>
+          {/* Format A5 portrait : utilise la moitié supérieure de l'A4 — l'autre moitié sera blanche ou pliée */}
+          <div className="border-b-2 border-orange-500 pb-3 mb-4">
+            <p className="text-xs uppercase tracking-[0.3em] text-orange-500 font-black">Préparé pour</p>
+            <p className="text-xl font-black text-gray-900 mt-1">{clientData.name || "Votre établissement"}</p>
+          </div>
+
+          <h1 className="text-3xl font-black leading-[1.05] mb-3">
+            Triplez vos avis Google.<br/>
+            <span className="text-orange-500">Zéro effort.</span>
+          </h1>
+
+          <p className="text-xs leading-relaxed text-gray-700 mb-4">
+            Vos clients scannent un QR sur leur table, commandent, payent.
+            <b> Nova IA</b> récolte leur avis Google en 30 secondes. Tout est automatique.
+          </p>
+
+          <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+            <div className="border border-orange-200 rounded p-2">
+              <p className="text-lg font-black text-orange-500">+200%</p>
+              <p className="text-[9px] uppercase text-gray-600">Avis Google</p>
+            </div>
+            <div className="border border-orange-200 rounded p-2">
+              <p className="text-lg font-black text-orange-500">+30%</p>
+              <p className="text-[9px] uppercase text-gray-600">Service</p>
+            </div>
+            <div className="border border-orange-200 rounded p-2">
+              <p className="text-lg font-black text-orange-500">+15%</p>
+              <p className="text-[9px] uppercase text-gray-600">Pourboires</p>
+            </div>
+          </div>
+
+          <ul className="text-xs space-y-1 mb-4">
+            <li><b className="text-orange-500">›</b> Avis Google automatisés</li>
+            <li><b className="text-orange-500">›</b> QR · Commande · Paiement</li>
+            <li><b className="text-orange-500">›</b> Serveur · Cuisine · Caisse</li>
+            <li><b className="text-orange-500">›</b> Nova IA complète</li>
+            <li><b className="text-orange-500">›</b> Stock · Finance · Contab</li>
+            <li><b className="text-orange-500">›</b> Réservations</li>
+          </ul>
+
+          <div className="flex items-baseline justify-between border-y border-gray-300 py-2 mb-4">
+            <p className="text-xs text-gray-700">Tout inclus dès</p>
+            <p className="text-2xl font-black text-orange-500">79 € HT/mois</p>
+          </div>
+
+          <div className="border-2 border-orange-500 rounded-lg p-3 text-center">
+            <p className="text-[10px] uppercase tracking-widest text-orange-600 font-bold mb-1">Démo gratuite — 15 min</p>
+            <p className="text-base font-black">📞 {vendor.phone}</p>
+            <p className="text-xs text-orange-600 font-bold">{vendor.email}</p>
+            <p className="text-[10px] text-gray-500 italic mt-1">Demandez {vendor.representant}</p>
+          </div>
+
+          <p className="text-[8px] text-gray-400 text-center mt-3">
+            {vendor.raisonSociale} · matable.pro · Réf. {docMeta.numero}
           </p>
         </div>
       )}

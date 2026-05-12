@@ -26,6 +26,9 @@ const TYPE_LABELS: Record<string, string> = {
   onboarding: "Onboarding",
   tarification: "Tarification",
   plaquette: "Plaquette",
+  "plaquette-eco": "Plaq. éco",
+  "plaquette-premium": "Plaq. premium",
+  "plaquette-compact": "Plaq. A5",
   flyer: "Flyer",
 };
 
@@ -38,6 +41,9 @@ const TYPE_COLORS: Record<string, string> = {
   onboarding: "bg-amber-500/10 text-amber-400 border-amber-500/30",
   tarification: "bg-rose-500/10 text-rose-400 border-rose-500/30",
   plaquette: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/30",
+  "plaquette-eco": "bg-lime-500/10 text-lime-400 border-lime-500/30",
+  "plaquette-premium": "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  "plaquette-compact": "bg-pink-500/10 text-pink-400 border-pink-500/30",
   flyer: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
 };
 
