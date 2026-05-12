@@ -289,7 +289,25 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer";
+export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer";
+
+// Ligne d'établissement pour les devis chaîne
+export type ChainEstablishment = {
+  id: string;
+  name: string;
+  city?: string;
+  modules: string[];           // ids depuis MODULES
+  engagement: string;          // "3m" | "6m" | "9m" | "12m" | "12a"
+  monthlyHt: number;           // tarif négocié (saisie libre)
+  notes?: string;
+};
+
+export type ChainQuote = {
+  establishments: ChainEstablishment[];
+  groupDiscountPercent: number;    // remise groupe sur le total
+  setupFeeHt: number;              // frais d'installation groupe (saisie libre)
+  notes?: string;
+};
 
 type Props = {
   docType: DocType;
@@ -299,10 +317,11 @@ type Props = {
   engagement: string;
   prestation: Prestation;
   priceInfo: PriceInfo;
+  chainQuote?: ChainQuote;
 };
 
 const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemplate(
-  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo },
+  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote },
   ref
 ) {
   return (
@@ -355,6 +374,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           {docType === "cgvu" && "Conditions Générales de Vente et d'Utilisation"}
           {docType === "onboarding" && "Fiche d'Activation — Ma Table"}
           {docType === "tarification" && "Fiche Tarification & Suivi Client"}
+          {docType === "devis-chaine" && "Devis Groupe / Chaîne — Ma Table"}
         </h1>
       )}
 
@@ -716,6 +736,132 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
         </div>
       )}
+
+      {/* ===== DEVIS CHAÎNE — multi-établissements, lignes saisies à la main ===== */}
+      {docType === "devis-chaine" && (() => {
+        const cq = chainQuote ?? { establishments: [], groupDiscountPercent: 0, setupFeeHt: 0 };
+        const subtotalMonthly = cq.establishments.reduce((s, e) => s + (e.monthlyHt || 0), 0);
+        const groupDiscount = subtotalMonthly * (cq.groupDiscountPercent / 100);
+        const totalMonthly = subtotalMonthly - groupDiscount;
+        const moduleNames: Record<string, string> = Object.fromEntries(MODULES.map((m) => [m.id, m.name]));
+        const engLabel: Record<string, string> = { "3m": "3 m", "6m": "6 m", "9m": "9 m", "12m": "12 m", "12a": "12 m an." };
+        return (
+          <div>
+            {/* Émetteur / Bénéficiaire */}
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-50 p-4 rounded-xl border">
+                <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Émetteur</h3>
+                <p className="text-sm font-bold mb-1">{vendor.raisonSociale}</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {vendor.address}<br/>
+                  SIRET : {PH(vendor.siret, "IMAT en cours")}<br/>
+                  {vendor.email} · {vendor.phone}
+                </p>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Groupe / Chaîne</h3>
+                <p className="text-sm font-bold mb-1">{clientData.name || "..."}</p>
+                <p className="text-xs text-orange-900 leading-relaxed">
+                  {clientData.address || "..."}<br/>
+                  {clientData.managerName && <>Contact : {clientData.managerName}<br/></>}
+                  {clientData.email && <>{clientData.email}</>}
+                </p>
+              </div>
+            </div>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Périmètre du devis</h2>
+            <p className="text-sm mb-4 leading-relaxed">
+              Le présent devis couvre <b>{cq.establishments.length}</b> établissement{cq.establishments.length > 1 ? "s" : ""} du
+              groupe <b>{clientData.name || "Client"}</b> avec un tarif négocié au cas par cas selon les modules retenus et la durée d'engagement.
+            </p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Détail par établissement</h2>
+            <table className="w-full text-xs mb-3 border-collapse">
+              <thead>
+                <tr className="bg-orange-50 text-orange-900 text-left uppercase tracking-wider border-y-2 border-orange-500">
+                  <th className="p-2">#</th>
+                  <th className="p-2">Établissement</th>
+                  <th className="p-2">Modules retenus</th>
+                  <th className="p-2 text-center">Eng.</th>
+                  <th className="p-2 text-right">HT/mois</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cq.establishments.length === 0 ? (
+                  <tr><td colSpan={5} className="p-4 text-center text-gray-400 italic text-xs">Aucun établissement saisi — éditez le devis dans le sidebar.</td></tr>
+                ) : cq.establishments.map((e, i) => (
+                  <tr key={e.id} className="border-b border-gray-200">
+                    <td className="p-2 font-mono text-gray-500">{i + 1}</td>
+                    <td className="p-2">
+                      <b>{e.name || "—"}</b>
+                      {e.city && <><br/><span className="text-[10px] text-gray-500">{e.city}</span></>}
+                      {e.notes && <><br/><span className="text-[10px] text-gray-500 italic">{e.notes}</span></>}
+                    </td>
+                    <td className="p-2 text-xs">
+                      {e.modules.length === 0 ? <span className="text-gray-400">—</span> : e.modules.map((mid) => moduleNames[mid] ?? mid).join(" · ")}
+                    </td>
+                    <td className="p-2 text-center text-xs">{engLabel[e.engagement] ?? e.engagement}</td>
+                    <td className="p-2 text-right font-bold">{(e.monthlyHt || 0).toFixed(2)} €</td>
+                  </tr>
+                ))}
+                <tr className="border-b text-xs">
+                  <td colSpan={4} className="p-2 text-right text-gray-600">Sous-total HT mensuel ({cq.establishments.length} établissement{cq.establishments.length > 1 ? "s" : ""})</td>
+                  <td className="p-2 text-right">{subtotalMonthly.toFixed(2)} €</td>
+                </tr>
+                {cq.groupDiscountPercent > 0 && (
+                  <tr className="border-b text-xs text-emerald-700">
+                    <td colSpan={4} className="p-2 text-right">Remise groupe ({cq.groupDiscountPercent} %)</td>
+                    <td className="p-2 text-right">− {groupDiscount.toFixed(2)} €</td>
+                  </tr>
+                )}
+                <tr className="bg-gray-50 font-black">
+                  <td colSpan={4} className="p-2 text-right">TOTAL HT MENSUEL</td>
+                  <td className="p-2 text-right text-orange-500">{totalMonthly.toFixed(2)} €</td>
+                </tr>
+                <tr className="bg-orange-50/40 text-sm">
+                  <td colSpan={4} className="p-2 text-right text-orange-900">Total HT annuel (×12)</td>
+                  <td className="p-2 text-right font-black text-orange-700">{(totalMonthly * 12).toFixed(2)} €</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {cq.setupFeeHt > 0 && (
+              <div className="bg-gray-50 border rounded-lg p-3 mb-3 text-sm">
+                <div className="flex justify-between">
+                  <span><b>Frais d'installation groupe</b> <span className="text-xs text-gray-500">(facturation unique à la signature)</span></span>
+                  <b>{cq.setupFeeHt.toFixed(2)} € HT</b>
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI.</p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Conditions</h2>
+            <ul className="text-sm mb-4 ml-6 list-disc space-y-1">
+              <li>Devis valable jusqu'au <b>{docMeta.validite}</b>.</li>
+              <li>Paiement mensuel par virement bancaire ou prélèvement SEPA — un seul prélèvement consolidé pour l'ensemble du groupe.</li>
+              <li>Contrat-cadre Groupe + bons de commande individuels par établissement à la signature.</li>
+              <li>Mise en service échelonnée selon planning à arrêter conjointement après acceptation du devis.</li>
+              <li>Account Manager dédié + ligne directe pour l'ensemble des établissements du groupe.</li>
+              {cq.notes && <li className="italic">{cq.notes}</li>}
+            </ul>
+
+            <div className="grid grid-cols-2 gap-8 mt-10">
+              <div className="border rounded-xl p-4">
+                <h3 className="text-xs uppercase tracking-widest text-gray-400 font-black mb-2">Émetteur</h3>
+                <div className="border-b h-14 mb-2"></div>
+                <p className="text-xs text-gray-500">{vendor.representant} — {docMeta.date}</p>
+              </div>
+              <div className="border border-orange-200 bg-orange-50/50 rounded-xl p-4">
+                <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Bon pour accord — Groupe</h3>
+                <p className="text-xs text-orange-700 mb-2">Mention manuscrite « bon pour accord » + signature + cachet</p>
+                <div className="border-b border-orange-200 h-14 mb-2"></div>
+                <p className="text-xs text-orange-900">{clientData.managerName || "..."}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ===== CGV / CGU ===== */}
       {docType === "cgvu" && (

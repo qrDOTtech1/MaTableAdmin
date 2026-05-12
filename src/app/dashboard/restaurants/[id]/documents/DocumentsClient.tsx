@@ -30,7 +30,7 @@ const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 pl
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
-  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer">("contrat");
+  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer">("contrat");
   const [engagement, setEngagement] = useState<DurationKey>("12m");
   // Modules sélectionnés — "avis" est requis donc toujours inclus
   const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
@@ -71,6 +71,38 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     periode: `01/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1} — ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1}`,
   });
 
+  // Devis Chaîne — lignes saisies à la main par l'admin
+  const [chainQuote, setChainQuote] = useState<{
+    establishments: Array<{ id: string; name: string; city: string; modules: string[]; engagement: string; monthlyHt: number; notes: string }>;
+    groupDiscountPercent: number;
+    setupFeeHt: number;
+    notes: string;
+  }>({
+    establishments: [],
+    groupDiscountPercent: 0,
+    setupFeeHt: 0,
+    notes: "",
+  });
+
+  const addChainEstablishment = () => {
+    setChainQuote((q) => ({
+      ...q,
+      establishments: [
+        ...q.establishments,
+        { id: Math.random().toString(36).slice(2, 9), name: "", city: "", modules: ["avis"], engagement: "12m", monthlyHt: 79, notes: "" },
+      ],
+    }));
+  };
+  const removeChainEstablishment = (id: string) => {
+    setChainQuote((q) => ({ ...q, establishments: q.establishments.filter((e) => e.id !== id) }));
+  };
+  const updateChainEstablishment = (id: string, patch: Partial<typeof chainQuote.establishments[0]>) => {
+    setChainQuote((q) => ({
+      ...q,
+      establishments: q.establishments.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    }));
+  };
+
   // Contrat de prestation transitoire (avant IMAT société) — mensuel sans engagement
   const [prestation, setPrestation] = useState({
     description: "Mise à disposition mensuelle de la plateforme Ma Table (tous modules) et accompagnement à l'usage. Prestation transitoire conclue en attendant l'immatriculation de la société du Prestataire.",
@@ -95,6 +127,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     "plaquette-premium": "Plaquette premium",
     "plaquette-compact": "Plaquette compacte A5",
     "plaquette-chaine": "Plaquette Chaîne (sur devis)",
+    "devis-chaine": "Devis Chaîne / Groupe",
     flyer: "Flyer démo",
   };
 
@@ -112,6 +145,10 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
         totalCents = Math.round(prestation.montantHT * 100);
       } else if (docType === "tarification") {
         totalCents = Math.round(priceInfo.monthly * 100);
+      } else if (docType === "devis-chaine") {
+        const sub = chainQuote.establishments.reduce((s, e) => s + (e.monthlyHt || 0), 0);
+        const net = sub - sub * (chainQuote.groupDiscountPercent / 100);
+        totalCents = Math.round(net * 100);
       }
       const title = `${typeLabels[docType] ?? docType} — ${clientData.name || "Sans nom"}`;
       const res = await fetch("/api/documents", {
@@ -125,7 +162,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           totalCents,
           vendor,
           client: clientData,
-          data: { engagement, selectedModules, docMeta, prestation },
+          data: { engagement, selectedModules, docMeta, prestation, chainQuote },
         }),
       });
       const data = await res.json();
@@ -165,7 +202,8 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
               <optgroup label="📑 Contrats & Facturation">
                 <option value="contrat">Contrat d'Abonnement</option>
                 <option value="prestation">Contrat de Prestation (transitoire)</option>
-                <option value="devis">Devis</option>
+                <option value="devis">Devis (mono-établissement)</option>
+                <option value="devis-chaine">Devis Chaîne / Groupe</option>
                 <option value="facture">Facture</option>
               </optgroup>
               <optgroup label="📋 Documents légaux & internes">
@@ -288,6 +326,146 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
             <input type="text" value={clientData.phone} placeholder="Téléphone" onChange={(e) => setClientData({...clientData, phone: e.target.value})} className={INPUT_CLIENT_CLS} />
           </div>
 
+          {/* ─── Devis Chaîne : édition multi-établissements ────────────── */}
+          {docType === "devis-chaine" && (
+            <div className="pt-4 border-t border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Établissements du groupe ({chainQuote.establishments.length})</label>
+                <button
+                  type="button"
+                  onClick={addChainEstablishment}
+                  className="text-xs px-2 py-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/30 rounded font-bold"
+                >
+                  + Ajouter
+                </button>
+              </div>
+
+              {chainQuote.establishments.length === 0 && (
+                <p className="text-xs text-slate-500 italic py-3 text-center bg-slate-800/40 rounded-lg border border-slate-700/40">
+                  Aucun établissement. Cliquez "+ Ajouter" pour commencer.
+                </p>
+              )}
+
+              {chainQuote.establishments.map((e, i) => (
+                <div key={e.id} className="bg-slate-800 border border-slate-700 rounded-lg p-2 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500 font-mono">#{i + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeChainEstablishment(e.id)}
+                      className="text-[10px] text-red-400 hover:text-red-300"
+                    >
+                      ✕ Retirer
+                    </button>
+                  </div>
+                  <input
+                    type="text" value={e.name} placeholder="Nom de l'établissement"
+                    onChange={(ev) => updateChainEstablishment(e.id, { name: ev.target.value })}
+                    className={INPUT_CLS + " text-xs"}
+                  />
+                  <input
+                    type="text" value={e.city} placeholder="Ville"
+                    onChange={(ev) => updateChainEstablishment(e.id, { city: ev.target.value })}
+                    className={INPUT_CLS + " text-xs"}
+                  />
+                  <select
+                    value={e.engagement}
+                    onChange={(ev) => updateChainEstablishment(e.id, { engagement: ev.target.value })}
+                    className={INPUT_CLS + " text-xs"}
+                  >
+                    {DURATIONS.map((d) => (
+                      <option key={d.key} value={d.key}>{d.label}</option>
+                    ))}
+                  </select>
+                  <div>
+                    <p className="text-[10px] text-slate-500 mb-0.5">Modules</p>
+                    <div className="flex flex-wrap gap-1">
+                      {MODULES.map((mod) => {
+                        const isSel = e.modules.includes(mod.id);
+                        return (
+                          <button
+                            key={mod.id}
+                            type="button"
+                            onClick={() => {
+                              if (mod.required) return;
+                              const next = isSel ? e.modules.filter((x) => x !== mod.id) : [...e.modules, mod.id];
+                              updateChainEstablishment(e.id, { modules: next });
+                            }}
+                            disabled={mod.required}
+                            className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                              isSel
+                                ? "bg-orange-500/20 text-orange-300 border-orange-500/40"
+                                : "bg-slate-900 text-slate-500 border-slate-700 hover:bg-slate-800"
+                            } ${mod.required ? "opacity-90" : ""}`}
+                            title={mod.required ? "Module requis" : ""}
+                          >
+                            {mod.name.split(" ")[0]}{mod.required && "*"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number" step="0.01" value={e.monthlyHt}
+                      onChange={(ev) => updateChainEstablishment(e.id, { monthlyHt: Number(ev.target.value) || 0 })}
+                      className={INPUT_CLS + " text-xs"}
+                      placeholder="HT/mois"
+                    />
+                    <span className="text-xs text-slate-400">€/mois</span>
+                  </div>
+                  <input
+                    type="text" value={e.notes} placeholder="Notes (optionnel)"
+                    onChange={(ev) => updateChainEstablishment(e.id, { notes: ev.target.value })}
+                    className={INPUT_CLS + " text-[10px]"}
+                  />
+                </div>
+              ))}
+
+              <div className="pt-2 border-t border-slate-700/40 space-y-2">
+                <div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">Remise groupe (%)</label>
+                  <input
+                    type="number" min="0" max="100" value={chainQuote.groupDiscountPercent}
+                    onChange={(ev) => setChainQuote((q) => ({ ...q, groupDiscountPercent: Number(ev.target.value) || 0 }))}
+                    className={INPUT_CLS + " text-xs"}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">Frais d'installation groupe (€ HT)</label>
+                  <input
+                    type="number" min="0" step="0.01" value={chainQuote.setupFeeHt}
+                    onChange={(ev) => setChainQuote((q) => ({ ...q, setupFeeHt: Number(ev.target.value) || 0 }))}
+                    className={INPUT_CLS + " text-xs"}
+                  />
+                </div>
+                <textarea
+                  value={chainQuote.notes} placeholder="Note libre (apparaît dans les conditions)"
+                  onChange={(ev) => setChainQuote((q) => ({ ...q, notes: ev.target.value }))}
+                  rows={2}
+                  className={INPUT_CLS + " text-[10px]"}
+                />
+
+                {/* Récap live */}
+                {chainQuote.establishments.length > 0 && (() => {
+                  const sub = chainQuote.establishments.reduce((s, e) => s + (e.monthlyHt || 0), 0);
+                  const disc = sub * (chainQuote.groupDiscountPercent / 100);
+                  const net = sub - disc;
+                  return (
+                    <div className="mt-2 p-2 bg-slate-900 border border-slate-700 rounded text-xs">
+                      <div className="flex justify-between text-slate-400"><span>Sous-total</span><span>{sub.toFixed(2)} €</span></div>
+                      {chainQuote.groupDiscountPercent > 0 && (
+                        <div className="flex justify-between text-emerald-400"><span>Remise</span><span>−{disc.toFixed(2)} €</span></div>
+                      )}
+                      <div className="flex justify-between text-orange-400 font-black border-t border-slate-700 mt-1 pt-1"><span>HT/mois</span><span>{net.toFixed(2)} €</span></div>
+                      <div className="flex justify-between text-slate-500 text-[10px]"><span>HT/an (×12)</span><span>{(net * 12).toFixed(2)} €</span></div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
           {/* ─── Prestation (ponctuelle) ──────────────────────────────── */}
           {docType === "prestation" && (
             <div className="pt-4 border-t border-slate-800 space-y-2">
@@ -343,6 +521,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           engagement={engagement}
           prestation={prestation}
           priceInfo={priceInfo}
+          chainQuote={chainQuote}
         />
       </div>
     </div>

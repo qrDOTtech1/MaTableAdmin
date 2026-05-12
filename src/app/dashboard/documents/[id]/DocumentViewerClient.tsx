@@ -19,7 +19,7 @@ type Doc = {
   title: string;
   vendor: Vendor;
   client: ClientData;
-  data: { engagement?: string; selectedModules?: string[]; docMeta?: DocMeta; prestation?: Prestation };
+  data: { engagement?: string; selectedModules?: string[]; docMeta?: DocMeta; prestation?: Prestation; chainQuote?: any };
   restaurantName: string;
   signedAt: string | null;
 };
@@ -132,6 +132,7 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
           engagement={engagement}
           prestation={prestation}
           priceInfo={priceInfo}
+          chainQuote={doc.data?.chainQuote}
         />
       </div>
     </div>
