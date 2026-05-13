@@ -105,7 +105,7 @@ async function runArchive(opts: { dryRun?: boolean; force?: boolean } = {}) {
   const html = `<!doctype html>
 <html><body style="font-family: Arial, sans-serif; color: #1a1a1a; max-width: 700px; margin: 0 auto; padding: 24px;">
   <div style="border-bottom: 3px solid #f97316; padding-bottom: 12px; margin-bottom: 24px;">
-    <h1 style="margin: 0; font-size: 24px;">Ma <span style="color:#f97316">Table</span> — Archive mensuelle</h1>
+    <h1 style="margin: 0; font-size: 24px;">MaTable<span style="color:#f97316">.Pro</span> — Archive mensuelle</h1>
     <p style="margin: 8px 0 0; color: #666; font-size: 14px;">
       Période : <b>${start.toLocaleDateString("fr-FR")}</b> → <b>${new Date(end.getTime() - 1).toLocaleDateString("fr-FR")}</b>
     </p>
@@ -177,7 +177,7 @@ async function runArchive(opts: { dryRun?: boolean; force?: boolean } = {}) {
   const result = await resend.emails.send({
     from: "archive@matable.pro",
     to: [cfg.archiveRecipient],
-    subject: `Ma Table — Archive ${key} (${docs.length} document${docs.length > 1 ? "s" : ""})`,
+    subject: `MaTable.Pro — Archive ${key} (${docs.length} document${docs.length > 1 ? "s" : ""})`,
     html,
   });
 

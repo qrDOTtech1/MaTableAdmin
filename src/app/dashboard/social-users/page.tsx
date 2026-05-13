@@ -55,7 +55,7 @@ export default async function SocialUsersPage() {
   if (!result.ok) {
     return (
       <div className="p-8">
-        <h1 className="text-3xl font-bold text-white mb-4">Utilisateurs Ma Table RS</h1>
+        <h1 className="text-3xl font-bold text-white mb-4">Utilisateurs MaTable.Pro RS</h1>
         {result.reason === "no-env" ? (
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-6">
             <p className="text-yellow-400 font-bold mb-2">⚠️ Variable manquante</p>
@@ -87,7 +87,7 @@ export default async function SocialUsersPage() {
   return (
     <div className="p-8 space-y-10">
       <div>
-        <h1 className="text-3xl font-bold text-white">Utilisateurs Ma Table RS</h1>
+        <h1 className="text-3xl font-bold text-white">Utilisateurs MaTable.Pro RS</h1>
         <p className="text-slate-400 text-sm mt-1">Gestion des comptes, profils sociaux, réservations et restaurants partenaires.</p>
       </div>
 

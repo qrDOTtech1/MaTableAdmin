@@ -248,7 +248,7 @@ export default function DemandesClient({ requests: initial }: { requests: Req[] 
                 </>
               )}
               <a
-                href={`mailto:${open.email}?subject=Votre demande Ma Table — ${encodeURIComponent(open.restaurantName)}`}
+                href={`mailto:${open.email}?subject=Votre demande MaTable.Pro — ${encodeURIComponent(open.restaurantName)}`}
                 className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-semibold ml-auto"
               >
                 ✉ Répondre par email

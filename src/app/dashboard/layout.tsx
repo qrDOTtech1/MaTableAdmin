@@ -28,7 +28,7 @@ export default function DashboardLayout({
           <Link href="/dashboard/emails" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">📧 Emails</Link>
           <Link href="/dashboard/support" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">🎧 SAV / Support</Link>
 
-          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-4 pb-1">Ma Table RS</p>
+          <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest px-4 pt-4 pb-1">MaTable.Pro RS</p>
           <Link href="/dashboard/social-users" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">👥 Utilisateurs RS</Link>
           <Link href="/dashboard/social" className="block px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-900 transition-colors text-sm">✨ Nova Connect IA</Link>
         </nav>

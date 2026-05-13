@@ -76,17 +76,17 @@ function SideBanner({ side }: { side: "left" | "right" }) {
         {/* Wordmark vertical répété — police 3.5 pour rentrer dans 6 mm */}
         <g transform="rotate(-90, 12, 200)">
           <text x="12" y="200" textAnchor="middle" fontSize="3.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.32" letterSpacing="1.5">
-            MA · TABLE · MA · TABLE · MA · TABLE
+            MATABLE.PRO · MATABLE.PRO · MATABLE.PRO
           </text>
         </g>
         <g transform="rotate(-90, 12, 560)">
           <text x="12" y="560" textAnchor="middle" fontSize="3.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.32" letterSpacing="1.5">
-            MA · TABLE · MA · TABLE · MA · TABLE
+            MATABLE.PRO · MATABLE.PRO · MATABLE.PRO
           </text>
         </g>
         <g transform="rotate(-90, 12, 920)">
           <text x="12" y="920" textAnchor="middle" fontSize="3.5" fontFamily="Arial, sans-serif" fontWeight="900" fill="#f97316" opacity="0.32" letterSpacing="1.5">
-            MA · TABLE · MA · TABLE · MA · TABLE
+            MATABLE.PRO · MATABLE.PRO · MATABLE.PRO
           </text>
         </g>
 
@@ -155,7 +155,7 @@ function FlyerCard({ vendor }: { vendor: Vendor }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <div>
           <p style={{ fontSize: "9px", letterSpacing: "3px", color: "#f97316", fontWeight: 900, textTransform: "uppercase", margin: 0 }}>
-            Ma · Table
+            MaTable.Pro
           </p>
           <h1 style={{ fontSize: "26px", fontWeight: 900, lineHeight: 1.05, margin: "6px 0 0 0" }}>
             Triplez vos avis<br/>Google.<br/>
@@ -348,7 +348,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       {/* Header commun */}
       <div className="flex justify-between items-start border-b-2 border-orange-500 pb-5 mb-8">
         <div className="text-2xl font-black">
-          Ma <span className="text-orange-500">Table</span>
+          MaTable<span className="text-orange-500">.Pro</span>
         </div>
         <div className="text-right text-sm text-gray-500">
           <div className="uppercase font-bold">{docType === "cgvu" ? "CGV / CGU" : docType}</div>
@@ -367,14 +367,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
       {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
-          {docType === "contrat" && "Contrat d'Abonnement — Plateforme Ma Table"}
-          {docType === "prestation" && "Contrat de Prestation — Ma Table"}
-          {docType === "devis" && "Devis — Abonnement Ma Table"}
-          {docType === "facture" && "Facture — Abonnement Ma Table"}
+          {docType === "contrat" && "Contrat d'Abonnement — Plateforme MaTable.Pro"}
+          {docType === "prestation" && "Contrat de Prestation — MaTable.Pro"}
+          {docType === "devis" && "Devis — Abonnement MaTable.Pro"}
+          {docType === "facture" && "Facture — Abonnement MaTable.Pro"}
           {docType === "cgvu" && "Conditions Générales de Vente et d'Utilisation"}
-          {docType === "onboarding" && "Fiche d'Activation — Ma Table"}
+          {docType === "onboarding" && "Fiche d'Activation — MaTable.Pro"}
           {docType === "tarification" && "Fiche Tarification & Suivi Client"}
-          {docType === "devis-chaine" && "Devis Groupe / Chaîne — Ma Table"}
+          {docType === "devis-chaine" && "Devis Groupe / Chaîne — MaTable.Pro"}
         </h1>
       )}
 
@@ -410,7 +410,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="text-xs text-gray-600 mb-6 italic">Ci-après désignés ensemble « les Parties ». Il a été convenu ce qui suit :</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 1 — Objet du contrat</h2>
-          <p className="text-sm mb-3 leading-relaxed">Le présent contrat (« <b>le Contrat</b> ») a pour objet de définir les conditions dans lesquelles le Prestataire met à disposition du Client, sous forme de service en ligne (SaaS), l'accès à la plateforme <b>Ma Table</b> ainsi qu'aux modules choisis. Le Prestataire conserve la pleine propriété de la plateforme, de son code et de ses contenus.</p>
+          <p className="text-sm mb-3 leading-relaxed">Le présent contrat (« <b>le Contrat</b> ») a pour objet de définir les conditions dans lesquelles le Prestataire met à disposition du Client, sous forme de service en ligne (SaaS), l'accès à la plateforme <b>MaTable.Pro</b> ainsi qu'aux modules choisis. Le Prestataire conserve la pleine propriété de la plateforme, de son code et de ses contenus.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Modules souscrits & Tarifs</h2>
           <table className="w-full text-sm mb-3 border-collapse">
@@ -496,7 +496,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="text-sm mb-3 leading-relaxed">Le Client conserve la pleine propriété des données qu'il saisit ou que ses clients génèrent via la plateforme.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 7 — Propriété intellectuelle</h2>
-          <p className="text-sm mb-3 leading-relaxed">La plateforme Ma Table, sa marque, son code, ses interfaces et l'ensemble des contenus qu'elle contient (hors données client) sont la propriété exclusive du Prestataire. Le Contrat confère au Client un <b>droit d'usage personnel, non-exclusif et non-transférable</b> pendant la durée du Contrat. Toute reproduction, décompilation ou diffusion est strictement interdite.</p>
+          <p className="text-sm mb-3 leading-relaxed">La plateforme MaTable.Pro, sa marque, son code, ses interfaces et l'ensemble des contenus qu'elle contient (hors données client) sont la propriété exclusive du Prestataire. Le Contrat confère au Client un <b>droit d'usage personnel, non-exclusif et non-transférable</b> pendant la durée du Contrat. Toute reproduction, décompilation ou diffusion est strictement interdite.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 8 — Confidentialité</h2>
           <p className="text-sm mb-3 leading-relaxed">Chacune des Parties s'engage à conserver confidentielles toutes informations dont elle aurait connaissance dans le cadre du Contrat, et à ne les divulguer à aucun tiers sans l'accord écrit de l'autre Partie. Cette obligation perdure 3 ans après la fin du Contrat.</p>
@@ -663,7 +663,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Objet</h2>
-          <p className="text-sm mb-4 leading-relaxed">Mise à disposition de la plateforme SaaS <b>Ma Table</b> sur les modules sélectionnés ci-dessous. Hébergement, mises à jour et support inclus.</p>
+          <p className="text-sm mb-4 leading-relaxed">Mise à disposition de la plateforme SaaS <b>MaTable.Pro</b> sur les modules sélectionnés ci-dessous. Hébergement, mises à jour et support inclus.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Détail tarifaire — engagement <span className="text-orange-700">{priceInfo.durationLabel ?? engagement}</span></h2>
           <table className="w-full text-sm mb-3 border-collapse">
@@ -871,10 +871,10 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       {/* ===== CGV / CGU ===== */}
       {docType === "cgvu" && (
         <div className="text-sm leading-relaxed">
-          <p className="text-xs text-gray-500 mb-6 italic">En vigueur au {docMeta.date}. Applicables à toute souscription d'un abonnement à la plateforme Ma Table.</p>
+          <p className="text-xs text-gray-500 mb-6 italic">En vigueur au {docMeta.date}. Applicables à toute souscription d'un abonnement à la plateforme MaTable.Pro.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 1 — Identification du Prestataire</h2>
-          <p className="mb-3">La plateforme Ma Table (« <b>la Plateforme</b> ») est éditée et exploitée par :</p>
+          <p className="mb-3">La plateforme MaTable.Pro (« <b>la Plateforme</b> ») est éditée et exploitée par :</p>
           <ul className="ml-6 mb-3 list-disc">
             <li><b>{vendor.raisonSociale}</b> {vendor.formeJuridique && <>— {vendor.formeJuridique}</>}</li>
             <li>Siège social : {vendor.address}</li>
@@ -890,13 +890,13 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </ul>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Objet</h2>
-          <p className="mb-3">Les présentes CGV/CGU régissent l'accès et l'utilisation de la Plateforme Ma Table, service en ligne (SaaS) à destination des établissements de restauration et assimilés (restaurants, bars, salons de thé, boutiques alimentaires). La Plateforme propose notamment : gestion d'avis Google, QR codes de commande à table, portail serveur, écran cuisine, caisse, assistant IA (Nova), gestion de stock, réservations en ligne.</p>
+          <p className="mb-3">Les présentes CGV/CGU régissent l'accès et l'utilisation de la Plateforme MaTable.Pro, service en ligne (SaaS) à destination des établissements de restauration et assimilés (restaurants, bars, salons de thé, boutiques alimentaires). La Plateforme propose notamment : gestion d'avis Google, QR codes de commande à table, portail serveur, écran cuisine, caisse, assistant IA (Nova), gestion de stock, réservations en ligne.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 3 — Acceptation</h2>
           <p className="mb-3">Toute souscription à un abonnement implique l'acceptation pleine et entière des présentes CGV/CGU. Le Client reconnaît avoir la capacité juridique de contracter, agir en tant que professionnel et avoir pris connaissance des présentes avant signature du contrat d'abonnement.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 — Description des services</h2>
-          <p className="mb-2">L'abonnement Ma Table comprend l'accès illimité à l'ensemble des modules suivants pour un établissement :</p>
+          <p className="mb-2">L'abonnement MaTable.Pro comprend l'accès illimité à l'ensemble des modules suivants pour un établissement :</p>
           <ul className="ml-6 mb-3 list-disc text-xs">
             <li><b>Avis Google & Réputation</b> — collecte d'avis post-repas via IA conversationnelle, publication assistée sur Google Business Profile.</li>
             <li><b>QR Codes & Commande à table</b> — génération illimitée de QR codes par table, prise de commande client autonome.</li>
@@ -962,7 +962,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </ul>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 10 — Propriété intellectuelle</h2>
-          <p className="mb-3">L'ensemble des éléments composant la Plateforme (code, design, marque « Ma Table », interfaces, contenus éditoriaux, IA, base de données) est la propriété exclusive du Prestataire et protégé par le droit d'auteur et le droit des marques. Le Client bénéficie d'un droit d'usage personnel, non-exclusif et non-transférable pendant la durée du Contrat. Les <b>données saisies par le Client</b> (menu, clients finaux, commandes, avis) demeurent sa propriété exclusive.</p>
+          <p className="mb-3">L'ensemble des éléments composant la Plateforme (code, design, marque « MaTable.Pro », interfaces, contenus éditoriaux, IA, base de données) est la propriété exclusive du Prestataire et protégé par le droit d'auteur et le droit des marques. Le Client bénéficie d'un droit d'usage personnel, non-exclusif et non-transférable pendant la durée du Contrat. Les <b>données saisies par le Client</b> (menu, clients finaux, commandes, avis) demeurent sa propriété exclusive.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 11 — Données personnelles (RGPD)</h2>
           <p className="mb-2">Le Prestataire agit en qualité de <b>sous-traitant</b> au sens de l'art. 28 du RGPD pour le compte du Client. Les traitements sont effectués exclusivement aux fins de l'exécution du Contrat. Les données sont hébergées dans l'Union Européenne, chiffrées en transit (TLS 1.3) et au repos.</p>
@@ -1124,7 +1124,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 1 — Objet de la prestation</h2>
           <p className="text-sm mb-3 leading-relaxed whitespace-pre-line">{prestation.description}</p>
-          <p className="text-sm mb-3 leading-relaxed">Cette prestation comprend l'accès à la plateforme Ma Table et à l'ensemble de ses modules : Avis Google, QR Commande, Portail Serveur, Cuisine Live, Caisse, Nova IA, Stock IA, Réservations. L'accompagnement technique (formation, mise en service, support) est inclus.</p>
+          <p className="text-sm mb-3 leading-relaxed">Cette prestation comprend l'accès à la plateforme MaTable.Pro et à l'ensemble de ses modules : Avis Google, QR Commande, Portail Serveur, Cuisine Live, Caisse, Nova IA, Stock IA, Réservations. L'accompagnement technique (formation, mise en service, support) est inclus.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Durée & reconduction</h2>
           <p className="text-sm mb-3 leading-relaxed">
@@ -1165,7 +1165,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 5 — Propriété intellectuelle</h2>
-          <p className="text-sm mb-3 leading-relaxed">La plateforme Ma Table et ses composants restent la propriété exclusive du Prestataire. Le Bénéficiaire ne dispose que d'un droit d'usage temporaire pendant la durée de la prestation. Les <b>données saisies par le Bénéficiaire</b> (menu, clients, avis, commandes) restent sa pleine propriété.</p>
+          <p className="text-sm mb-3 leading-relaxed">La plateforme MaTable.Pro et ses composants restent la propriété exclusive du Prestataire. Le Bénéficiaire ne dispose que d'un droit d'usage temporaire pendant la durée de la prestation. Les <b>données saisies par le Bénéficiaire</b> (menu, clients, avis, commandes) restent sa pleine propriété.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 6 — Obligations du Bénéficiaire</h2>
           <p className="text-sm mb-3 leading-relaxed">Le Bénéficiaire fournit tous les éléments nécessaires à la mise en service (menu, photos, coordonnées Google Business, etc.). Il conserve la confidentialité de ses identifiants et codes PIN. Il s'engage à un usage conforme à l'objet de la prestation.</p>
@@ -1360,7 +1360,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </p>
 
           {/* La solution */}
-          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-2">Notre solution — Ma Table</h2>
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-2">Notre solution — MaTable.Pro</h2>
           <p className="text-sm leading-relaxed mb-5">
             Vos clients scannent un QR code sur leur table, commandent et payent quand ils veulent.
             <b> Nova IA</b>, notre assistante intelligente, leur propose à la fin du repas de partager leur expérience
@@ -1560,13 +1560,13 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </h1>
 
           <p className="text-sm leading-relaxed text-gray-700 mb-6">
-            Ma Table digitalise <b>l'intégralité de votre exploitation</b> — de la prise de commande aux avis Google,
+            MaTable.Pro digitalise <b>l'intégralité de votre exploitation</b> — de la prise de commande aux avis Google,
             en passant par la caisse, le stock et la finance — dans une seule plateforme cohérente, opérée
             avec l'intelligence artificielle de <b className="text-gray-900">NovaTech</b>.
           </p>
 
           {/* Différenciants */}
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Pourquoi Ma Table plutôt qu'un autre</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Pourquoi MaTable.Pro plutôt qu'un autre</h2>
           <div className="grid grid-cols-2 gap-3 mb-6">
             <div className="border border-gray-200 rounded-lg p-3">
               <p className="font-black text-sm text-gray-900 mb-1">🎯 Une seule plateforme</p>
@@ -1774,7 +1774,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           {/* Pitch */}
           <p className="text-sm leading-relaxed mb-5 text-gray-700">
-            Ma Table propose un <b>mode Chaîne dédié</b> aux groupes opérant plusieurs établissements.
+            MaTable.Pro propose un <b>mode Chaîne dédié</b> aux groupes opérant plusieurs établissements.
             Chaque restaurant garde son autonomie opérationnelle (équipes, menu, caisse, tables) mais
             l'ensemble est piloté depuis un <b>dashboard central</b> avec carte interactive,
             statistiques consolidées et déploiement coordonné.
