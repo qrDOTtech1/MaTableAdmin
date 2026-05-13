@@ -232,7 +232,9 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
                   className={INPUT_CLS}
                 >
                   {DURATIONS.map((d) => (
-                    <option key={d.key} value={d.key}>{d.label} — {d.sub} (×{d.realMult.toFixed(2)})</option>
+                    <option key={d.key} value={d.key}>
+                      {d.label} — {d.displayDiscount === 0 ? "prix de base" : `−${d.displayDiscount} %`}{d.sub ? ` · ${d.sub}` : ""}
+                    </option>
                   ))}
                 </select>
               </div>

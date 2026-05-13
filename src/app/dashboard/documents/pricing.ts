@@ -32,12 +32,18 @@ export const MODULES = [
 
 export type ModuleId = (typeof MODULES)[number]["id"];
 
+/**
+ * `realMult`     = facteur interne appliqué au prix de base 12m pour obtenir le prix réel facturé.
+ * `displayDiscount` = pourcentage de réduction AFFICHÉ au client par rapport au prix 3 mois
+ *                     (qui sert de prix de base visible). Sert uniquement à la communication.
+ *                     Doit rester strictement synchronisé avec `fakeDiscount` côté landing.
+ */
 export const DURATIONS = [
-  { key: "3m",  label: "3 mois",            sub: "Sans risque",        realMult: 1.07 },
-  { key: "6m",  label: "6 mois",            sub: "Le plus populaire",  realMult: 1.05 },
-  { key: "9m",  label: "9 mois",            sub: "Presque annuel",     realMult: 1.03 },
-  { key: "12m", label: "12 mois",           sub: "Référence",          realMult: 1.00 },
-  { key: "12a", label: "12 mois — annuel",  sub: "Paiement annuel",    realMult: 0.95 },
+  { key: "3m",  label: "3 mois",            sub: "Prix de base",       realMult: 1.07, displayDiscount: 0  },
+  { key: "6m",  label: "6 mois",            sub: "Le plus populaire",  realMult: 1.05, displayDiscount: 2  },
+  { key: "9m",  label: "9 mois",            sub: "Presque annuel",     realMult: 1.03, displayDiscount: 4  },
+  { key: "12m", label: "12 mois",           sub: "Recommandé",         realMult: 1.00, displayDiscount: 7  },
+  { key: "12a", label: "12 mois — annuel",  sub: "Paiement annuel",    realMult: 0.95, displayDiscount: 12 },
 ] as const;
 
 export type DurationKey = (typeof DURATIONS)[number]["key"];
@@ -125,13 +131,10 @@ export function computeQuote(selectedIds: readonly string[], durationKey: Durati
               : 12;
   const totalEngagement = round2(monthlyHT * months);
 
-  // Label majoration vs 12m
-  const mult =
-    dur.key === "3m" ? "+7%"
-    : dur.key === "6m" ? "+5%"
-    : dur.key === "9m" ? "+3%"
-    : dur.key === "12a" ? "−5%"
-    : "0%";
+  // Label réduction affichée vs prix de base (3 mois) — toujours négatif ou "—"
+  const mult = dur.displayDiscount === 0
+    ? "Prix de base"
+    : `−${dur.displayDiscount} %`;
 
   return {
     modules,

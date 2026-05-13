@@ -455,13 +455,17 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </table>
           <p className="text-xs text-gray-500 italic mb-4">
             TVA non applicable, art. 293B du CGI. Hébergement, mises à jour et support inclus.
-            {priceInfo.durationKey && priceInfo.realMult && priceInfo.realMult !== 1 && (
-              <> Tarifs unitaires calculés avec le multiplicateur de durée {priceInfo.durationKey} (×{priceInfo.realMult.toFixed(2)}).</>
+            {priceInfo.durationKey && priceInfo.durationKey !== "3m" && (
+              <> Tarifs unitaires affichés avec la réduction engagement {priceInfo.durationLabel} ({priceInfo.mult}) appliquée par rapport au prix de base (3 mois).</>
             )}
           </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 3 — Durée & Engagement</h2>
           <p className="text-sm mb-3 leading-relaxed">Le Contrat est conclu pour une durée ferme minimale de <b className="text-orange-700 bg-orange-50 px-1">{engagement.replace('m', ' mois').replace('a', ' mois (paiement annuel)')}</b> à compter de sa date de signature, période durant laquelle aucune résiliation anticipée n'est possible sauf cas prévus à l'article 9. À l'issue de cette période, le Contrat se renouvelle <b>tacitement par périodes successives d'un mois</b>, sauf résiliation notifiée par l'une des Parties au moins 30 jours avant l'échéance, par email avec accusé de réception.</p>
+          <p className="text-sm mb-3 leading-relaxed text-gray-600 italic">
+            Le prix de base s'entend pour un engagement de 3 mois. Plus l'engagement choisi est long, plus la réduction est forte :
+            6 mois (<b>−2 %</b>) · 9 mois (<b>−4 %</b>) · 12 mois (<b>−7 %</b>) · 12 mois en paiement annuel (<b>−12 %</b>).
+          </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 — Modalités de paiement</h2>
           <p className="text-sm mb-2 leading-relaxed">Le Client règle le Prestataire par <b>virement bancaire</b> ou <b>prélèvement SEPA</b>, à terme à échoir, le 1er de chaque mois. Toute mise en service est conditionnée à la réception du premier paiement.</p>
@@ -686,10 +690,10 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                   <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
                 </tr>
               )}
-              {priceInfo.realMult && priceInfo.realMult !== 1 && (
-                <tr className="border-b text-xs text-gray-500 italic">
-                  <td className="p-3 text-right">Effet engagement vs 12 mois de référence</td>
-                  <td className="p-3 text-right">{priceInfo.mult}</td>
+              {priceInfo.durationKey && priceInfo.durationKey !== "3m" && (
+                <tr className="border-b text-xs text-emerald-700 italic">
+                  <td className="p-3 text-right">Réduction engagement {priceInfo.durationLabel} (vs prix de base 3 mois)</td>
+                  <td className="p-3 text-right font-bold">{priceInfo.mult}</td>
                 </tr>
               )}
               <tr className="bg-gray-50 font-black">
@@ -713,7 +717,8 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Conditions</h2>
           <ul className="text-sm mb-4 ml-6 list-disc space-y-1">
             <li>Devis valable jusqu'au <b>{docMeta.validite}</b>.</li>
-            <li>Tarifs exprimés en euros, hors taxes (TVA non applicable).</li>
+            <li>Tarifs exprimés en euros, hors taxes (TVA non applicable, art. 293B du CGI).</li>
+            <li><b>Prix de base = engagement 3 mois.</b> Réductions appliquées sur engagement plus long : <b className="text-emerald-700">6 m (−2 %) · 9 m (−4 %) · 12 m (−7 %) · 12 m annuel (−12 %)</b>.</li>
             <li>Paiement par virement bancaire ou prélèvement SEPA mensuel à terme à échoir.</li>
             <li>Mise en service immédiate dès retour du contrat signé et du premier paiement.</li>
             <li>Engagement ferme sur la période choisie ; renouvellement tacite mensuel à l'issue.</li>
@@ -905,25 +910,25 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="mb-3 text-xs italic text-gray-600">Le Prestataire se réserve le droit de faire évoluer la composition des modules et leurs fonctionnalités, sans que cela puisse être considéré comme une modification substantielle du contrat.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 5 — Tarifs & engagement</h2>
-          <p className="mb-2">Tarifs en vigueur, hors taxes (TVA non applicable, art. 293B du CGI) :</p>
+          <p className="mb-2">Tarifs en vigueur, hors taxes (TVA non applicable, art. 293B du CGI). <b>Le prix de base s'entend pour un engagement de 3 mois</b>, et une réduction est appliquée pour tout engagement plus long :</p>
           <table className="w-full text-xs mb-3 border-collapse">
             <thead>
               <tr className="bg-gray-100 text-left">
                 <th className="p-2">Engagement</th>
-                <th className="p-2 text-right">Mensualité HT</th>
+                <th className="p-2 text-right">Mensualité HT (Avis seul)</th>
                 <th className="p-2 text-right">Total période HT</th>
-                <th className="p-2 text-right">Variation</th>
+                <th className="p-2 text-right">Réduction</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b"><td className="p-2">3 mois</td><td className="p-2 text-right">84,53 €</td><td className="p-2 text-right">253,59 €</td><td className="p-2 text-right">+7 %</td></tr>
-              <tr className="border-b"><td className="p-2">6 mois</td><td className="p-2 text-right">82,95 €</td><td className="p-2 text-right">497,70 €</td><td className="p-2 text-right">+5 %</td></tr>
-              <tr className="border-b"><td className="p-2">9 mois</td><td className="p-2 text-right">81,37 €</td><td className="p-2 text-right">732,33 €</td><td className="p-2 text-right">+3 %</td></tr>
-              <tr className="border-b bg-orange-50"><td className="p-2"><b>12 mois (référence)</b></td><td className="p-2 text-right"><b>79,00 €</b></td><td className="p-2 text-right"><b>948,00 €</b></td><td className="p-2 text-right">0 %</td></tr>
-              <tr className="border-b"><td className="p-2">12 mois — paiement annuel</td><td className="p-2 text-right">75,05 €</td><td className="p-2 text-right">900,60 €</td><td className="p-2 text-right text-emerald-700">−5 %</td></tr>
+              <tr className="border-b bg-gray-50"><td className="p-2"><b>3 mois — prix de base</b></td><td className="p-2 text-right"><b>84,53 €</b></td><td className="p-2 text-right"><b>253,59 €</b></td><td className="p-2 text-right">—</td></tr>
+              <tr className="border-b"><td className="p-2">6 mois</td><td className="p-2 text-right">82,95 €</td><td className="p-2 text-right">497,70 €</td><td className="p-2 text-right text-emerald-700">−2 %</td></tr>
+              <tr className="border-b"><td className="p-2">9 mois</td><td className="p-2 text-right">81,37 €</td><td className="p-2 text-right">732,33 €</td><td className="p-2 text-right text-emerald-700">−4 %</td></tr>
+              <tr className="border-b bg-orange-50"><td className="p-2"><b>12 mois — recommandé</b></td><td className="p-2 text-right"><b>79,00 €</b></td><td className="p-2 text-right"><b>948,00 €</b></td><td className="p-2 text-right text-emerald-700 font-bold">−7 %</td></tr>
+              <tr className="border-b"><td className="p-2">12 mois — paiement annuel</td><td className="p-2 text-right">75,05 €</td><td className="p-2 text-right">900,60 €</td><td className="p-2 text-right text-emerald-700 font-bold">−12 %</td></tr>
             </tbody>
           </table>
-          <p className="mb-3">L'engagement choisi est ferme. À son terme, le Contrat se renouvelle <b>tacitement par périodes successives d'un mois</b> au tarif de référence 12 mois, sauf résiliation notifiée 30 jours avant l'échéance par email avec accusé de réception.</p>
+          <p className="mb-3">L'engagement choisi est ferme. À son terme, le Contrat se renouvelle <b>tacitement par périodes successives d'un mois</b> au tarif équivalent 12 mois, sauf résiliation notifiée 30 jours avant l'échéance par email avec accusé de réception.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 6 — Modalités de paiement</h2>
           <p className="mb-2">Paiement par <b>virement bancaire</b> ou <b>prélèvement SEPA</b>, à terme à échoir, le 1er de chaque mois (ou à la signature pour le paiement annuel). La mise en service est conditionnée à la réception du premier règlement.</p>
@@ -1398,26 +1403,28 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
 
           {/* Grille tarifaire — modules à la carte */}
-          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-3">Tarifs à la carte (HT/mois, engagement 12 mois)</h2>
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-1">Tarifs à la carte — modules HT/mois</h2>
+          <p className="text-xs text-gray-500 italic mb-3">Tarifs de base, engagement 3 mois. Réductions appliquées sur les engagements plus longs (voir ci-dessous).</p>
           <table className="w-full text-xs mb-3 border-collapse">
             <tbody>
               {MODULES.map((m) => (
                 <tr key={m.id} className="border-b border-gray-200">
                   <td className="py-1.5"><b>{m.name}</b>{m.required && <span className="text-orange-600 italic"> · requis</span>}</td>
-                  <td className="py-1.5 text-right font-bold text-gray-900">{m.price} €</td>
+                  <td className="py-1.5 text-right font-bold text-gray-900">{(m.price * 1.07).toFixed(2)} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-4 mb-6 text-sm">
-            <p className="font-black text-orange-600 mb-2">💡 Cumulez les modules pour bénéficier de remises :</p>
+            <p className="font-black text-orange-600 mb-2">💡 Cumulez les modules pour des remises supplémentaires :</p>
             <div className="grid grid-cols-3 gap-2 text-xs text-gray-700">
               <div><b className="text-emerald-600">−10 %</b> dès 2 modules</div>
               <div><b className="text-emerald-600">−15 %</b> dès 3 modules</div>
               <div><b className="text-emerald-600">−20 %</b> dès 4 modules</div>
             </div>
-            <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-orange-200">
-              <b>Engagement</b> : 3 mois (+7 %) · 6 mois (+5 %) · 9 mois (+3 %) · <b>12 mois (réf)</b> · 12 mois en paiement annuel (<b className="text-emerald-700">−5 %</b>)
+            <p className="text-xs text-gray-700 mt-3 pt-3 border-t border-orange-200">
+              <b className="text-orange-600">Plus l'engagement est long, plus la réduction est forte :</b><br/>
+              3 mois (prix de base) · 6 mois (<b className="text-emerald-700">−2 %</b>) · 9 mois (<b className="text-emerald-700">−4 %</b>) · <b>12 mois (<span className="text-emerald-700">−7 %</span>)</b> · 12 mois en paiement annuel (<b className="text-emerald-700">−12 %</b>)
             </p>
           </div>
 
@@ -1486,22 +1493,25 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             Votre équipe ne fait <b>rien de plus</b> : tout est automatique.
           </p>
 
-          {/* Modules disponibles — liste avec prix, fond blanc */}
-          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">Modules à la carte — tarifs HT/mois (12 mois de réf.)</p>
+          {/* Modules disponibles — liste avec prix de base 3 mois */}
+          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-1">Modules à la carte — tarifs HT/mois</p>
+          <p className="text-[10px] text-gray-500 italic mb-2">Prix de base (engagement 3 mois). Réductions appliquées pour engagements plus longs.</p>
           <table className="w-full text-sm mb-4">
             <tbody>
               {MODULES.map((m) => (
                 <tr key={m.id} className="border-b border-gray-200">
                   <td className="py-1.5"><span className="text-orange-500 font-black">›</span> <b>{m.name}</b>{m.required && <span className="text-orange-600 italic text-xs"> · requis</span>}</td>
-                  <td className="py-1.5 text-right font-bold">{m.price} €</td>
+                  <td className="py-1.5 text-right font-bold">{(m.price * 1.07).toFixed(2)} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
+          <p className="text-xs text-gray-700 mb-2 leading-relaxed">
+            <b className="text-orange-600">Cumulez plusieurs modules :</b> <b className="text-emerald-700">−10 %</b> dès 2 · <b className="text-emerald-700">−15 %</b> dès 3 · <b className="text-emerald-700">−20 %</b> dès 4.
+          </p>
           <p className="text-xs text-gray-700 mb-6 leading-relaxed">
-            <b className="text-orange-600">Cumulez plusieurs modules</b> : −10 % dès 2 · −15 % dès 3 · <b>−20 % dès 4</b>.
-            <b className="text-orange-600 ml-1">Engagement</b> : 3 m (+7 %) · 6 m (+5 %) · 9 m (+3 %) · 12 m réf · 12 m annuel (−5 %).
+            <b className="text-orange-600">Réduction engagement :</b> 3 m (prix de base) · 6 m (<b className="text-emerald-700">−2 %</b>) · 9 m (<b className="text-emerald-700">−4 %</b>) · 12 m (<b className="text-emerald-700">−7 %</b>) · 12 m annuel (<b className="text-emerald-700">−12 %</b>).
           </p>
 
           <div className="h-px bg-gray-300 mb-6" />
@@ -1509,11 +1519,11 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           {/* Prix d'entrée + tarif tout activé */}
           <div className="mb-8 text-sm">
             <div className="flex items-baseline justify-between">
-              <p className="text-gray-700">Configuration minimale (Avis Google seul)</p>
-              <p className="text-2xl font-black text-orange-500">79 € HT/mois</p>
+              <p className="text-gray-700">Configuration minimale (Avis Google seul, 3 m)</p>
+              <p className="text-2xl font-black text-orange-500">84,53 € HT/mois</p>
             </div>
             <div className="flex items-baseline justify-between mt-1 text-xs text-gray-500">
-              <p>Tous modules activés (−20 % volume)</p>
+              <p>Pack complet 7 modules (−20 % volume, 12 m)</p>
               <p className="font-bold">482,40 € HT/mois</p>
             </div>
           </div>
@@ -1604,19 +1614,20 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
 
           {/* Grille tarifaire complète + offres */}
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Grille tarifaire — sur-mesure modulaire</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-1 border-t pt-4">Grille tarifaire — sur-mesure modulaire</h2>
+          <p className="text-[11px] text-gray-500 italic mb-2">Prix de base = engagement 3 mois. Plus l'engagement est long, plus la réduction est forte.</p>
           <table className="w-full text-xs mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 border-y-2 border-orange-500">
                 <th className="p-2 text-left">Module</th>
-                <th className="p-2 text-right">HT/mois (12 m)</th>
+                <th className="p-2 text-right">HT/mois (3 m)</th>
               </tr>
             </thead>
             <tbody>
               {MODULES.map((m) => (
                 <tr key={m.id} className="border-b border-gray-200">
                   <td className="p-2"><b>{m.name}</b>{m.required && <span className="text-orange-600 italic text-[10px]"> · requis</span>}<br/><span className="text-[10px] text-gray-500">{m.desc.slice(0, 80)}…</span></td>
-                  <td className="p-2 text-right font-bold">{m.price} €</td>
+                  <td className="p-2 text-right font-bold">{(m.price * 1.07).toFixed(2)} €</td>
                 </tr>
               ))}
             </tbody>
@@ -1624,7 +1635,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="border border-orange-200 bg-orange-50/40 rounded-lg p-3">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Remises volume</p>
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Remises volume modules</p>
               <ul className="text-xs space-y-1">
                 <li>· 2 modules — <b className="text-emerald-700">−10 %</b></li>
                 <li>· 3 modules — <b className="text-emerald-700">−15 %</b></li>
@@ -1632,27 +1643,27 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               </ul>
             </div>
             <div className="border border-orange-200 bg-orange-50/40 rounded-lg p-3">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Engagement</p>
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Réduction engagement</p>
               <ul className="text-xs space-y-1">
-                <li>· 3 mois (+7 %) — sans risque</li>
-                <li>· 6 mois (+5 %) · 9 mois (+3 %)</li>
-                <li>· <b>12 mois — référence</b></li>
-                <li>· 12 mois annuel — <b className="text-emerald-700">−5 %</b></li>
+                <li>· 3 mois — prix de base</li>
+                <li>· 6 mois — <b className="text-emerald-700">−2 %</b> · 9 mois — <b className="text-emerald-700">−4 %</b></li>
+                <li>· <b>12 mois — <span className="text-emerald-700">−7 %</span></b> (recommandé)</li>
+                <li>· 12 mois en paiement annuel — <b className="text-emerald-700">−12 %</b></li>
               </ul>
             </div>
           </div>
 
           <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-4 mb-4 text-sm">
             <div className="flex items-baseline justify-between">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Exemples de configurations</p>
+              <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Exemples de configurations (12 mois)</p>
             </div>
             <div className="mt-2 space-y-1 text-xs text-gray-700">
-              <div className="flex justify-between"><span>Avis Google seul (entrée de gamme)</span><b className="text-gray-900">79 € HT/mois</b></div>
+              <div className="flex justify-between"><span>Avis Google seul (entrée de gamme)</span><b className="text-gray-900">79,00 € HT/mois</b></div>
               <div className="flex justify-between"><span>Avis + QR Commande (pack vitrine)</span><b className="text-gray-900">160,20 € HT/mois</b></div>
               <div className="flex justify-between"><span>Avis + QR + Serveur (pack salle)</span><b className="text-gray-900">209,95 € HT/mois</b></div>
-              <div className="flex justify-between"><span>Pack complet 7 modules (−20 %)</span><b className="text-orange-600">482,40 € HT/mois</b></div>
+              <div className="flex justify-between"><span>Pack complet 7 modules (−20 % volume)</span><b className="text-orange-600">482,40 € HT/mois</b></div>
             </div>
-            <p className="text-[10px] text-gray-500 italic mt-2 pt-2 border-t border-orange-200">Tarifs base 12 mois. Mise en service sous 7 jours. Aucun frais d'installation.</p>
+            <p className="text-[10px] text-gray-500 italic mt-2 pt-2 border-t border-orange-200">Configurations chiffrées sur engagement 12 mois. Mise en service sous 7 jours. Aucun frais d'installation.</p>
           </div>
 
           {/* CTA premium */}
@@ -1704,29 +1715,30 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </div>
           </div>
 
-          <p className="text-[10px] uppercase tracking-wider text-orange-500 font-black mb-1">Modules à la carte — HT/mois</p>
+          <p className="text-[10px] uppercase tracking-wider text-orange-500 font-black mb-1">Modules à la carte — HT/mois (3 m)</p>
           <table className="w-full text-[10px] mb-3">
             <tbody>
               {MODULES.map((m) => (
                 <tr key={m.id} className="border-b border-gray-200">
                   <td className="py-0.5"><b className="text-orange-500">›</b> {m.name}{m.required && <span className="text-orange-600 italic"> ·req.</span>}</td>
-                  <td className="py-0.5 text-right font-bold">{m.price} €</td>
+                  <td className="py-0.5 text-right font-bold">{(m.price * 1.07).toFixed(2)} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           <p className="text-[10px] text-gray-700 mb-3 leading-snug">
-            <b>Cumulez</b> : −10 % à −20 %. <b>Engagement</b> : 3 m (+7 %) à 12 m annuel (−5 %).
+            <b>Cumulez modules :</b> <b className="text-emerald-700">−10 %</b> à <b className="text-emerald-700">−20 %</b>.<br/>
+            <b>Engagement long :</b> <b className="text-emerald-700">−2 %</b> à <b className="text-emerald-700">−12 %</b> selon durée.
           </p>
 
           <div className="border-y border-gray-300 py-2 mb-4 text-xs">
             <div className="flex items-baseline justify-between">
               <span className="text-gray-700">Dès</span>
-              <b className="text-xl text-orange-500">79 € HT/mois</b>
+              <b className="text-xl text-orange-500">84,53 € HT/mois</b>
             </div>
             <div className="flex items-baseline justify-between text-[10px] text-gray-500">
-              <span>Tout activé</span>
+              <span>Pack complet 7 mod. (12 m, −20 %)</span>
               <span>482,40 € HT/mois</span>
             </div>
           </div>
