@@ -1880,292 +1880,521 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 export default DocumentTemplate;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PLAQUETTE TUTO AVIS — Guide de A à Z pour obtenir les premiers avis Google
-// Format A4 portrait, impression couleur / N&B compatible
+// PLAQUETTE TUTO AVIS — Guide 3 pages A à Z, impression couleur / N&B
 // ─────────────────────────────────────────────────────────────────────────────
-function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
-  const steps = [
-    {
-      num: "01",
-      icon: "📲",
-      title: "Activer le module Avis",
-      color: "#fb923c",
-      items: [
-        "Connectez-vous sur matable.app avec vos identifiants.",
-        "Dans le menu latéral, ouvrez Configuration → Applications.",
-        "Activez le module ⭐ Avis Google & Réputation.",
-        "Vérifiez que votre lien Google My Business est bien renseigné (copiez l'URL de votre fiche Google).",
-      ],
-    },
-    {
-      num: "02",
-      icon: "🖨️",
-      title: "Choisir votre mode QR & imprimer",
-      color: "#3b82f6",
-      items: [
-        "Dans Serveurs → paramètre « ID unique par serveur » : activé = un QR/NFC par serveur (avis attribués nominativement) ; désactivé = un seul QR pour tout l'établissement.",
-        "Mode par serveur : chaque serveur a son QR/NFC personnel — le client voit « Qui vous a servi ? » et choisit.",
-        "Mode établissement : un seul QR commun, aucune attribution individuelle — idéal si vous préférez la simplicité.",
-        "Téléchargez les QR codes depuis le dashboard Serveurs (PNG haute résolution, prêt à imprimer).",
-        "Placez-les sur chaque table : support de table, ardoise, présentoir ou autocollant sur l'addition — à hauteur des yeux, face client.",
-      ],
-    },
-    {
-      num: "03",
-      icon: "🎁",
-      title: "Configurer le bon de réduction",
-      color: "#10b981",
-      items: [
-        "Dans Avis → Paramètres, activez le voucher post-avis.",
-        "Choisissez la récompense : remise (ex : -10%), boisson offerte ou dessert offert.",
-        "Définissez la validité (recommandé : 30 jours) et le plafond mensuel.",
-        "Le client reçoit automatiquement son bon après avoir laissé son avis ★★★★★.",
-        "Vous n'avez rien à gérer manuellement — tout est automatisé.",
-      ],
-    },
-    {
-      num: "04",
-      icon: "🚀",
-      title: "Campagnes SMS/e-mail — Bientôt",
-      color: "#8b5cf6",
-      items: [
-        "Les campagnes de relance automatiques (SMS & e-mail) sont en cours de développement par notre équipe.",
-        "À terme : relancez vos clients après chaque visite pour maintenir un flux d'avis constant.",
-        "Nova IA rédigera les messages pour vous — personnalisés, chaleureux, au bon moment.",
-        "Vous serez notifié dès l'activation de cette fonctionnalité sur votre compte.",
-        "En attendant, encouragez oralement vos clients à scanner le QR et laisser un avis !",
-      ],
-    },
-    {
-      num: "05",
-      icon: "💬",
-      title: "Répondre aux avis avec Nova IA",
-      color: "#f59e0b",
-      items: [
-        "Dans Avis → Réponses, Nova IA propose une réponse personnalisée pour chaque avis.",
-        "Relisez, ajustez si besoin, et publiez en 1 clic sur Google.",
-        "Répondez à TOUS les avis — positifs comme négatifs — dans les 24h.",
-        "Les réponses soignées améliorent votre note globale et rassurent les futurs clients.",
-        "Astuce : configurez le ton (professionnel, chaleureux, décontracté) dans les paramètres Nova IA.",
-      ],
-    },
-    {
-      num: "06",
-      icon: "📊",
-      title: "Suivre vos résultats",
-      color: "#06b6d4",
-      items: [
-        "Dans le tableau de bord Avis, consultez l'évolution de votre note Google semaine par semaine.",
-        "Identifiez vos meilleurs serveurs (les mieux notés) et valorisez-les.",
-        "Objectif à 3 mois : +4,5★ sur Google avec 50+ avis récents.",
-        "Notre équipe MaTable est disponible pour vous accompagner : support@matable.pro",
-      ],
-    },
-  ];
 
+// ── Mockup téléphone générique ────────────────────────────────────────────────
+function PhoneMockup({ children, scale = 1 }: { children: React.ReactNode; scale?: number }) {
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", maxWidth: "210mm", margin: "0 auto" }}>
-      {/* Hero */}
+    <div style={{ transform: `scale(${scale})`, transformOrigin: "top center", display: "inline-block" }}>
       <div style={{
-        background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%)",
-        padding: "28px 32px 24px",
-        marginBottom: "24px",
-        borderRadius: "12px",
+        width: 130, background: "#0f172a", borderRadius: 22,
+        border: "3px solid #334155", padding: "10px 6px 14px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
         position: "relative",
-        overflow: "hidden",
       }}>
-        <div style={{ position: "absolute", top: 0, right: 0, width: "120px", height: "120px", opacity: 0.08 }}>
-          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="60" cy="60" r="55" stroke="#fb923c" strokeWidth="2" />
-            <circle cx="60" cy="60" r="35" stroke="#fb923c" strokeWidth="1.5" />
-            <circle cx="60" cy="60" r="15" fill="#fb923c" />
-          </svg>
-        </div>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
-          <div style={{
-            background: "linear-gradient(135deg, #fb923c, #f97316)",
-            borderRadius: "12px",
-            padding: "10px 14px",
-            fontSize: "28px",
-            lineHeight: 1,
-            flexShrink: 0,
-          }}>⭐</div>
-          <div>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: "#fb923c", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "4px" }}>
-              Guide Complet — MaTable.Pro
-            </div>
-            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>
-              Obtenir vos premiers<br />avis Google en 7 jours
-            </h1>
-            <p style={{ margin: "8px 0 0", fontSize: "11px", color: "#94a3b8" }}>
-              De A à Z · Du QR code à votre première étoile supplémentaire
-            </p>
-          </div>
-        </div>
-        {/* Client info */}
-        <div style={{
-          marginTop: "16px",
-          padding: "10px 14px",
-          background: "rgba(255,255,255,0.06)",
-          borderRadius: "8px",
-          display: "flex",
-          gap: "24px",
-          flexWrap: "wrap",
-        }}>
-          <div>
-            <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>Restaurant</div>
-            <div style={{ fontSize: "12px", color: "#fff", fontWeight: 700 }}>{client.name || "—"}</div>
-          </div>
-          {client.email && (
-            <div>
-              <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>Email</div>
-              <div style={{ fontSize: "12px", color: "#fb923c" }}>{client.email}</div>
-            </div>
-          )}
-          <div style={{ marginLeft: "auto", textAlign: "right" }}>
-            <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>Votre référent</div>
-            <div style={{ fontSize: "12px", color: "#fff", fontWeight: 700 }}>{vendor.representant || vendor.raisonSociale}</div>
-            <div style={{ fontSize: "10px", color: "#94a3b8" }}>{vendor.phone || vendor.email}</div>
-          </div>
+        {/* Notch */}
+        <div style={{ width: 40, height: 6, background: "#334155", borderRadius: 10, margin: "0 auto 8px" }} />
+        <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", minHeight: 180 }}>
+          {children}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Intro */}
-      <div style={{
-        background: "#fef9f0",
-        border: "1px solid #fed7aa",
-        borderLeft: "4px solid #fb923c",
-        borderRadius: "8px",
-        padding: "12px 16px",
-        marginBottom: "20px",
-        fontSize: "11px",
-        color: "#92400e",
-        lineHeight: 1.6,
-      }}>
-        <strong>Pourquoi les avis Google sont essentiels ?</strong><br />
-        88 % des consommateurs consultent les avis en ligne avant de choisir un restaurant. Chaque étoile supplémentaire sur Google représente en moyenne +5 à +9 % de chiffre d'affaires. Ce guide vous accompagne étape par étape pour activer votre système d'avis et recevoir vos premiers retours dès cette semaine.
+// ── Mockup QR code SVG ────────────────────────────────────────────────────────
+function QrMockup({ size = 80 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 80 80" style={{ display: "block" }}>
+      <rect width="80" height="80" fill="#fff" rx="4"/>
+      {/* Coin HG */}
+      <rect x="4" y="4" width="24" height="24" rx="3" fill="#0f172a"/>
+      <rect x="8" y="8" width="16" height="16" rx="1" fill="#fff"/>
+      <rect x="11" y="11" width="10" height="10" rx="1" fill="#0f172a"/>
+      {/* Coin HD */}
+      <rect x="52" y="4" width="24" height="24" rx="3" fill="#0f172a"/>
+      <rect x="56" y="8" width="16" height="16" rx="1" fill="#fff"/>
+      <rect x="59" y="11" width="10" height="10" rx="1" fill="#0f172a"/>
+      {/* Coin BG */}
+      <rect x="4" y="52" width="24" height="24" rx="3" fill="#0f172a"/>
+      <rect x="8" y="56" width="16" height="16" rx="1" fill="#fff"/>
+      <rect x="11" y="59" width="10" height="10" rx="1" fill="#0f172a"/>
+      {/* Data bits */}
+      {[0,1,0,1,1,0,1].map((v,i) => v ? <rect key={i} x={32+i*3} y="4" width="2" height="2" fill="#0f172a"/> : null)}
+      {[1,0,1,0,1,1,0].map((v,i) => v ? <rect key={i} x={32+i*3} y="8" width="2" height="2" fill="#0f172a"/> : null)}
+      {[0,1,1,0,0,1,0].map((v,i) => v ? <rect key={i} x={32+i*3} y="12" width="2" height="2" fill="#0f172a"/> : null)}
+      {[1,1,0,1,0,0,1].map((v,i) => v ? <rect key={i} x={32+i*3} y="16" width="2" height="2" fill="#0f172a"/> : null)}
+      {[0,0,1,1,1,0,1].map((v,i) => v ? <rect key={i} x={32+i*3} y="20" width="2" height="2" fill="#0f172a"/> : null)}
+      {[1,0,0,0,1,1,0].map((v,i) => v ? <rect key={i} x={32+i*3} y="24" width="2" height="2" fill="#0f172a"/> : null)}
+      {[0,1,0,1,0,0,1].map((v,i) => v ? <rect key={i} x={4+i*4} y="32" width="3" height="3" fill="#0f172a"/> : null)}
+      {[1,0,1,1,0,1,0,1,1,0,1,0,1,1,0,1].map((v,i) => v ? <rect key={i} x={4+i*4} y="36" width="3" height="3" fill="#0f172a"/> : null)}
+      {[0,1,0,0,1,1,1,0,1,0,0,1,0,1,1,0].map((v,i) => v ? <rect key={i} x={4+i*4} y="40" width="3" height="3" fill="#0f172a"/> : null)}
+      {[1,1,1,0,0,1,0,1,0,1,1,0,1,0,0,1].map((v,i) => v ? <rect key={i} x={4+i*4} y="44" width="3" height="3" fill="#0f172a"/> : null)}
+      {[0,0,1,1,0,0,1,0,1,1,0,1,0,1,0,0].map((v,i) => v ? <rect key={i} x={4+i*4} y="48" width="3" height="3" fill="#0f172a"/> : null)}
+      {[1,0,0,1,1,0,0,1,0,0,1,0,1,0,1,1].map((v,i) => v ? <rect key={i} x={4+i*4} y="52" width="3" height="3" fill="#0f172a"/> : null)}
+      {[0,1,1,0,1,1,0,1,1,0,1,1,0,1,1,0].map((v,i) => v ? <rect key={i} x={4+i*4} y="56" width="3" height="3" fill="#0f172a"/> : null)}
+      {[1,0,1,0,0,0,1,0,0,1,0,0,1,0,1,0].map((v,i) => v ? <rect key={i} x={4+i*4} y="60" width="3" height="3" fill="#0f172a"/> : null)}
+      {[0,1,0,1,1,1,0,1,1,0,1,1,0,1,0,1].map((v,i) => v ? <rect key={i} x={4+i*4} y="64" width="3" height="3" fill="#0f172a"/> : null)}
+      {[1,1,0,0,1,0,1,0,1,1,0,0,1,0,1,1].map((v,i) => v ? <rect key={i} x={4+i*4} y="68" width="3" height="3" fill="#0f172a"/> : null)}
+      {[0,0,1,1,0,1,0,1,0,0,1,1,0,1,0,0].map((v,i) => v ? <rect key={i} x={4+i*4} y="72" width="3" height="3" fill="#0f172a"/> : null)}
+      {/* Logo central */}
+      <rect x="33" y="33" width="14" height="14" rx="3" fill="#fb923c"/>
+      <text x="40" y="43" textAnchor="middle" fontSize="8" fontWeight="bold" fill="#fff">M</text>
+    </svg>
+  );
+}
+
+// ── Étoiles ────────────────────────────────────────────────────────────────────
+function Stars({ count = 5, filled = 5, size = 14 }: { count?: number; filled?: number; size?: number }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 1 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <svg key={i} width={size} height={size} viewBox="0 0 20 20">
+          <polygon points="10,1 12.9,7 19.5,7.6 14.5,12 16.2,18.5 10,15 3.8,18.5 5.5,12 0.5,7.6 7.1,7"
+            fill={i < filled ? "#fbbf24" : "#e2e8f0"} />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+// ── Badge numéro d'étape ──────────────────────────────────────────────────────
+function StepBadge({ num, color }: { num: string; color: string }) {
+  return (
+    <div style={{
+      width: 36, height: 36, borderRadius: "50%",
+      background: color, display: "flex", alignItems: "center",
+      justifyContent: "center", flexShrink: 0,
+      fontSize: 14, fontWeight: 900, color: "#fff",
+      boxShadow: `0 4px 12px ${color}55`,
+    }}>
+      {num}
+    </div>
+  );
+}
+
+// ── Carte d'étape ──────────────────────────────────────────────────────────────
+function StepCard({ num, color, icon, title, items, mockup, badge }: {
+  num: string; color: string; icon: string; title: string;
+  items: (string | React.ReactNode)[]; mockup?: React.ReactNode; badge?: string;
+}) {
+  return (
+    <div style={{
+      display: "flex", gap: 12, padding: "14px 16px",
+      background: "#fff", border: `1px solid ${color}40`,
+      borderLeft: `4px solid ${color}`, borderRadius: 10,
+      pageBreakInside: "avoid", marginBottom: 10,
+    }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
+        <StepBadge num={num} color={color} />
+        <div style={{ fontSize: 18 }}>{icon}</div>
       </div>
-
-      {/* Steps grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-        {steps.map((step) => (
-          <div key={step.num} style={{
-            background: "#fff",
-            border: "1px solid #e2e8f0",
-            borderTop: `3px solid ${step.color}`,
-            borderRadius: "10px",
-            padding: "14px",
-            pageBreakInside: "avoid",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              <div style={{
-                width: "28px", height: "28px",
-                background: step.color,
-                borderRadius: "8px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: "14px",
-                flexShrink: 0,
-              }}>{step.icon}</div>
-              <div>
-                <div style={{ fontSize: "9px", fontWeight: 700, color: step.color, letterSpacing: "1px" }}>ÉTAPE {step.num}</div>
-                <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", lineHeight: 1.2 }}>{step.title}</div>
-              </div>
-            </div>
-            <ul style={{ margin: 0, paddingLeft: "14px", fontSize: "10px", color: "#475569", lineHeight: 1.65, listStyle: "disc" }}>
-              {step.items.map((item, i) => (
-                <li key={i} style={{ marginBottom: "3px" }}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Checklist rapide */}
-      <div style={{
-        background: "#f0fdf4",
-        border: "1px solid #86efac",
-        borderRadius: "10px",
-        padding: "14px 16px",
-        marginBottom: "16px",
-      }}>
-        <div style={{ fontSize: "11px", fontWeight: 800, color: "#15803d", marginBottom: "10px" }}>
-          ✅ Checklist — Votre lancement en 7 jours
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>{title}</div>
+          {badge && <span style={{ fontSize: 9, background: color + "20", color, padding: "1px 6px", borderRadius: 10, fontWeight: 700 }}>{badge}</span>}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 20px" }}>
-          {[
-            ["Jour 1", "Activer le module Avis dans matable.app"],
-            ["Jour 1", "Renseigner le lien Google My Business"],
-            ["Jour 2", "Télécharger et imprimer les QR codes"],
-            ["Jour 2", "Configurer le bon de réduction"],
-            ["Jour 3", "Poser les QR codes sur toutes les tables"],
-            ["Jour 3", "Tester le parcours client (QR → avis → bon)"],
-            ["Jour 4", "Encourager vos clients à scanner le QR après le service"],
-            ["Jour 5–7", "Répondre aux premiers avis avec Nova IA"],
-          ].map(([day, task], i) => (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "10px", color: "#166534", padding: "3px 0" }}>
-              <span style={{
-                width: "14px", height: "14px",
-                border: "1.5px solid #16a34a",
-                borderRadius: "3px",
-                flexShrink: 0,
-                marginTop: "1px",
-                display: "inline-block",
-              }} />
-              <span><strong style={{ color: "#15803d" }}>{day} :</strong> {task}</span>
-            </div>
+        <ul style={{ margin: 0, paddingLeft: 14, fontSize: 10, color: "#475569", lineHeight: 1.7, listStyle: "none" }}>
+          {items.map((item, i) => (
+            <li key={i} style={{ display: "flex", gap: 5, marginBottom: 2 }}>
+              <span style={{ color, flexShrink: 0, fontWeight: 700, marginTop: 1 }}>›</span>
+              <span>{item}</span>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
+      {mockup && (
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>{mockup}</div>
+      )}
+    </div>
+  );
+}
 
-      {/* Objectifs & contact */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-        <div style={{
-          background: "linear-gradient(135deg, #1e1b4b, #312e81)",
-          borderRadius: "10px",
-          padding: "14px",
-          color: "#fff",
-        }}>
-          <div style={{ fontSize: "11px", fontWeight: 800, color: "#a5b4fc", marginBottom: "8px" }}>🎯 Objectifs à atteindre</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+// ── Page A4 wrapper (gère les sauts de page) ──────────────────────────────────
+function A4Page({ children, first = false }: { children: React.ReactNode; first?: boolean }) {
+  return (
+    <div style={{
+      width: "100%", minHeight: "277mm",
+      pageBreakBefore: first ? undefined : "always",
+      breakBefore: first ? undefined : "page",
+      paddingTop: first ? 0 : "8mm",
+      position: "relative",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  /* ─── PAGE 1 : Couverture ──────────────────────────────────────────────── */
+  const cover = (
+    <A4Page first>
+      {/* Fond pleine hauteur */}
+      <div style={{
+        background: "linear-gradient(160deg, #0f172a 0%, #1e1b4b 45%, #0f172a 100%)",
+        margin: "-18mm -14mm 0", padding: "22mm 18mm 16mm",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Cercles décoratifs */}
+        <div style={{ position: "absolute", top: -40, right: -40, width: 220, height: 220, borderRadius: "50%", border: "1px solid rgba(251,146,60,0.15)" }} />
+        <div style={{ position: "absolute", top: -20, right: -20, width: 160, height: 160, borderRadius: "50%", border: "1px solid rgba(251,146,60,0.1)" }} />
+        <div style={{ position: "absolute", bottom: -60, left: -60, width: 280, height: 280, borderRadius: "50%", border: "1px solid rgba(99,102,241,0.12)" }} />
+
+        {/* Logo MaTable */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
+          <div style={{ width: 36, height: 36, background: "linear-gradient(135deg,#fb923c,#f97316)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⭐</div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#fff", letterSpacing: -0.5 }}>MaTable<span style={{ color: "#fb923c" }}>.Pro</span></div>
+            <div style={{ fontSize: 8, color: "#64748b", textTransform: "uppercase", letterSpacing: 2 }}>Plateforme Restaurant</div>
+          </div>
+          <div style={{ marginLeft: "auto", textAlign: "right" }}>
+            <div style={{ fontSize: 9, color: "#64748b" }}>Préparé pour</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>{client.name || "Votre Restaurant"}</div>
+            {client.email && <div style={{ fontSize: 9, color: "#fb923c" }}>{client.email}</div>}
+          </div>
+        </div>
+
+        {/* Titre principal */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "#fb923c", textTransform: "uppercase", letterSpacing: 3, marginBottom: 10 }}>Guide complet · Avis Google</div>
+          <h1 style={{ margin: 0, fontSize: 36, fontWeight: 900, color: "#fff", lineHeight: 1.1, marginBottom: 12 }}>
+            Vos premiers avis<br /><span style={{ color: "#fb923c" }}>Google</span> en 7 jours
+          </h1>
+          <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", lineHeight: 1.6, maxWidth: 280 }}>
+            Un guide pas à pas, de la configuration de votre QR code jusqu'aux premières étoiles. Accessible à tous, sans compétences techniques.
+          </p>
+        </div>
+
+        {/* Mockup central — téléphone + QR + flux */}
+        <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+          {/* Phone mockup — ce que voit le client */}
+          <div style={{ flexShrink: 0 }}>
+            <PhoneMockup>
+              {/* Écran d'avis */}
+              <div style={{ padding: "10px 8px" }}>
+                <div style={{ fontSize: 7, fontWeight: 800, color: "#0f172a", marginBottom: 6, textAlign: "center" }}>Qui vous a servi ? 😊</div>
+                {[
+                  { name: "Sophie", emoji: "👩‍🍳", rating: 5 },
+                  { name: "Marc", emoji: "👨‍🍳", rating: 4 },
+                ].map((s) => (
+                  <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 6px", background: "#f8fafc", borderRadius: 8, marginBottom: 4, border: "1px solid #e2e8f0" }}>
+                    <div style={{ width: 24, height: 24, background: "#fb923c20", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>{s.emoji}</div>
+                    <div>
+                      <div style={{ fontSize: 8, fontWeight: 700, color: "#0f172a" }}>{s.name}</div>
+                      <Stars filled={s.rating} size={8} />
+                    </div>
+                  </div>
+                ))}
+                <div style={{ marginTop: 8, background: "linear-gradient(135deg,#fb923c,#f97316)", borderRadius: 8, padding: "6px 0", textAlign: "center" }}>
+                  <div style={{ fontSize: 7, fontWeight: 800, color: "#fff" }}>Laisser un avis Google ⭐</div>
+                </div>
+                <div style={{ marginTop: 6, textAlign: "center", fontSize: 7, color: "#94a3b8" }}>→ Bon de réduction offert 🎁</div>
+              </div>
+            </PhoneMockup>
+            <div style={{ textAlign: "center", fontSize: 8, color: "#64748b", marginTop: 6 }}>Ce que voit votre client</div>
+          </div>
+
+          {/* Flèche + étapes résumées */}
+          <div style={{ flex: 1, paddingTop: 8 }}>
             {[
-              ["Semaine 1", "5–10 premiers avis Google", "#fb923c"],
-              ["Mois 1", "25+ avis · Note ≥ 4,3 ★", "#818cf8"],
-              ["Mois 3", "50+ avis · Note ≥ 4,5 ★", "#34d399"],
-            ].map(([period, goal, color]) => (
-              <div key={period} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px" }}>
-                <span style={{ color: "#94a3b8" }}>{period}</span>
-                <span style={{ color, fontWeight: 700 }}>{goal}</span>
+              { icon: "📲", label: "Activation du module", sub: "matable.app · 2 min" },
+              { icon: "🖨️", label: "QR code sur vos tables", sub: "Impression ou NFC" },
+              { icon: "🎁", label: "Bon de réduction automatique", sub: "Après chaque ★★★★★" },
+              { icon: "💬", label: "Réponse IA aux avis", sub: "Nova IA · 1 clic" },
+              { icon: "📊", label: "Suivi de vos résultats", sub: "Dashboard en temps réel" },
+            ].map((s, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 30, height: 30, background: "rgba(251,146,60,0.15)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{s.icon}</div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{s.label}</div>
+                  <div style={{ fontSize: 9, color: "#64748b" }}>{s.sub}</div>
+                </div>
+                <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: "rgba(251,146,60,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 8, height: 2, background: "#fb923c", borderRadius: 1 }} />
+                </div>
               </div>
             ))}
           </div>
         </div>
-        <div style={{
-          background: "#fff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "10px",
-          padding: "14px",
-        }}>
-          <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a", marginBottom: "8px" }}>📞 Besoin d'aide ?</div>
-          <div style={{ fontSize: "10px", color: "#475569", lineHeight: 1.7 }}>
-            <div>Notre équipe vous accompagne 7j/7</div>
-            <div style={{ marginTop: "6px" }}>
-              <div>✉️ <a href="mailto:support@matable.pro" style={{ color: "#fb923c", fontWeight: 700 }}>support@matable.pro</a></div>
-              <div>🌐 <span style={{ color: "#fb923c" }}>matable.pro</span></div>
-              {vendor.phone && <div>📱 {vendor.phone}</div>}
+      </div>
+
+      {/* Bloc chiffres clés */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginTop: 20, marginBottom: 20 }}>
+        {[
+          { stat: "88%", desc: "des clients consultent les avis avant de choisir un restaurant", color: "#fb923c" },
+          { stat: "+9%", desc: "de chiffre d'affaires par étoile supplémentaire sur Google", color: "#10b981" },
+          { stat: "7j", desc: "suffisent pour obtenir vos premiers avis avec ce guide", color: "#6366f1" },
+        ].map(({ stat, desc, color }) => (
+          <div key={stat} style={{ background: "#fff", border: `1px solid ${color}30`, borderTop: `3px solid ${color}`, borderRadius: 10, padding: "14px 12px", textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color, lineHeight: 1 }}>{stat}</div>
+            <div style={{ fontSize: 9, color: "#64748b", marginTop: 6, lineHeight: 1.5 }}>{desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Deux modes QR */}
+      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "14px 16px", marginBottom: 16 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 10 }}>🪪 Deux façons d'utiliser vos QR codes</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ background: "#fff", border: "2px solid #10b981", borderRadius: 8, padding: "10px 12px" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#10b981", marginBottom: 4 }}>✅ Mode recommandé — Par serveur</div>
+            <div style={{ fontSize: 9, color: "#475569", lineHeight: 1.6 }}>
+              Chaque serveur a son <strong>QR/NFC unique</strong>. Le client scanne, choisit qui l'a servi, et laisse son avis. Les avis sont attribués nominativement — vous savez qui performe.
             </div>
-            <div style={{ marginTop: "8px", padding: "6px 8px", background: "#fef9f0", borderRadius: "6px", fontSize: "9px", color: "#92400e" }}>
-              💡 Conseil : activez les notifications dans l'app pour être alerté de chaque nouvel avis en temps réel.
+          </div>
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 12px" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#64748b", marginBottom: 4 }}>◎ Mode simplifié — Établissement</div>
+            <div style={{ fontSize: 9, color: "#475569", lineHeight: 1.6 }}>
+              Un seul QR pour tout le restaurant. Plus simple à gérer, mais aucune attribution individuelle aux serveurs.
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <div style={{ marginTop: "16px", textAlign: "center", fontSize: "9px", color: "#94a3b8" }}>
-        {vendor.raisonSociale} · matable.pro · {vendor.email} · Ce document est confidentiel et destiné uniquement à {client.name || "votre restaurant"}.
+      {/* Footer page 1 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid #e2e8f0" }}>
+        <div style={{ fontSize: 8, color: "#94a3b8" }}>{vendor.raisonSociale} · matable.pro · {vendor.email}</div>
+        <div style={{ fontSize: 8, color: "#94a3b8" }}>Page 1 / 3</div>
       </div>
-    </div>
+    </A4Page>
   );
+
+  /* ─── PAGE 2 : Étapes 1 à 3 ───────────────────────────────────────────── */
+  const page2 = (
+    <A4Page>
+      {/* En-tête */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 12, borderBottom: "2px solid #fb923c" }}>
+        <div style={{ width: 28, height: 28, background: "linear-gradient(135deg,#fb923c,#f97316)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⭐</div>
+        <div>
+          <div style={{ fontSize: 8, color: "#fb923c", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Guide Avis Google · {client.name}</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a" }}>Étapes 1 à 3 — Mise en place</div>
+        </div>
+        <div style={{ marginLeft: "auto", fontSize: 8, color: "#94a3b8" }}>matable.pro</div>
+      </div>
+
+      {/* ÉTAPE 1 */}
+      <StepCard num="1" color="#fb923c" icon="📲" title="Activer le module Avis"
+        mockup={
+          <div style={{ width: 110, background: "#0f172a", borderRadius: 16, padding: "8px 6px 10px", border: "2px solid #1e293b" }}>
+            <div style={{ width: 30, height: 4, background: "#1e293b", borderRadius: 4, margin: "0 auto 6px" }} />
+            <div style={{ background: "#1e293b", borderRadius: 8, padding: "8px 6px" }}>
+              <div style={{ fontSize: 6, color: "#94a3b8", marginBottom: 6 }}>Applications actives</div>
+              {[
+                { name: "⭐ Avis Google", on: true },
+                { name: "📅 Réservations", on: false },
+                { name: "🤖 Nova IA", on: false },
+              ].map(a => (
+                <div key={a.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "3px 4px", background: a.on ? "#fb923c20" : "transparent", borderRadius: 4, marginBottom: 2 }}>
+                  <span style={{ fontSize: 6, color: a.on ? "#fb923c" : "#64748b" }}>{a.name}</span>
+                  <div style={{ width: 18, height: 10, background: a.on ? "#fb923c" : "#334155", borderRadius: 6, position: "relative" }}>
+                    <div style={{ width: 8, height: 8, background: "#fff", borderRadius: "50%", position: "absolute", top: 1, [a.on ? "right" : "left"]: 1 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        }
+        items={[
+          <span key="a">Ouvrez <strong>matable.app</strong> et connectez-vous avec votre email et mot de passe.</span>,
+          <span key="b">Dans le menu latéral, appuyez sur <strong>⚙ Configuration</strong> puis <strong>Applications</strong>.</span>,
+          <span key="c">Activez le module <strong>⭐ Avis Google & Réputation</strong> (le switch doit être orange).</span>,
+          <span key="d">Collez votre <strong>lien Google My Business</strong> dans le champ prévu (l'URL de votre fiche Google).</span>,
+          <span key="e"><em>Comment trouver ce lien ?</em> Tapez votre restaurant sur Google Maps → clic droit sur "Donner un avis" → Copier l'adresse du lien.</span>,
+        ]}
+      />
+
+      {/* ÉTAPE 2 */}
+      <StepCard num="2" color="#3b82f6" icon="🖨️" title="Choisir votre mode et installer les QR codes"
+        mockup={
+          <div style={{ textAlign: "center" }}>
+            <QrMockup size={72} />
+            <div style={{ fontSize: 7, color: "#64748b", marginTop: 4, width: 72 }}>Scannez-moi pour laisser un avis !</div>
+          </div>
+        }
+        items={[
+          <span key="a">Dans <strong>Serveurs</strong>, choisissez votre mode via le switch <strong>"ID unique par serveur"</strong> :</span>,
+          <span key="b" style={{ paddingLeft: 8, display: "block" }}>✅ <strong>Activé</strong> = créez un profil par serveur → chaque serveur a son propre QR/NFC</span>,
+          <span key="c" style={{ paddingLeft: 8, display: "block" }}>◎ <strong>Désactivé</strong> = un seul QR pour tout le restaurant (plus simple)</span>,
+          <span key="d">Téléchargez les QR codes depuis le dashboard (<strong>format PNG, prêt à imprimer</strong>).</span>,
+          <span key="e">Imprimez et placez-les sur vos tables : support de table, ardoise ou autocollant sur l'addition. Idéalement <strong>après le plat principal</strong>.</span>,
+          <span key="f"><strong>Astuce NFC :</strong> utilisez le bouton "Encoder la carte NFC" sur Chrome Android pour programmer des badges sans contact.</span>,
+        ]}
+      />
+
+      {/* ÉTAPE 3 */}
+      <StepCard num="3" color="#10b981" icon="🎁" title="Configurer le bon de réduction automatique"
+        mockup={
+          <div style={{ width: 100 }}>
+            {/* Mockup bon */}
+            <div style={{ background: "#fff", border: "2px dashed #10b981", borderRadius: 10, padding: "8px", textAlign: "center" }}>
+              <div style={{ fontSize: 16, marginBottom: 2 }}>🎁</div>
+              <div style={{ fontSize: 7, fontWeight: 800, color: "#065f46" }}>BON DE</div>
+              <div style={{ fontSize: 7, fontWeight: 800, color: "#065f46" }}>RÉDUCTION</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "#10b981", margin: "4px 0" }}>-10%</div>
+              <div style={{ fontSize: 6, color: "#64748b" }}>sur votre prochaine visite</div>
+              <div style={{ marginTop: 6, background: "#f0fdf4", borderRadius: 4, padding: "3px 4px" }}>
+                <div style={{ fontSize: 6, color: "#16a34a", fontWeight: 700 }}>Valable 30 jours</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 7, color: "#94a3b8", textAlign: "center", marginTop: 4 }}>Envoyé automatiquement<br />après ★★★★★</div>
+          </div>
+        }
+        items={[
+          <span key="a">Dans <strong>Avis → Paramètres</strong>, activez le <strong>voucher post-avis</strong>.</span>,
+          <span key="b">Choisissez la récompense : <strong>remise en %</strong>, boisson offerte, dessert offert…</span>,
+          <span key="c">Définissez la <strong>durée de validité</strong> (recommandé : 30 jours) et un plafond mensuel si besoin.</span>,
+          <span key="d">Le bon est envoyé <strong>automatiquement</strong> au client dès qu'il laisse son avis — vous n'avez rien à gérer manuellement.</span>,
+          <span key="e"><strong>Conseil :</strong> commencez avec -10% sur la prochaine visite, c'est la récompense qui convertit le mieux.</span>,
+        ]}
+      />
+
+      {/* Footer page 2 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid #e2e8f0", marginTop: 8 }}>
+        <div style={{ fontSize: 8, color: "#94a3b8" }}>{vendor.raisonSociale} · matable.pro</div>
+        <div style={{ fontSize: 8, color: "#94a3b8" }}>Page 2 / 3</div>
+      </div>
+    </A4Page>
+  );
+
+  /* ─── PAGE 3 : Étapes 4-5 + Checklist + Objectifs ─────────────────────── */
+  const page3 = (
+    <A4Page>
+      {/* En-tête */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 12, borderBottom: "2px solid #6366f1" }}>
+        <div style={{ width: 28, height: 28, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🚀</div>
+        <div>
+          <div style={{ fontSize: 8, color: "#6366f1", fontWeight: 700, textTransform: "uppercase", letterSpacing: 2 }}>Guide Avis Google · {client.name}</div>
+          <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a" }}>Étapes 4 & 5 + Checklist 7 jours</div>
+        </div>
+        <div style={{ marginLeft: "auto", fontSize: 8, color: "#94a3b8" }}>matable.pro</div>
+      </div>
+
+      {/* ÉTAPE 4 — Répondre aux avis */}
+      <StepCard num="4" color="#f59e0b" icon="💬" title="Répondre aux avis avec Nova IA"
+        mockup={
+          <div style={{ width: 110 }}>
+            <div style={{ background: "#0f172a", borderRadius: 10, padding: "8px 6px" }}>
+              <div style={{ fontSize: 6, color: "#94a3b8", marginBottom: 6 }}>Nouvel avis Google</div>
+              <div style={{ background: "#1e293b", borderRadius: 6, padding: "5px 6px", marginBottom: 6 }}>
+                <Stars filled={5} size={9} />
+                <div style={{ fontSize: 6, color: "#e2e8f0", marginTop: 3, lineHeight: 1.4 }}>"Excellent repas, service impeccable ! Sophie était fantastique."</div>
+              </div>
+              <div style={{ background: "#f59e0b20", border: "1px solid #f59e0b40", borderRadius: 6, padding: "5px 6px" }}>
+                <div style={{ fontSize: 6, color: "#f59e0b", fontWeight: 700, marginBottom: 2 }}>✨ Réponse Nova IA</div>
+                <div style={{ fontSize: 6, color: "#e2e8f0", lineHeight: 1.4 }}>"Merci pour ce beau retour ! Nous sommes ravis…"</div>
+              </div>
+              <div style={{ marginTop: 6, background: "#f59e0b", borderRadius: 4, padding: "3px 0", textAlign: "center" }}>
+                <div style={{ fontSize: 6, color: "#fff", fontWeight: 800 }}>Publier sur Google ✓</div>
+              </div>
+            </div>
+          </div>
+        }
+        items={[
+          <span key="a">Dans <strong>Avis → Réponses</strong>, vous verrez tous vos nouveaux avis Google en temps réel.</span>,
+          <span key="b"><strong>Nova IA rédige une réponse personnalisée</strong> pour chaque avis — relisez et publiez en 1 clic.</span>,
+          <span key="c">Répondez à <strong>tous les avis</strong> (positifs ET négatifs) dans les <strong>24h</strong>.</span>,
+          <span key="d">Pour les avis négatifs : remerciez, reconnaissez et proposez une solution. Ne vous défendez pas.</span>,
+          <span key="e">Les réponses soignées rassurent les futurs clients et améliorent votre position dans les résultats Google.</span>,
+        ]}
+      />
+
+      {/* ÉTAPE 5 — Campagnes (bientôt) */}
+      <StepCard num="5" color="#8b5cf6" icon="🚀" title="Campagnes SMS / e-mail — Bientôt disponible" badge="En développement"
+        mockup={
+          <div style={{ width: 90, textAlign: "center" }}>
+            <div style={{ background: "#f5f3ff", border: "2px dashed #8b5cf6", borderRadius: 10, padding: "10px 8px" }}>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>📣</div>
+              <div style={{ fontSize: 7, fontWeight: 700, color: "#6d28d9" }}>Campagnes IA</div>
+              <div style={{ fontSize: 6, color: "#8b5cf6", marginTop: 2 }}>SMS · E-mail</div>
+              <div style={{ marginTop: 6, background: "#8b5cf620", borderRadius: 4, padding: "3px 4px" }}>
+                <div style={{ fontSize: 6, color: "#7c3aed", fontWeight: 700 }}>Bientôt 🔒</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 7, color: "#94a3b8", marginTop: 4, lineHeight: 1.4 }}>Vous serez notifié<br />à l'activation</div>
+          </div>
+        }
+        items={[
+          <span key="a">Les campagnes automatiques de relance (SMS & e-mail) sont <strong>en cours de développement</strong> par notre équipe.</span>,
+          <span key="b">À terme : relancez vos anciens clients après chaque visite pour maintenir un <strong>flux d'avis constant</strong> chaque semaine.</span>,
+          <span key="c">Nova IA rédigera les messages pour vous — personnalisés, au bon moment, dans le bon ton.</span>,
+          <span key="d">Vous serez automatiquement notifié par e-mail dès que la fonctionnalité est activée sur votre compte.</span>,
+          <span key="e"><strong>En attendant :</strong> encouragez verbalement vos clients satisfaits à scanner le QR code après le repas — c'est souvent suffisant pour démarrer !</span>,
+        ]}
+      />
+
+      {/* Checklist + Objectifs côte à côte */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 4 }}>
+        {/* Checklist 7 jours */}
+        <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: "12px 14px" }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#15803d", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+            <span>✅</span> Checklist — 7 premiers jours
+          </div>
+          {[
+            { day: "J1", task: "Activer le module Avis + coller le lien Google" },
+            { day: "J1", task: "Choisir : mode serveur ou mode restaurant" },
+            { day: "J2", task: "Télécharger et imprimer les QR codes" },
+            { day: "J2", task: "Configurer le bon de réduction (-10%)" },
+            { day: "J3", task: "Poser les QR sur toutes les tables" },
+            { day: "J3", task: "Tester le parcours client : QR → avis → bon" },
+            { day: "J4–7", task: "Encourager vos clients à scanner après le repas" },
+            { day: "J5–7", task: "Répondre aux premiers avis avec Nova IA" },
+          ].map(({ day, task }, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 5 }}>
+              <div style={{ width: 13, height: 13, border: "1.5px solid #16a34a", borderRadius: 3, flexShrink: 0, marginTop: 1 }} />
+              <div style={{ fontSize: 9, color: "#166534", lineHeight: 1.4 }}>
+                <strong style={{ color: "#15803d", marginRight: 3 }}>{day} :</strong>{task}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Objectifs + Contact */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Objectifs */}
+          <div style={{ background: "linear-gradient(135deg,#1e1b4b,#312e81)", borderRadius: 10, padding: "12px 14px", flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#a5b4fc", marginBottom: 10 }}>🎯 Vos objectifs</div>
+            {[
+              { period: "Semaine 1", goal: "5 à 10 avis Google", note: "les premiers sont les plus importants", color: "#fb923c" },
+              { period: "Mois 1", goal: "25+ avis · ≥ 4,3 ★", note: "votre note commence à grimper", color: "#818cf8" },
+              { period: "Mois 3", goal: "50+ avis · ≥ 4,5 ★", note: "vous apparaissez en top résultats", color: "#34d399" },
+            ].map(({ period, goal, note, color }) => (
+              <div key={period} style={{ marginBottom: 8, padding: "6px 8px", background: "rgba(255,255,255,0.05)", borderRadius: 6, borderLeft: `2px solid ${color}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                  <span style={{ fontSize: 9, color: "#94a3b8" }}>{period}</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color }}>{goal}</span>
+                </div>
+                <div style={{ fontSize: 8, color: "#64748b" }}>{note}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Contact */}
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>📞 Une question ?</div>
+            <div style={{ fontSize: 9, color: "#475569", lineHeight: 1.8 }}>
+              <div>Notre équipe vous accompagne <strong>7j/7</strong></div>
+              <div>✉️ <strong style={{ color: "#fb923c" }}>support@matable.pro</strong></div>
+              <div>🌐 <strong style={{ color: "#fb923c" }}>matable.pro</strong></div>
+              {vendor.phone && <div>📱 {vendor.phone}</div>}
+            </div>
+            <div style={{ marginTop: 8, background: "#fef9f0", borderRadius: 6, padding: "6px 8px", fontSize: 8, color: "#92400e", lineHeight: 1.5 }}>
+              💡 <strong>Conseil :</strong> activez les notifications dans matable.app — vous serez alerté en temps réel à chaque nouvel avis Google.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer page 3 */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid #e2e8f0", marginTop: 10 }}>
+        <div style={{ fontSize: 8, color: "#94a3b8" }}>{vendor.raisonSociale} · matable.pro · {vendor.email} · Document confidentiel — {client.name || "votre restaurant"}</div>
+        <div style={{ fontSize: 8, color: "#94a3b8" }}>Page 3 / 3</div>
+      </div>
+    </A4Page>
+  );
+
+  return <div style={{ fontFamily: "Arial, sans-serif" }}>{cover}{page2}{page3}</div>;
+
 }
 
 // Re-exports depuis pricing.ts pour rétro-compatibilité avec les imports
