@@ -318,10 +318,11 @@ type Props = {
   prestation: Prestation;
   priceInfo: PriceInfo;
   chainQuote?: ChainQuote;
+  tutoQrCode?: string; // data URL du vrai QR code restaurant (tuto-avis)
 };
 
 const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemplate(
-  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote },
+  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote, tutoQrCode },
   ref
 ) {
   return (
@@ -1864,7 +1865,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
       {/* ===== PLAQUETTE TUTO AVIS — Guide A à Z pour obtenir les premiers avis Google ===== */}
       {docType === "tuto-avis" && (
-        <TutoAvisSheet vendor={vendor} client={clientData} />
+        <TutoAvisSheet vendor={vendor} client={clientData} qrCodeDataUrl={tutoQrCode} />
       )}
 
       {/* ===== FLYER DÉMO — A5 paysage générique, 2 par A4 portrait ===== */}
@@ -2026,15 +2027,16 @@ function A4Page({ children, first = false }: { children: React.ReactNode; first?
   );
 }
 
-function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+function TutoAvisSheet({ vendor, client, qrCodeDataUrl }: { vendor: Vendor; client: ClientData; qrCodeDataUrl?: string }) {
   /* ─── PAGE 1 : Couverture ──────────────────────────────────────────────── */
   const cover = (
     <A4Page first>
-      {/* Fond pleine hauteur */}
+      {/* Fond pleine hauteur — reste dans les marges du template */}
       <div style={{
         background: "linear-gradient(160deg, #0f172a 0%, #1e1b4b 45%, #0f172a 100%)",
-        margin: "-18mm -14mm 0", padding: "22mm 18mm 16mm",
+        borderRadius: 12, padding: "22px 24px 20px",
         position: "relative", overflow: "hidden",
+        marginBottom: 16,
       }}>
         {/* Cercles décoratifs */}
         <div style={{ position: "absolute", top: -40, right: -40, width: 220, height: 220, borderRadius: "50%", border: "1px solid rgba(251,146,60,0.15)" }} />
@@ -2098,7 +2100,7 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
           {/* Flèche + étapes résumées */}
           <div style={{ flex: 1, paddingTop: 8 }}>
             {[
-              { icon: "📲", label: "Activation du module", sub: "matable.app · 2 min" },
+              { icon: "🔗", label: "Lien Google My Business", sub: "matable.pro · 2 min" },
               { icon: "🖨️", label: "QR code sur vos tables", sub: "Impression ou NFC" },
               { icon: "🎁", label: "Bon de réduction automatique", sub: "Après chaque ★★★★★" },
               { icon: "💬", label: "Réponse IA aux avis", sub: "Nova IA · 1 clic" },
@@ -2174,33 +2176,31 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
       </div>
 
       {/* ÉTAPE 1 */}
-      <StepCard num="1" color="#fb923c" icon="📲" title="Activer le module Avis"
+      <StepCard num="1" color="#fb923c" icon="🔗" title="Renseigner votre lien Google My Business"
         mockup={
           <div style={{ width: 110, background: "#0f172a", borderRadius: 16, padding: "8px 6px 10px", border: "2px solid #1e293b" }}>
             <div style={{ width: 30, height: 4, background: "#1e293b", borderRadius: 4, margin: "0 auto 6px" }} />
             <div style={{ background: "#1e293b", borderRadius: 8, padding: "8px 6px" }}>
-              <div style={{ fontSize: 6, color: "#94a3b8", marginBottom: 6 }}>Applications actives</div>
-              {[
-                { name: "⭐ Avis Google", on: true },
-                { name: "📅 Réservations", on: false },
-                { name: "🤖 Nova IA", on: false },
-              ].map(a => (
-                <div key={a.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "3px 4px", background: a.on ? "#fb923c20" : "transparent", borderRadius: 4, marginBottom: 2 }}>
-                  <span style={{ fontSize: 6, color: a.on ? "#fb923c" : "#64748b" }}>{a.name}</span>
-                  <div style={{ width: 18, height: 10, background: a.on ? "#fb923c" : "#334155", borderRadius: 6, position: "relative" }}>
-                    <div style={{ width: 8, height: 8, background: "#fff", borderRadius: "50%", position: "absolute", top: 1, [a.on ? "right" : "left"]: 1 }} />
-                  </div>
-                </div>
-              ))}
+              <div style={{ fontSize: 6, color: "#94a3b8", marginBottom: 4 }}>Avis → Paramètres</div>
+              <div style={{ fontSize: 6, color: "#64748b", marginBottom: 3 }}>Lien Google My Business</div>
+              <div style={{ background: "#0f172a", borderRadius: 4, padding: "3px 5px", border: "1px solid #fb923c50", marginBottom: 6 }}>
+                <span style={{ fontSize: 5, color: "#fb923c", fontFamily: "monospace" }}>maps.google.com/…</span>
+              </div>
+              <div style={{ background: "#fb923c", borderRadius: 4, padding: "3px 0", textAlign: "center" }}>
+                <span style={{ fontSize: 6, color: "#fff", fontWeight: 700 }}>Enregistrer ✓</span>
+              </div>
+              <div style={{ marginTop: 6, padding: "4px 5px", background: "#10b98120", borderRadius: 4 }}>
+                <span style={{ fontSize: 5, color: "#10b981" }}>✓ Module Avis déjà actif (inclus)</span>
+              </div>
             </div>
           </div>
         }
         items={[
-          <span key="a">Ouvrez <strong>matable.app</strong> et connectez-vous avec votre email et mot de passe.</span>,
-          <span key="b">Dans le menu latéral, appuyez sur <strong>⚙ Configuration</strong> puis <strong>Applications</strong>.</span>,
-          <span key="c">Activez le module <strong>⭐ Avis Google & Réputation</strong> (le switch doit être orange).</span>,
-          <span key="d">Collez votre <strong>lien Google My Business</strong> dans le champ prévu (l'URL de votre fiche Google).</span>,
-          <span key="e"><em>Comment trouver ce lien ?</em> Tapez votre restaurant sur Google Maps → clic droit sur "Donner un avis" → Copier l'adresse du lien.</span>,
+          <span key="trial">🎉 <strong>Bonne nouvelle :</strong> votre compte est créé avec 14 jours d'essai gratuit. Le module <strong>⭐ Avis Google</strong> est inclus et actif par défaut — rien à activer.</span>,
+          <span key="other">Vous souhaitez tester d'autres modules (Réservations, Nova IA…) ? Rendez-vous dans l'onglet <strong>SAV</strong> de votre dashboard pour en faire la demande.</span>,
+          <span key="a">Connectez-vous sur <strong>matable.pro</strong> avec votre email et mot de passe, puis ouvrez <strong>Avis → Paramètres</strong>.</span>,
+          <span key="b">Collez votre <strong>lien Google My Business</strong> dans le champ dédié — c'est l'URL de votre fiche Google.</span>,
+          <span key="c"><em>Comment trouver ce lien ?</em> Cherchez votre restaurant sur <strong>Google Maps</strong> → bouton <em>"Donner un avis"</em> → copiez l'URL de la page qui s'ouvre.</span>,
         ]}
       />
 
@@ -2208,8 +2208,12 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
       <StepCard num="2" color="#3b82f6" icon="🖨️" title="Choisir votre mode et installer les QR codes"
         mockup={
           <div style={{ textAlign: "center" }}>
-            <QrMockup size={72} />
-            <div style={{ fontSize: 7, color: "#64748b", marginTop: 4, width: 72 }}>Scannez-moi pour laisser un avis !</div>
+            {qrCodeDataUrl ? (
+              <img src={qrCodeDataUrl} alt="QR code restaurant" style={{ width: 72, height: 72, borderRadius: 6, display: "block" }} />
+            ) : (
+              <QrMockup size={72} />
+            )}
+            <div style={{ fontSize: 7, color: "#64748b", marginTop: 4, width: 72, lineHeight: 1.3 }}>Votre QR code<br />à imprimer</div>
           </div>
         }
         items={[

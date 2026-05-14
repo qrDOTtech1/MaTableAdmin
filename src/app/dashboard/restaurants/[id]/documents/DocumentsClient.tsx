@@ -616,6 +616,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           prestation={prestation}
           priceInfo={priceInfo}
           chainQuote={chainQuote}
+          tutoQrCode={nfcQrCode ?? undefined}
         />
       </div>
     </div>
