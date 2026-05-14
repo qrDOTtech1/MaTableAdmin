@@ -878,47 +878,148 @@ export default function NovaAgentTab() {
             CONFIG
         ══════════════════════════════════════════════════════ */}
         {section === "config" && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-2xl">
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 max-w-2xl">
             <div>
               <h2 className="text-xl font-black text-white">⚙️ Configuration</h2>
-              <p className="text-slate-400 text-sm">Vapi.ai · ElevenLabs · Nova Tech / Max</p>
+              <p className="text-slate-400 text-sm">Vapi.ai · Numéro téléphone · Voix IA</p>
             </div>
+
+            {/* ── Clarification SIP vs Réel ── */}
             <div className="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
-              <div className="px-5 py-4 border-b border-slate-800 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-xl">📡</div>
-                <div className="flex-1">
-                  <p className="text-white font-bold">Vapi.ai — Téléphonie IA</p>
-                  <p className="text-slate-400 text-xs">~0,05$/min · <a href="https://vapi.ai" target="_blank" className="text-violet-400">vapi.ai</a></p>
-                </div>
-                {cfg.hasVapi && <span className="text-emerald-400 text-sm font-bold">✅ Actif</span>}
+              <div className="px-5 py-3 border-b border-slate-800 bg-slate-800/40">
+                <p className="text-white font-bold text-sm">❓ Free Vapi SIP vs numéro réel — quelle différence ?</p>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="p-4 grid grid-cols-2 gap-3">
+                {/* SIP */}
+                <div className="rounded-xl border border-slate-700 bg-slate-950 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🔌</span>
+                    <p className="text-white font-bold text-sm">Free Vapi SIP</p>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded font-bold">GRATUIT</span>
+                  </div>
+                  <ul className="space-y-1 text-xs text-slate-400">
+                    <li className="flex gap-1.5"><span className="text-emerald-400 flex-shrink-0">✅</span>Parfait pour tester dans le navigateur</li>
+                    <li className="flex gap-1.5"><span className="text-emerald-400 flex-shrink-0">✅</span>Test de l'agent Max sans dépenser</li>
+                    <li className="flex gap-1.5"><span className="text-red-400 flex-shrink-0">❌</span><span>Ne peut <strong className="text-white">PAS</strong> appeler un 06/07/02 réel</span></li>
+                    <li className="flex gap-1.5"><span className="text-red-400 flex-shrink-0">❌</span>VoIP uniquement (SIP-to-SIP)</li>
+                  </ul>
+                  <p className="text-[10px] text-slate-600 italic">→ La simulation navigateur fonctionne déjà sans ça.</p>
+                </div>
+                {/* Twilio */}
+                <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📞</span>
+                    <p className="text-white font-bold text-sm">Numéro Twilio</p>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-violet-500/25 text-violet-300 rounded font-bold">RECOMMANDÉ</span>
+                  </div>
+                  <ul className="space-y-1 text-xs text-slate-400">
+                    <li className="flex gap-1.5"><span className="text-emerald-400 flex-shrink-0">✅</span>Appelle de vrais numéros français</li>
+                    <li className="flex gap-1.5"><span className="text-emerald-400 flex-shrink-0">✅</span>Max appelle vos restaurants réels</li>
+                    <li className="flex gap-1.5"><span className="text-emerald-400 flex-shrink-0">✅</span>15$ de crédit offert à l'inscription</li>
+                    <li className="flex gap-1.5"><span className="text-slate-400 flex-shrink-0">💶</span>~1,5€/mois numéro + ~0,013€/min</li>
+                  </ul>
+                  <p className="text-[10px] text-violet-400 font-semibold">→ C'est ce qu'il vous faut pour le mode Réel.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Guide Twilio ── */}
+            <div className="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
+              <div className="px-5 py-3 border-b border-slate-800 flex items-center gap-3">
+                <span className="text-xl">🛠️</span>
+                <div>
+                  <p className="text-white font-bold text-sm">Setup en 5 minutes — Twilio + Vapi</p>
+                  <p className="text-slate-500 text-xs">Pour appeler de vrais restaurants français avec Max</p>
+                </div>
+              </div>
+              <div className="p-5 space-y-3">
                 {[
-                  { key: "vapiApiKey", label: "API Key Vapi", placeholder: "vapi_XXXX…", type: "password", hint: "Dashboard Vapi → API Keys → Private Key" },
-                  { key: "vapiPhoneNumberId", label: "Phone Number ID", placeholder: "phone_XXXX…", hint: "Dashboard Vapi → Phone Numbers → votre numéro → ID" },
-                  { key: "elevenLabsVoiceId", label: "ElevenLabs Voice ID (optionnel)", placeholder: "Vide = Azure fr-FR-HenriNeural (inclus)", hint: "Laissez vide pour voix Azure gratuite incluse dans Vapi" },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label className="text-xs text-slate-400 font-semibold block mb-1">{f.label}</label>
-                    <input type={f.type ?? "text"} value={(cfgEdit as any)[f.key]}
-                      onChange={e => setCfgEdit(prev => ({ ...prev, [f.key]: e.target.value }))}
-                      placeholder={f.placeholder}
-                      className="w-full bg-black/40 border border-slate-700 focus:border-violet-500 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none" />
-                    <p className="text-slate-600 text-[10px] mt-1">{f.hint}</p>
+                  {
+                    step: "1", color: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                    title: "Créer un compte Twilio gratuit",
+                    desc: "15$ de crédit offert — largement suffisant pour commencer",
+                    link: { label: "→ twilio.com/try-twilio", href: "https://www.twilio.com/try-twilio" },
+                  },
+                  {
+                    step: "2", color: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+                    title: "Acheter un numéro français",
+                    desc: 'Dashboard Twilio → Phone Numbers → Manage → Buy a number → Pays : France 🇫🇷 → cherchez un 07XXXXXXXX (~1,5€/mois)',
+                  },
+                  {
+                    step: "3", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                    title: "Importer dans Vapi",
+                    desc: 'Dashboard Vapi → Phone Numbers → Import Twilio → collez Account SID + Auth Token + le numéro',
+                    link: { label: "→ dashboard.vapi.ai/phone-numbers", href: "https://dashboard.vapi.ai/phone-numbers" },
+                  },
+                  {
+                    step: "4", color: "bg-orange-500/20 text-orange-300 border-orange-500/30",
+                    title: "Copier le Phone Number ID",
+                    desc: 'Dans Vapi, cliquez sur votre numéro importé → copiez le champ "ID" (commence par phone_...)',
+                  },
+                  {
+                    step: "5", color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                    title: "Coller ci-dessous + sauvegarder",
+                    desc: "API Key Vapi + Phone Number ID → bouton 💾 — le mode Réel s'active automatiquement !",
+                  },
+                ].map(s => (
+                  <div key={s.step} className="flex gap-3 items-start">
+                    <span className={`w-7 h-7 rounded-full border text-xs font-black flex items-center justify-center flex-shrink-0 mt-0.5 ${s.color}`}>{s.step}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-semibold">{s.title}</p>
+                      <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{s.desc}</p>
+                      {s.link && <a href={s.link.href} target="_blank" rel="noopener" className="text-violet-400 text-xs hover:underline">{s.link.label}</a>}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-xs text-slate-400 space-y-1.5">
-              <p className="font-bold text-white text-sm">📋 Setup en 4 étapes</p>
-              <p>1. Créez un compte <a href="https://vapi.ai" target="_blank" className="text-violet-400">vapi.ai</a> (gratuit pour tester)</p>
-              <p>2. Achetez un numéro 🇫🇷 <strong>Dashboard → Phone Numbers → Buy</strong> (~1$/mois)</p>
-              <p>3. Copiez <strong>Private API Key</strong> depuis <strong>Dashboard → API Keys</strong></p>
-              <p>4. Copiez le <strong>Phone Number ID</strong> de votre numéro acheté</p>
+
+            {/* ── API Keys form ── */}
+            <div className="rounded-2xl border border-slate-700 bg-slate-900 overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-800 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-xl">🔑</div>
+                <div className="flex-1">
+                  <p className="text-white font-bold">Vos clés API</p>
+                  <p className="text-slate-400 text-xs">Stockées en base, jamais exposées au navigateur</p>
+                </div>
+                {cfg.hasVapi && (
+                  <div className="flex items-center gap-1.5 text-emerald-400 text-sm">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Actif
+                  </div>
+                )}
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1">API Key Vapi <span className="text-red-400">*</span></label>
+                  <input type="password" value={cfgEdit.vapiApiKey}
+                    onChange={e => setCfgEdit(p => ({ ...p, vapiApiKey: e.target.value }))}
+                    placeholder="vapi_XXXXXXXXXXXXXXXX"
+                    className="w-full bg-black/40 border border-slate-700 focus:border-violet-500 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none" />
+                  <p className="text-slate-600 text-[10px] mt-1">Dashboard Vapi → API Keys → <strong>Private Key</strong></p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1">Phone Number ID (Twilio importé) <span className="text-red-400">*</span></label>
+                  <input value={cfgEdit.vapiPhoneNumberId}
+                    onChange={e => setCfgEdit(p => ({ ...p, vapiPhoneNumberId: e.target.value }))}
+                    placeholder="phone_XXXXXXXXXXXXXXXX"
+                    className="w-full bg-black/40 border border-slate-700 focus:border-violet-500 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none" />
+                  <p className="text-slate-600 text-[10px] mt-1">Vapi → Phone Numbers → votre numéro importé → champ ID</p>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-400 font-semibold block mb-1">ElevenLabs Voice ID <span className="text-slate-600 text-[10px]">(optionnel)</span></label>
+                  <input value={cfgEdit.elevenLabsVoiceId}
+                    onChange={e => setCfgEdit(p => ({ ...p, elevenLabsVoiceId: e.target.value }))}
+                    placeholder="Vide = voix Azure fr-FR-HenriNeural (incluse gratuitement dans Vapi)"
+                    className="w-full bg-black/40 border border-slate-700 focus:border-orange-500 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none" />
+                  <p className="text-slate-600 text-[10px] mt-1">Sans ça, Vapi utilise Azure Neural TTS — qualité très correcte et inclus gratuitement</p>
+                </div>
+              </div>
             </div>
+
             <button onClick={saveConfig} disabled={cfgSaving}
-              className={`w-full py-3 rounded-xl text-sm font-black transition-all ${cfgSaved ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400" : "bg-violet-500 hover:bg-violet-400 text-white disabled:opacity-50"}`}>
-              {cfgSaved ? "✅ Sauvegardé !" : cfgSaving ? "Sauvegarde…" : "💾 Sauvegarder"}
+              className={`w-full py-3.5 rounded-xl text-sm font-black transition-all ${cfgSaved ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-400" : "bg-violet-500 hover:bg-violet-400 text-white shadow-lg shadow-violet-500/20 disabled:opacity-50"}`}>
+              {cfgSaved ? "✅ Sauvegardé — mode Réel activé !" : cfgSaving ? "Sauvegarde…" : "💾 Sauvegarder la configuration"}
             </button>
           </div>
         )}
