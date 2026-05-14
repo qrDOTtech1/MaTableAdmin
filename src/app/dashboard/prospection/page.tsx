@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import CircuitTab from "./CircuitTab";
+import CallModeTab from "./CallModeTab";
+import NovaAgentTab from "./NovaAgentTab";
 import dynamic from "next/dynamic";
 const MapProspectTab = dynamic(() => import("./MapProspectTab"), { ssr: false });
 
@@ -72,7 +74,7 @@ const PLAN_PRICES: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ProspectionPage() {
-  const [activeTab, setActiveTab] = useState<"crm" | "circuit" | "map">("crm");
+  const [activeTab, setActiveTab] = useState<"crm" | "circuit" | "map" | "callmode" | "nova">("crm");
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Prospect | null>(null);
@@ -268,10 +270,12 @@ export default function ProspectionPage() {
       {/* ── Tab bar ── */}
       <div className="flex items-center gap-1 px-6 pt-4 pb-0 border-b border-slate-800 flex-shrink-0 bg-slate-950">
         {([
-          { id: "crm", label: "📋 Base CRM" },
-          { id: "circuit", label: "🗺️ Circuits" },
-          { id: "map", label: "🌍 Carte Globale" },
-        ] as { id: "crm" | "circuit" | "map"; label: string }[]).map(tab => (
+          { id: "crm",      label: "📋 Base CRM" },
+          { id: "circuit",  label: "🗺️ Circuits" },
+          { id: "map",      label: "🌍 Carte" },
+          { id: "callmode", label: "📞 Mode Appel" },
+          { id: "nova",     label: "🤖 NovaAgent" },
+        ] as { id: "crm" | "circuit" | "map" | "callmode" | "nova"; label: string }[]).map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -297,6 +301,20 @@ export default function ProspectionPage() {
       {activeTab === "map" && (
         <div className="flex-1 overflow-hidden">
           <MapProspectTab />
+        </div>
+      )}
+
+      {/* ── Call Mode tab ── */}
+      {activeTab === "callmode" && (
+        <div className="flex-1 overflow-hidden">
+          <CallModeTab />
+        </div>
+      )}
+
+      {/* ── NovaAgent tab ── */}
+      {activeTab === "nova" && (
+        <div className="flex-1 overflow-hidden">
+          <NovaAgentTab />
         </div>
       )}
 
