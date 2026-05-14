@@ -10,6 +10,7 @@ import {
   updateStripeKeys,
   updateContactEmail,
   updateEnabledApps,
+  updateServerUniqueQr,
   deleteRestaurant,
 } from "@/lib/admin-actions";
 import Link from "next/link";
@@ -94,6 +95,12 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
     SELECT "stripeSecretKey", "stripePublicKey", "stripeWebhookSecret"
     FROM "Restaurant" WHERE id = ${id} LIMIT 1
   `.then(r => r[0] ?? { stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null });
+
+  // serverUniqueReviewQr — default true if column doesn't exist yet
+  const serverUniqueQrRows = await prisma.$queryRaw<Array<{ serverUniqueReviewQr: boolean | null }>>`
+    SELECT "serverUniqueReviewQr" FROM "Restaurant" WHERE id = ${id} LIMIT 1
+  `.catch(() => [{ serverUniqueReviewQr: true }]);
+  const serverUniqueReviewQr: boolean = serverUniqueQrRows[0]?.serverUniqueReviewQr ?? true;
 
   return (
     <div className="p-8 max-w-5xl space-y-8">
@@ -502,6 +509,56 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
           </form>
         </div>
       )}
+
+      {/* ── Configuration Avis Google ── */}
+      <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center text-xl">⭐</div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Configuration Avis Google</h2>
+            <p className="text-xs text-slate-400">Paramétrage du module Avis — QR / NFC et attribution aux serveurs</p>
+          </div>
+        </div>
+
+        <form action={updateServerUniqueQr.bind(null, id)} className="space-y-4">
+          <div className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${
+            serverUniqueReviewQr ? "border-emerald-500 bg-emerald-500/10" : "border-slate-700 bg-slate-800/50"
+          }`}>
+            <div className="pt-0.5">
+              <input
+                type="checkbox"
+                name="serverUniqueReviewQr"
+                id="serverUniqueReviewQr"
+                defaultChecked={serverUniqueReviewQr}
+                className="accent-emerald-500 w-5 h-5"
+              />
+            </div>
+            <label htmlFor="serverUniqueReviewQr" className="flex-1 cursor-pointer">
+              <div className="font-semibold text-white text-sm">ID unique par serveur</div>
+              <p className="text-xs text-slate-400 mt-1">
+                <strong className="text-emerald-400">Activé (recommandé) :</strong> chaque serveur dispose de son propre QR code / NFC.
+                Les avis Google sont attribués nominativement au serveur concerné — le client voit <em>"Qui vous a servi ?"</em> et choisit parmi les serveurs actifs.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                <strong className="text-slate-400">Désactivé :</strong> un seul QR / NFC pour le restaurant entier. Aucun serveur ne peut être créé. L'avis est enregistré sans attribution individuelle.
+              </p>
+            </label>
+          </div>
+
+          {!serverUniqueReviewQr && (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3">
+              <p className="text-xs text-amber-400">
+                ⚠️ Mode <strong>QR unique restaurant</strong> actif — les serveurs ne peuvent pas être créés.
+                Pour créer des serveurs et activer l'attribution nominative, activez l'option ci-dessus.
+              </p>
+            </div>
+          )}
+
+          <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-lg transition-colors text-sm">
+            Enregistrer
+          </button>
+        </form>
+      </div>
 
       {/* ── Zone de danger ── */}
       <div className="bg-red-950/20 border border-red-900/50 p-6 rounded-xl">

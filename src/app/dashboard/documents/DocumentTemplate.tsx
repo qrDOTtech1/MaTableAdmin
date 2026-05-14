@@ -289,7 +289,7 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer";
+export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis";
 
 // Ligne d'établissement pour les devis chaîne
 export type ChainEstablishment = {
@@ -365,7 +365,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       </div>
 
       {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
-      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && (
+      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
           {docType === "contrat" && "Contrat d'Abonnement — Plateforme MaTable.Pro"}
           {docType === "prestation" && "Contrat de Prestation — MaTable.Pro"}
@@ -1862,6 +1862,11 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         </div>
       )}
 
+      {/* ===== PLAQUETTE TUTO AVIS — Guide A à Z pour obtenir les premiers avis Google ===== */}
+      {docType === "tuto-avis" && (
+        <TutoAvisSheet vendor={vendor} client={client} />
+      )}
+
       {/* ===== FLYER DÉMO — A5 paysage générique, 2 par A4 portrait ===== */}
       {docType === "flyer" && (
         <FlyerSheet vendor={vendor} />
@@ -1873,6 +1878,296 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 });
 
 export default DocumentTemplate;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLAQUETTE TUTO AVIS — Guide de A à Z pour obtenir les premiers avis Google
+// Format A4 portrait, impression couleur / N&B compatible
+// ─────────────────────────────────────────────────────────────────────────────
+function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  const steps = [
+    {
+      num: "01",
+      icon: "📲",
+      title: "Activer le module Avis",
+      color: "#fb923c",
+      items: [
+        "Connectez-vous sur matable.app avec vos identifiants.",
+        "Dans le menu latéral, ouvrez Configuration → Applications.",
+        "Activez le module ⭐ Avis Google & Réputation.",
+        "Vérifiez que votre lien Google My Business est bien renseigné (copiez l'URL de votre fiche Google).",
+      ],
+    },
+    {
+      num: "02",
+      icon: "🖨️",
+      title: "Imprimer et poser vos QR codes",
+      color: "#3b82f6",
+      items: [
+        "Depuis le dashboard, allez dans Avis → QR Codes.",
+        "Téléchargez les QR codes de chaque serveur (format PDF haute résolution).",
+        "Imprimez-les en couleur sur du papier épais (ou commandez les supports NFC depuis l'admin).",
+        "Placez-les sur chaque table : support de table, ardoise, présentoir ou autocollant sur l'addition.",
+        "Conseil : position idéale = à hauteur des yeux, face client, après le service.",
+      ],
+    },
+    {
+      num: "03",
+      icon: "🎁",
+      title: "Configurer le bon de réduction",
+      color: "#10b981",
+      items: [
+        "Dans Avis → Paramètres, activez le voucher post-avis.",
+        "Choisissez la récompense : remise (ex : -10%), boisson offerte ou dessert offert.",
+        "Définissez la validité (recommandé : 30 jours) et le plafond mensuel.",
+        "Le client reçoit automatiquement son bon après avoir laissé son avis ★★★★★.",
+        "Vous n'avez rien à gérer manuellement — tout est automatisé.",
+      ],
+    },
+    {
+      num: "04",
+      icon: "🤳",
+      title: "Lancer la première campagne",
+      color: "#8b5cf6",
+      items: [
+        "Dans Avis → Campagnes, créez une campagne SMS ou e-mail.",
+        "Importez vos clients (export caisse, fichier CSV ou liste manuelle).",
+        "Rédigez un message court et chaleureux (Nova IA peut le rédiger pour vous).",
+        "Programmez l'envoi le soir même après le service, entre 20h et 21h.",
+        "Objectif : 5 à 10 avis Google dès la première semaine.",
+      ],
+    },
+    {
+      num: "05",
+      icon: "💬",
+      title: "Répondre aux avis avec Nova IA",
+      color: "#f59e0b",
+      items: [
+        "Dans Avis → Réponses, Nova IA propose une réponse personnalisée pour chaque avis.",
+        "Relisez, ajustez si besoin, et publiez en 1 clic sur Google.",
+        "Répondez à TOUS les avis — positifs comme négatifs — dans les 24h.",
+        "Les réponses soignées améliorent votre note globale et rassure les futurs clients.",
+        "Astuce : configurez le ton (professionnel, chaleureux, décontracté) dans les paramètres Nova IA.",
+      ],
+    },
+    {
+      num: "06",
+      icon: "📊",
+      title: "Suivre vos résultats",
+      color: "#06b6d4",
+      items: [
+        "Dans le tableau de bord Avis, consultez l'évolution de votre note Google semaine par semaine.",
+        "Identifiez vos meilleurs serveurs (les mieux notés) et valorisez-les.",
+        "Relancez une campagne chaque mois pour maintenir le flux d'avis.",
+        "Objectif à 3 mois : +4,5★ sur Google avec 50+ avis récents.",
+        "Notre équipe MaTable est disponible pour vous accompagner : support@matable.pro",
+      ],
+    },
+  ];
+
+  return (
+    <div style={{ fontFamily: "'Inter', sans-serif", maxWidth: "210mm", margin: "0 auto" }}>
+      {/* Hero */}
+      <div style={{
+        background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%)",
+        padding: "28px 32px 24px",
+        marginBottom: "24px",
+        borderRadius: "12px",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        <div style={{ position: "absolute", top: 0, right: 0, width: "120px", height: "120px", opacity: 0.08 }}>
+          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="60" cy="60" r="55" stroke="#fb923c" strokeWidth="2" />
+            <circle cx="60" cy="60" r="35" stroke="#fb923c" strokeWidth="1.5" />
+            <circle cx="60" cy="60" r="15" fill="#fb923c" />
+          </svg>
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+          <div style={{
+            background: "linear-gradient(135deg, #fb923c, #f97316)",
+            borderRadius: "12px",
+            padding: "10px 14px",
+            fontSize: "28px",
+            lineHeight: 1,
+            flexShrink: 0,
+          }}>⭐</div>
+          <div>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: "#fb923c", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "4px" }}>
+              Guide Complet — MaTable.Pro
+            </div>
+            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 900, color: "#fff", lineHeight: 1.2 }}>
+              Obtenir vos premiers<br />avis Google en 7 jours
+            </h1>
+            <p style={{ margin: "8px 0 0", fontSize: "11px", color: "#94a3b8" }}>
+              De A à Z · Du QR code à votre première étoile supplémentaire
+            </p>
+          </div>
+        </div>
+        {/* Client info */}
+        <div style={{
+          marginTop: "16px",
+          padding: "10px 14px",
+          background: "rgba(255,255,255,0.06)",
+          borderRadius: "8px",
+          display: "flex",
+          gap: "24px",
+          flexWrap: "wrap",
+        }}>
+          <div>
+            <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>Restaurant</div>
+            <div style={{ fontSize: "12px", color: "#fff", fontWeight: 700 }}>{client.name || "—"}</div>
+          </div>
+          {client.email && (
+            <div>
+              <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>Email</div>
+              <div style={{ fontSize: "12px", color: "#fb923c" }}>{client.email}</div>
+            </div>
+          )}
+          <div style={{ marginLeft: "auto", textAlign: "right" }}>
+            <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>Votre référent</div>
+            <div style={{ fontSize: "12px", color: "#fff", fontWeight: 700 }}>{vendor.representant || vendor.raisonSociale}</div>
+            <div style={{ fontSize: "10px", color: "#94a3b8" }}>{vendor.phone || vendor.email}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Intro */}
+      <div style={{
+        background: "#fef9f0",
+        border: "1px solid #fed7aa",
+        borderLeft: "4px solid #fb923c",
+        borderRadius: "8px",
+        padding: "12px 16px",
+        marginBottom: "20px",
+        fontSize: "11px",
+        color: "#92400e",
+        lineHeight: 1.6,
+      }}>
+        <strong>Pourquoi les avis Google sont essentiels ?</strong><br />
+        88 % des consommateurs consultent les avis en ligne avant de choisir un restaurant. Chaque étoile supplémentaire sur Google représente en moyenne +5 à +9 % de chiffre d'affaires. Ce guide vous accompagne étape par étape pour activer votre système d'avis et recevoir vos premiers retours dès cette semaine.
+      </div>
+
+      {/* Steps grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+        {steps.map((step) => (
+          <div key={step.num} style={{
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            borderTop: `3px solid ${step.color}`,
+            borderRadius: "10px",
+            padding: "14px",
+            pageBreakInside: "avoid",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+              <div style={{
+                width: "28px", height: "28px",
+                background: step.color,
+                borderRadius: "8px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "14px",
+                flexShrink: 0,
+              }}>{step.icon}</div>
+              <div>
+                <div style={{ fontSize: "9px", fontWeight: 700, color: step.color, letterSpacing: "1px" }}>ÉTAPE {step.num}</div>
+                <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", lineHeight: 1.2 }}>{step.title}</div>
+              </div>
+            </div>
+            <ul style={{ margin: 0, paddingLeft: "14px", fontSize: "10px", color: "#475569", lineHeight: 1.65, listStyle: "disc" }}>
+              {step.items.map((item, i) => (
+                <li key={i} style={{ marginBottom: "3px" }}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Checklist rapide */}
+      <div style={{
+        background: "#f0fdf4",
+        border: "1px solid #86efac",
+        borderRadius: "10px",
+        padding: "14px 16px",
+        marginBottom: "16px",
+      }}>
+        <div style={{ fontSize: "11px", fontWeight: 800, color: "#15803d", marginBottom: "10px" }}>
+          ✅ Checklist — Votre lancement en 7 jours
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 20px" }}>
+          {[
+            ["Jour 1", "Activer le module Avis dans matable.app"],
+            ["Jour 1", "Renseigner le lien Google My Business"],
+            ["Jour 2", "Télécharger et imprimer les QR codes"],
+            ["Jour 2", "Configurer le bon de réduction"],
+            ["Jour 3", "Poser les QR codes sur toutes les tables"],
+            ["Jour 3", "Tester le parcours client (QR → avis → bon)"],
+            ["Jour 4", "Lancer la 1ère campagne SMS/email"],
+            ["Jour 5–7", "Répondre aux premiers avis avec Nova IA"],
+          ].map(([day, task], i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "10px", color: "#166534", padding: "3px 0" }}>
+              <span style={{
+                width: "14px", height: "14px",
+                border: "1.5px solid #16a34a",
+                borderRadius: "3px",
+                flexShrink: 0,
+                marginTop: "1px",
+                display: "inline-block",
+              }} />
+              <span><strong style={{ color: "#15803d" }}>{day} :</strong> {task}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Objectifs & contact */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div style={{
+          background: "linear-gradient(135deg, #1e1b4b, #312e81)",
+          borderRadius: "10px",
+          padding: "14px",
+          color: "#fff",
+        }}>
+          <div style={{ fontSize: "11px", fontWeight: 800, color: "#a5b4fc", marginBottom: "8px" }}>🎯 Objectifs à atteindre</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {[
+              ["Semaine 1", "5–10 premiers avis Google", "#fb923c"],
+              ["Mois 1", "25+ avis · Note ≥ 4,3 ★", "#818cf8"],
+              ["Mois 3", "50+ avis · Note ≥ 4,5 ★", "#34d399"],
+            ].map(([period, goal, color]) => (
+              <div key={period} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px" }}>
+                <span style={{ color: "#94a3b8" }}>{period}</span>
+                <span style={{ color, fontWeight: 700 }}>{goal}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: "10px",
+          padding: "14px",
+        }}>
+          <div style={{ fontSize: "11px", fontWeight: 800, color: "#0f172a", marginBottom: "8px" }}>📞 Besoin d'aide ?</div>
+          <div style={{ fontSize: "10px", color: "#475569", lineHeight: 1.7 }}>
+            <div>Notre équipe vous accompagne 7j/7</div>
+            <div style={{ marginTop: "6px" }}>
+              <div>✉️ <a href="mailto:support@matable.pro" style={{ color: "#fb923c", fontWeight: 700 }}>support@matable.pro</a></div>
+              <div>🌐 <span style={{ color: "#fb923c" }}>matable.pro</span></div>
+              {vendor.phone && <div>📱 {vendor.phone}</div>}
+            </div>
+            <div style={{ marginTop: "8px", padding: "6px 8px", background: "#fef9f0", borderRadius: "6px", fontSize: "9px", color: "#92400e" }}>
+              💡 Conseil : activez les notifications dans l'app pour être alerté de chaque nouvel avis en temps réel.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ marginTop: "16px", textAlign: "center", fontSize: "9px", color: "#94a3b8" }}>
+        {vendor.raisonSociale} · matable.pro · {vendor.email} · Ce document est confidentiel et destiné uniquement à {client.name || "votre restaurant"}.
+      </div>
+    </div>
+  );
+}
 
 // Re-exports depuis pricing.ts pour rétro-compatibilité avec les imports
 // existants ailleurs dans le code (DocumentsClient, DocumentViewerClient).

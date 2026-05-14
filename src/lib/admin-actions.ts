@@ -142,6 +142,16 @@ export async function updateEnabledApps(id: string, formData: FormData) {
   revalidatePath(`/dashboard/restaurants/${id}`);
 }
 
+export async function updateServerUniqueQr(id: string, formData: FormData) {
+  "use server";
+  const enabled = formData.has("serverUniqueReviewQr");
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Restaurant" SET "serverUniqueReviewQr" = $1 WHERE id = $2`,
+    enabled, id,
+  );
+  revalidatePath(`/dashboard/restaurants/${id}`);
+}
+
 export async function deleteRestaurant(id: string) {
   "use server";
   await prisma.restaurant.delete({ where: { id } });
