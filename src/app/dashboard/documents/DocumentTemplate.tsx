@@ -1864,7 +1864,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
       {/* ===== PLAQUETTE TUTO AVIS — Guide A à Z pour obtenir les premiers avis Google ===== */}
       {docType === "tuto-avis" && (
-        <TutoAvisSheet vendor={vendor} client={client} />
+        <TutoAvisSheet vendor={vendor} client={clientData} />
       )}
 
       {/* ===== FLYER DÉMO — A5 paysage générique, 2 par A4 portrait ===== */}
