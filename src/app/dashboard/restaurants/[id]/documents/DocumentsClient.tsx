@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import QRCode from "qrcode";
 import DocumentTemplate, { type DocType } from "../../../documents/DocumentTemplate";
 import { printDocumentNode } from "../../../documents/printUtil";
 import { computeQuote, MODULES, DURATIONS, type DurationKey } from "../../../documents/pricing";
@@ -35,6 +36,39 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
   // Modules sélectionnés — "avis" est requis donc toujours inclus
   const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
   const printRef = useRef<HTMLDivElement>(null);
+
+  // ── NFC / QR pour tuto-avis ──────────────────────────────────────────────
+  const [nfcQrCode, setNfcQrCode] = useState<string | null>(null);
+  const [nfcWriting, setNfcWriting] = useState(false);
+  const [nfcWritten, setNfcWritten] = useState(false);
+  const reviewUrl = restaurant.slug ? `https://matable.pro/r/${restaurant.slug}/review` : null;
+
+  useEffect(() => {
+    if (docType !== "tuto-avis" || !reviewUrl) { setNfcQrCode(null); return; }
+    QRCode.toDataURL(reviewUrl, {
+      width: 300, margin: 1,
+      color: { dark: "#ffffff", light: "#0a0a0a" },
+    }).then(setNfcQrCode).catch(() => {});
+  }, [docType, reviewUrl]);
+
+  const writeNfc = async () => {
+    if (!reviewUrl) return;
+    if (!("NDEFReader" in window)) {
+      alert("L'écriture NFC n'est disponible que sur Chrome pour Android.");
+      return;
+    }
+    try {
+      setNfcWriting(true);
+      const ndef = new (window as any).NDEFReader();
+      await ndef.write({ records: [{ recordType: "url", data: reviewUrl }] });
+      setNfcWritten(true);
+      setTimeout(() => setNfcWritten(false), 3000);
+    } catch (err: any) {
+      alert(`Écriture NFC annulée : ${err.message ?? "Erreur inconnue"}`);
+    } finally {
+      setNfcWriting(false);
+    }
+  };
 
   const toggleModule = (id: string) => {
     if (id === "avis") return; // requis, ne se désélectionne pas
@@ -484,6 +518,62 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
               <input type="number" value={prestation.montantHT} placeholder="Montant HT (€)" onChange={(e) => setPrestation({...prestation, montantHT: Number(e.target.value)})} className={INPUT_CLS} />
               <input type="text" value={prestation.modalites} placeholder="Modalités de paiement" onChange={(e) => setPrestation({...prestation, modalites: e.target.value})} className={INPUT_CLS} />
               <input type="text" value={prestation.delaiLivraison} placeholder="Délai de livraison" onChange={(e) => setPrestation({...prestation, delaiLivraison: e.target.value})} className={INPUT_CLS} />
+            </div>
+          )}
+
+          {/* ── Section NFC/QR — Tuto Avis seulement ── */}
+          {docType === "tuto-avis" && reviewUrl && (
+            <div className="pt-4 border-t border-slate-800 space-y-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">🪪 Carte NFC & QR Code restaurant</p>
+
+              <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2">
+                <span className="font-mono text-[10px] text-slate-400 flex-1 truncate">{reviewUrl}</span>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(reviewUrl)}
+                  className="text-xs text-orange-400 hover:text-orange-300 transition-colors shrink-0 font-semibold"
+                >
+                  📋
+                </button>
+              </div>
+
+              {nfcQrCode ? (
+                <div className="flex items-center gap-3 p-3 bg-slate-900 border border-slate-700 rounded-xl">
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-600 shrink-0">
+                    <img src={nfcQrCode} alt="QR restaurant" className="w-full h-full" />
+                  </div>
+                  <div className="space-y-2 min-w-0">
+                    <p className="text-xs text-slate-400 leading-relaxed">QR global du restaurant — à coller sur les tables ou cartes NFC.</p>
+                    <a
+                      href={nfcQrCode}
+                      download={`nfc-${restaurant.slug || "restaurant"}.png`}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+                    >
+                      ⬇ Télécharger PNG
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span className="w-3 h-3 border-2 border-slate-500 border-t-transparent rounded-full animate-spin" />
+                  Génération du QR…
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={writeNfc}
+                disabled={nfcWriting}
+                className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold px-3 py-2.5 bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 rounded-lg text-blue-300 transition-colors disabled:opacity-60"
+              >
+                {nfcWriting ? (
+                  <><span className="w-3 h-3 border-2 border-blue-300 border-t-transparent rounded-full animate-spin shrink-0" /> Approchez la carte NFC…</>
+                ) : nfcWritten ? "✅ Carte encodée !" : "📱 Encoder la carte NFC"}
+              </button>
+
+              <p className="text-[10px] text-slate-600 leading-relaxed">
+                ⚠ Encodage NFC réservé à <strong className="text-slate-500">Chrome sur Android</strong>. Sur iPhone, utilisez l'app <em>NFC Tools</em> et collez l'URL ci-dessus.
+              </p>
             </div>
           )}
 
