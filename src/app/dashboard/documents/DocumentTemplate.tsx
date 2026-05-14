@@ -1900,14 +1900,14 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
     {
       num: "02",
       icon: "🖨️",
-      title: "Imprimer et poser vos QR codes",
+      title: "Choisir votre mode QR & imprimer",
       color: "#3b82f6",
       items: [
-        "Depuis le dashboard, allez dans Avis → QR Codes.",
-        "Téléchargez les QR codes de chaque serveur (format PDF haute résolution).",
-        "Imprimez-les en couleur sur du papier épais (ou commandez les supports NFC depuis l'admin).",
-        "Placez-les sur chaque table : support de table, ardoise, présentoir ou autocollant sur l'addition.",
-        "Conseil : position idéale = à hauteur des yeux, face client, après le service.",
+        "Dans Serveurs → paramètre « ID unique par serveur » : activé = un QR/NFC par serveur (avis attribués nominativement) ; désactivé = un seul QR pour tout l'établissement.",
+        "Mode par serveur : chaque serveur a son QR/NFC personnel — le client voit « Qui vous a servi ? » et choisit.",
+        "Mode établissement : un seul QR commun, aucune attribution individuelle — idéal si vous préférez la simplicité.",
+        "Téléchargez les QR codes depuis le dashboard Serveurs (PNG haute résolution, prêt à imprimer).",
+        "Placez-les sur chaque table : support de table, ardoise, présentoir ou autocollant sur l'addition — à hauteur des yeux, face client.",
       ],
     },
     {
@@ -1925,15 +1925,15 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
     },
     {
       num: "04",
-      icon: "🤳",
-      title: "Lancer la première campagne",
+      icon: "🚀",
+      title: "Campagnes SMS/e-mail — Bientôt",
       color: "#8b5cf6",
       items: [
-        "Dans Avis → Campagnes, créez une campagne SMS ou e-mail.",
-        "Importez vos clients (export caisse, fichier CSV ou liste manuelle).",
-        "Rédigez un message court et chaleureux (Nova IA peut le rédiger pour vous).",
-        "Programmez l'envoi le soir même après le service, entre 20h et 21h.",
-        "Objectif : 5 à 10 avis Google dès la première semaine.",
+        "Les campagnes de relance automatiques (SMS & e-mail) sont en cours de développement par notre équipe.",
+        "À terme : relancez vos clients après chaque visite pour maintenir un flux d'avis constant.",
+        "Nova IA rédigera les messages pour vous — personnalisés, chaleureux, au bon moment.",
+        "Vous serez notifié dès l'activation de cette fonctionnalité sur votre compte.",
+        "En attendant, encouragez oralement vos clients à scanner le QR et laisser un avis !",
       ],
     },
     {
@@ -1945,7 +1945,7 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
         "Dans Avis → Réponses, Nova IA propose une réponse personnalisée pour chaque avis.",
         "Relisez, ajustez si besoin, et publiez en 1 clic sur Google.",
         "Répondez à TOUS les avis — positifs comme négatifs — dans les 24h.",
-        "Les réponses soignées améliorent votre note globale et rassure les futurs clients.",
+        "Les réponses soignées améliorent votre note globale et rassurent les futurs clients.",
         "Astuce : configurez le ton (professionnel, chaleureux, décontracté) dans les paramètres Nova IA.",
       ],
     },
@@ -1957,7 +1957,6 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
       items: [
         "Dans le tableau de bord Avis, consultez l'évolution de votre note Google semaine par semaine.",
         "Identifiez vos meilleurs serveurs (les mieux notés) et valorisez-les.",
-        "Relancez une campagne chaque mois pour maintenir le flux d'avis.",
         "Objectif à 3 mois : +4,5★ sur Google avec 50+ avis récents.",
         "Notre équipe MaTable est disponible pour vous accompagner : support@matable.pro",
       ],
@@ -2100,7 +2099,7 @@ function TutoAvisSheet({ vendor, client }: { vendor: Vendor; client: ClientData 
             ["Jour 2", "Configurer le bon de réduction"],
             ["Jour 3", "Poser les QR codes sur toutes les tables"],
             ["Jour 3", "Tester le parcours client (QR → avis → bon)"],
-            ["Jour 4", "Lancer la 1ère campagne SMS/email"],
+            ["Jour 4", "Encourager vos clients à scanner le QR après le service"],
             ["Jour 5–7", "Répondre aux premiers avis avec Nova IA"],
           ].map(([day, task], i) => (
             <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "10px", color: "#166534", padding: "3px 0" }}>
