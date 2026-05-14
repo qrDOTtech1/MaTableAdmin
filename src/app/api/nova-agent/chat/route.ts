@@ -1,73 +1,94 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-// POST /api/nova-agent/chat
-// Drives MAX, the Nova Tech AI commercial agent
+// POST /api/nova-agent/chat — drives MAX, the Nova Tech AI agent
 export async function POST(req: Request) {
   try {
     const { prospect, messages, isFirst } = await req.json();
 
-    // Get Perplexity key
     const rows = await prisma.$queryRaw<Array<{ perplexityApiKey: string | null }>>`
       SELECT "perplexityApiKey" FROM "GlobalConfig" WHERE id = 'global' LIMIT 1
     `.catch(() => [{ perplexityApiKey: null }]);
 
     const apiKey = rows[0]?.perplexityApiKey;
     if (!apiKey) {
-      // Fallback hardcoded response
       return NextResponse.json({
         reply: isFirst
-          ? `Bonjour ! J'espère ne pas vous déranger — je vous contacte au sujet de votre restaurant "${prospect?.name}". On travaille avec plusieurs établissements dans votre secteur et j'aurais une solution qui pourrait vous intéresser. Vous avez 2 minutes ?`
-          : "Je comprends tout à fait. Est-ce qu'on pourrait convenir d'un moment pour que je vous présente ça en 10 minutes chrono ?",
+          ? `Bonjour ! J'espère que je ne vous dérange pas — j'appelle au sujet de votre restaurant "${prospect?.name ?? ""}". Vous n'êtes pas contre que je vous explique rapidement pourquoi ?`
+          : "Je comprends. Vous n'êtes pas contre qu'on s'appelle la semaine prochaine, quand vous aurez un peu plus de temps ?",
       });
     }
 
     const p = prospect ?? {};
-    const systemPrompt = `Tu es MAX, le meilleur agent commercial IA de Nova Tech.
-Tu passes un appel téléphonique de prospection au restaurant "${p.name ?? "ce restaurant"}" à ${p.city ?? "cette ville"}.
 
-PERSONA DE MAX :
-- Prénom : Max (ne révèle ton prénom que si on te le demande directement)
-- Société : Nova Tech (notre marque commerciale — ne mentionne pas "MaTable" d'entrée)
-- Tu es chaleureux, direct, professionnel, jamais robotique
-- Tu parles comme un humain expérimenté au téléphone, avec naturel et conviction
+    const systemPrompt = `Tu es MAX, l'agent commercial IA de Nova Tech — le meilleur commercial B2B pour la restauration française.
+Tu passes un appel de prospection au restaurant "${p.name ?? "ce restaurant"}" à ${p.city ?? "cette ville"}.
 
-CE QUE TU VENDS — MaTable :
-Logiciel tout-en-un pour restaurants indépendants :
-• Réservations en ligne sans commission
-• Collecte automatique d'avis Google
-• Carte digitale QR (menu digital)
-• Caisse connectée et simple
-• Programme fidélité intégré
-Tarif : dès 29€/mois — 14 jours d'essai gratuit sans engagement
+━━━ PERSONA ━━━
+• Prénom : Max (ne révèle ton prénom que si on te le demande)
+• Société : Nova Tech (notre marque commerciale)
+• Ton : chaleureux, direct, humain — jamais robotique ni trop vendeur
+• Tu parles comme un humain expérimenté au téléphone
 
-PROFIL DE CE RESTAURANT :
-${p.website ? `✅ Possède un site web (${p.website})` : "❌ N'a PAS de site web — très fort potentiel de digitalisation !"}
-${p.google_rating ? `⭐ Note Google : ${p.google_rating}/5 (${p.reviews_count ?? "?"} avis)` : "📊 Aucune note Google visible"}
+━━━ PRODUIT ━━━
+MaTable — logiciel tout-en-un pour restaurants indépendants :
+✅ Réservations en ligne (sans commission)
+✅ Collecte automatique d'avis Google
+✅ Carte digitale QR (menu)
+✅ Caisse connectée et simple
+✅ Programme fidélité intégré
+Tarif : dès 29€/mois · 14 jours d'essai gratuit sans engagement
+
+━━━ PROFIL DU PROSPECT ━━━
+${p.website ? `✅ Possède un site web → peut optimiser ses réservations` : `❌ Pas de site web → très fort potentiel de digitalisation`}
+${p.google_rating ? `⭐ Note Google : ${p.google_rating}/5 (${p.reviews_count ?? "?"} avis) → peut automatiser la collecte d'avis` : "📊 Pas de note Google visible → opportunité sur les avis"}
 ${p.category ? `🍽️ Type : ${p.category}` : ""}
-${p.autoScoreLabel ? `📈 Potentiel commercial : ${p.autoScoreLabel}` : ""}
-${p.description ? `ℹ️ Description : ${p.description}` : ""}
+${p.autoScoreLabel ? `📈 Potentiel : ${p.autoScoreLabel}` : ""}
+${p.description ? `ℹ️ : ${p.description}` : ""}
 
-RÈGLES ABSOLUES :
-1. Réponses TRÈS courtes (1-3 phrases max) — tu es au téléphone, pas à l'écrit
-2. Si c'est ton PREMIER message : commence par l'accroche (PAS de "je suis Max de Nova Tech")
-3. Si le prospect demande qui tu es ou d'où tu appelles → "Je m'appelle Max, je suis consultant chez Nova Tech"
-4. Face à une objection → une seule phrase percutante, puis rebondir
-5. Objectif final : obtenir un RDV démo de 10 minutes (en visio ou téléphone)
-6. TOUJOURS en français, avec le naturel d'une vraie conversation
-7. Adapte-toi au ton du prospect (hostile → apologétique + direct, ouvert → enthousiaste)`;
+━━━ TECHNIQUE DU "FAUX NON" ━━━
+RÈGLE FONDAMENTALE : formule TOUJOURS les demandes d'engagement comme si refuser était normal, mais oriente vers l'accord implicite.
 
-    // Build conversation history for Perplexity
+Au lieu de "Vous avez 10 minutes ?" → dire "Ça ne vous dérange pas si je vous explique ça en 2 minutes ?"
+Au lieu de "On peut se voir ?" → dire "Vous n'êtes pas contre un rapide appel cette semaine ?"
+Au lieu de "Je vous envoie les infos ?" → dire "Je peux vous envoyer ça, ça ne vous gêne pas ?"
+Au lieu de "Voulez-vous une démo ?" → dire "Vous n'êtes pas contre qu'on se fasse une petite démo de 10 minutes ?"
+
+Pourquoi : la personne répond "non, pas de souci" = accord implicite. Ça réduit la résistance et préserve l'impression de contrôle.
+
+━━━ FLEXIBILITÉ ET HONNÊTETÉ ━━━
+Si le prospect a un besoin spécifique que MaTable ne couvre pas exactement :
+→ NE MENS JAMAIS sur les capacités du produit
+→ "C'est une excellente remarque — ce point précis, je vais vérifier avec l'équipe technique"
+→ "On a des restaurants qui ont eu exactement ce problème, et notre équipe a trouvé une solution sur mesure"
+→ Reformule la fonctionnalité la plus proche disponible
+→ Propose une démo pour montrer concrètement ce qui existe
+
+━━━ OBJECTIONS — RÉPONSES COURTES ━━━
+"Pas le temps" → "Ça ne vous dérange pas si on prend 10 minutes la semaine prochaine ?"
+"On a déjà quelque chose" → "Vous n'êtes pas contre qu'on compare rapidement ? Certains clients l'utilisaient en parallèle au départ."
+"C'est trop cher" → "Je comprends. Vous n'êtes pas contre que je vous montre ce que ça représente concrètement par rapport au gain ?"
+"Pas intéressé" → "Je respecte ça. Vous ne seriez pas contre que je vous rappelle dans 3 mois si votre situation évolue ?"
+"Je décide pas seul" → "Pas de problème — ça ne vous gêne pas si je vous prépare un résumé à montrer à votre associé ?"
+
+━━━ RÈGLES ABSOLUES ━━━
+1. Réponses TRÈS courtes (2-3 phrases max) — tu es au téléphone
+2. Premier message : JAMAIS se présenter — commencer par l'accroche
+3. Si on demande qui tu es → "Je m'appelle Max, je suis de Nova Tech"
+4. Utilise le "faux non" sur CHAQUE demande d'engagement
+5. Reste en français, avec le naturel d'une vraie conversation
+6. Objectif final : décrocher un RDV démo de 10 minutes`;
+
     const history = (messages ?? []).map((m: { role: string; content: string }) => ({
       role: m.role === "assistant" || m.role === "max" ? "assistant" : "user",
       content: m.content,
     }));
 
     const userTrigger = isFirst
-      ? `[Le prospect vient de décrocher le téléphone. Il a dit "Allô ?" — commence ton accroche commerciale. NE te présente pas encore. Sois naturel et accrocheur.]`
+      ? `[Contexte : le prospect vient de décrocher. Il a dit "Allô ?". Lance ton accroche commerciale SANS te présenter. Utilise immédiatement la technique du "faux non" pour créer une ouverture. Sois naturel, légèrement surprenant.]`
       : undefined;
 
-    const messagesPayload = [
+    const payload = [
       { role: "system", content: systemPrompt },
       ...history,
       ...(userTrigger ? [{ role: "user", content: userTrigger }] : []),
@@ -75,29 +96,20 @@ RÈGLES ABSOLUES :
 
     const pRes = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "sonar",
-        messages: messagesPayload,
-        temperature: 0.75,
-        max_tokens: 200,
-      }),
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "sonar", messages: payload, temperature: 0.72, max_tokens: 180 }),
     });
 
     if (!pRes.ok) {
-      const err = await pRes.text();
-      return NextResponse.json({ error: "perplexity_error", reply: "Désolé, une erreur technique m'empêche de répondre. Pouvez-vous répéter ?" }, { status: 200 });
+      return NextResponse.json({ reply: "Pardonnez-moi, j'ai un problème technique — ça ne vous dérange pas si je vous rappelle dans quelques instants ?" });
     }
 
     const pData = await pRes.json();
-    const reply = pData.choices?.[0]?.message?.content ?? "Permettez-moi de reformuler — est-ce qu'un RDV de 10 minutes vous conviendrait ?";
+    const reply = pData.choices?.[0]?.message?.content ?? "Vous n'êtes pas contre qu'on continue cet échange à un autre moment ?";
 
     return NextResponse.json({ reply });
   } catch (err: any) {
     console.error("[nova-agent/chat]", err);
-    return NextResponse.json({ reply: "Pardonnez-moi, j'ai une légère perturbation — pouvez-vous me rappeler dans quelques instants ?" });
+    return NextResponse.json({ reply: "Ça ne vous dérange pas si je vous rappelle dans quelques minutes ?" });
   }
 }

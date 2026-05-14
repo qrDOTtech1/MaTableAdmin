@@ -8,51 +8,63 @@ export async function POST(req: Request) {
     `.catch(() => [{ perplexityApiKey: null }]);
 
     const apiKey = rows[0]?.perplexityApiKey;
-
     const { name, city, category, phone, website, google_rating, reviews_count, description, autoScoreLabel, autoScoreReasons } = await req.json();
 
     // Build contextual insights
     const insights: string[] = [];
-    if (!website) insights.push("n'a pas de site web professionnel");
-    if (google_rating && google_rating >= 3.8 && google_rating <= 4.4) insights.push(`a une excellente note Google de ${google_rating}★ (${reviews_count ?? "?"} avis) — il attire déjà des clients`);
+    if (!website) insights.push("n'a pas de site web professionnel — fort potentiel de digitalisation");
+    if (google_rating && google_rating >= 3.8 && google_rating <= 4.4) insights.push(`a une excellente note Google de ${google_rating}★ (${reviews_count ?? "?"} avis) qui attire déjà des clients`);
     else if (google_rating) insights.push(`a une note Google de ${google_rating}★ avec ${reviews_count ?? "?"} avis`);
-    if (!phone) insights.push("le numéro a été trouvé dans nos recherches");
 
-    const scoreContext = autoScoreLabel ? `Profil : ${autoScoreLabel}` : "";
+    const scoreContext  = autoScoreLabel ? `Profil : ${autoScoreLabel}` : "";
     const reasonsContext = autoScoreReasons?.length ? `Points clés : ${autoScoreReasons.slice(0, 3).join(", ")}` : "";
 
-    // If no API key, return a solid template
     if (!apiKey) {
       return NextResponse.json({ script: buildTemplate(name, city, category, insights), fallback: true });
     }
 
-    const prompt = `Tu es un commercial expert pour MaTable, un logiciel de gestion de restaurant tout-en-un (réservations, avis Google, carte digitale, caisse, fidélité).
+    const prompt = `Tu es un expert en prospection commerciale B2B pour la restauration.
+Tu dois écrire un script d'appel téléphonique de prospection pour MaTable (logiciel tout-en-un : réservations, avis Google auto, carte QR, caisse, fidélité — dès 29€/mois).
 
-Tu dois écrire un script d'appel téléphonique de prospection COURT et EFFICACE pour contacter ce restaurant :
-
-Restaurant : "${name}"
+RESTAURANT À APPELER :
+Nom : "${name}"
 Ville : ${city}
 Type : ${category ?? "Restaurant"}
 ${description ? `Description : ${description}` : ""}
 ${google_rating ? `Note Google : ${google_rating}★ (${reviews_count ?? "?"} avis)` : ""}
-${!website ? "⚡ PAS de site web — fort potentiel de digitalisation" : `Site web : ${website}`}
+${!website ? "⚡ PAS de site web — très fort potentiel" : `Site web : ${website}`}
 ${scoreContext}
 ${reasonsContext}
 
-Le script doit :
-1. Être en français, naturel et chaleureux (pas corporate)
-2. Durer environ 45 secondes à lire
-3. Commencer par "Bonjour, [nom du contact si connu / Monsieur ou Madame], c'est [Prénom] de MaTable..."
-4. Mentionner 1 ou 2 points SPÉCIFIQUES à ce restaurant (sa note, son absence de site, son type de cuisine...)
-5. Expliquer en 1 phrase ce que fait MaTable
-6. Terminer par une question ouverte pour obtenir un RDV ou une démo
-7. Inclure en dessous 2-3 OBJECTIONS COURANTES avec réponses rapides (format "Objection → Réponse")
+━━━ TECHNIQUE DU "FAUX NON" — OBLIGATOIRE ━━━
+Formule TOUTES les demandes d'engagement en négatif pour réduire la résistance :
+• "Ça ne vous dérange pas si je vous explique ça en 2 minutes ?"
+• "Vous n'êtes pas contre une petite démo de 10 minutes ?"
+• "Je peux vous envoyer ça, ça ne vous gêne pas ?"
+• "Vous n'êtes pas contre qu'on se fasse un rapide appel cette semaine ?"
+→ La personne répond "non, pas de souci" = accord implicite. Réduit la résistance frontale.
 
-Format de sortie — texte brut structuré avec ces sections :
+━━━ FLEXIBILITÉ ━━━
+Si le prospect a un besoin spécifique non couvert par MaTable :
+→ Rester honnête mais ouvert : "On travaille dessus / je vois avec l'équipe"
+→ Proposer la fonctionnalité la plus proche
+→ "On est flexibles, on a souvent trouvé des solutions sur mesure pour des cas comme le vôtre"
+
+━━━ RÈGLES DU SCRIPT ━━━
+1. En français naturel et chaleureux (pas corporate)
+2. Durée environ 45 secondes à l'oral
+3. NE PAS se présenter d'entrée — commencer par l'accroche du restaurant
+4. Mentionner 1-2 points SPÉCIFIQUES à ce restaurant
+5. Utiliser le "faux non" sur la demande de RDV
+6. Finir par une question ouverte souple
+7. 2-3 objections avec réponses courtes utilisant aussi le "faux non"
+
+FORMAT de sortie — texte brut structuré :
 📞 ACCROCHE
-[texte du script principal]
+[script principal — naturel, personnalisé, technique du "faux non" sur le RDV]
 
 💡 OBJECTIONS
+• [Objection] → [Réponse courte avec "faux non" si possible]
 • [Objection] → [Réponse courte]
 • [Objection] → [Réponse courte]
 
@@ -64,11 +76,11 @@ Zéro markdown gras/italique. Texte brut uniquement.`;
       body: JSON.stringify({
         model: "sonar",
         messages: [
-          { role: "system", content: "Tu es un expert en prospection commerciale B2B pour la restauration. Tu écris des scripts d'appel percutants, naturels et personnalisés en français." },
+          { role: "system", content: "Tu es un expert en prospection commerciale B2B pour la restauration. Tu maîtrises la technique du 'faux non' et rédiges des scripts percutants, naturels et personnalisés en français." },
           { role: "user", content: prompt },
         ],
         temperature: 0.6,
-        max_tokens: 800,
+        max_tokens: 900,
       }),
     });
 
@@ -86,20 +98,23 @@ Zéro markdown gras/italique. Texte brut uniquement.`;
 }
 
 function buildTemplate(name: string, city: string, category?: string, insights: string[] = []): string {
-  const hook = insights.length > 0 ? `En préparant notre appel, j'ai remarqué que votre restaurant ${insights[0]}.` : `J'ai découvert votre restaurant "${name}" à ${city} et je voulais vous contacter directement.`;
+  const hook = insights.length > 0
+    ? `En préparant cet appel, j'ai vu que votre restaurant ${insights[0]}.`
+    : `J'ai découvert votre établissement "${name}" à ${city} et j'avais une question rapide pour vous.`;
 
   return `📞 ACCROCHE
 
-Bonjour, c'est [Prénom] de MaTable. Je vous contacte au sujet de "${name}".
+Bonjour ! J'espère que je ne vous dérange pas — je vous appelle au sujet de "${name}".
 
 ${hook}
 
-MaTable, c'est une plateforme tout-en-un pour les restaurants indépendants : réservations en ligne, collecte d'avis Google automatique, carte digitale QR, et gestion de la caisse — tout ça depuis un seul outil, sans commission.
+Vous ne seriez pas contre qu'on discute 2 minutes ? Je voulais vous montrer ce que MaTable peut faire pour un restaurant comme le vôtre — réservations en ligne, avis Google automatisés, carte QR digitale, tout depuis un seul outil, sans commission.
 
-Est-ce que vous avez 10 minutes cette semaine pour que je vous fasse une démo rapide ? Je peux vous montrer exactement comment ça fonctionnerait pour un restaurant comme le vôtre.
+Vous n'êtes pas contre une petite démo de 10 minutes cette semaine, que ce soit en visio ou par téléphone ? Je m'adapte à votre emploi du temps.
 
 💡 OBJECTIONS
-• On a déjà un système → Aucun problème, MaTable s'intègre ou remplace — je vous montre la différence en 5 min.
-• Pas le temps en ce moment → Je comprends, c'est pour ça que la démo dure 10 min chrono, à l'heure qui vous convient.
-• Ça coûte combien ? → On commence à 29€/mois, et les 14 premiers jours sont offerts sans engagement.`;
+• Pas le temps en ce moment → Je comprends totalement. Ça ne vous dérange pas si je vous rappelle la semaine prochaine, à l'heure qui vous convient ?
+• On a déjà un système → Pas de problème. Vous ne seriez pas contre une comparaison rapide ? Certains clients l'utilisaient en parallèle au départ et ont vite switché.
+• Ça coûte combien ? → Ça commence à 29€/mois, et les 14 premiers jours sont offerts sans engagement. Ça ne vous gêne pas qu'on en discute concrètement sur une démo ?
+• Je ne suis pas décideur → Aucun souci. Je peux vous préparer un résumé à montrer à votre associé, ça ne vous dérange pas ?`;
 }
