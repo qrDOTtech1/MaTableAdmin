@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
+import CircuitTab from "./CircuitTab";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProspectStatus = "NEW" | "CONTACTED" | "ACTIVATED" | "IGNORED";
@@ -69,6 +70,7 @@ const PLAN_PRICES: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ProspectionPage() {
+  const [activeTab, setActiveTab] = useState<"crm" | "circuit">("crm");
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Prospect | null>(null);
@@ -259,7 +261,37 @@ export default function ProspectionPage() {
         : "bg-slate-900 text-slate-400 border-slate-700";
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden">
+
+      {/* ── Tab bar ── */}
+      <div className="flex items-center gap-1 px-6 pt-4 pb-0 border-b border-slate-800 flex-shrink-0 bg-slate-950">
+        {([
+          { id: "crm", label: "📋 Base CRM" },
+          { id: "circuit", label: "🗺️ Circuits de Prospection" },
+        ] as { id: "crm" | "circuit"; label: string }[]).map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-5 py-2.5 text-sm font-bold rounded-t-lg transition-all border-b-2 ${
+              activeTab === tab.id
+                ? "text-orange-400 border-orange-500 bg-slate-900"
+                : "text-slate-400 border-transparent hover:text-white hover:bg-slate-900/50"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Circuit tab ── */}
+      {activeTab === "circuit" && (
+        <div className="flex-1 overflow-hidden">
+          <CircuitTab />
+        </div>
+      )}
+
+      {/* ── CRM tab ── */}
+      {activeTab === "crm" && <div className="flex flex-1 overflow-hidden">
 
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <div className={`flex flex-col flex-1 overflow-hidden transition-all duration-300 ${selected ? "mr-[420px]" : ""}`}>
@@ -716,6 +748,7 @@ export default function ProspectionPage() {
           </div>
         </div>
       )}
+      </div>}
     </div>
   );
 }

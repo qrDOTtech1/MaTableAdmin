@@ -13,6 +13,14 @@ export default function AdminSettingsPage() {
   const [apiKey, setApiKey] = useState("");
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
+  // Perplexity
+  const [pxKey, setPxKey] = useState("");
+  const [pxCurrentKey, setPxCurrentKey] = useState<string | null>(null);
+  const [pxHasKey, setPxHasKey] = useState(false);
+  const [pxSaving, setPxSaving] = useState(false);
+  const [pxMsg, setPxMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [pxVisible, setPxVisible] = useState(false);
+
   // Load current config status
   useEffect(() => {
     fetch("/api/ia-config")
@@ -23,7 +31,37 @@ export default function AdminSettingsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    fetch("/api/perplexity-config")
+      .then((r) => r.json())
+      .then((data) => {
+        setPxHasKey(!!data.hasKey);
+        setPxCurrentKey(data.key ?? null);
+      })
+      .catch(() => {});
   }, []);
+
+  async function handleSavePx(e: React.FormEvent) {
+    e.preventDefault();
+    setPxSaving(true);
+    setPxMsg(null);
+    try {
+      const res = await fetch("/api/perplexity-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: pxKey.trim() || null }),
+      });
+      if (!res.ok) throw new Error("Erreur serveur");
+      setPxHasKey(!!pxKey.trim());
+      if (pxKey.trim()) setPxCurrentKey(pxKey.trim());
+      setPxKey("");
+      setPxMsg({ type: "ok", text: "Clé Perplexity sauvegardée !" });
+    } catch (err: any) {
+      setPxMsg({ type: "err", text: err.message });
+    } finally {
+      setPxSaving(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -168,6 +206,87 @@ export default function AdminSettingsPage() {
           {saving ? "Sauvegarde..." : "Sauvegarder"}
         </button>
       </form>
+
+      {/* ── Perplexity API ── */}
+      <div className="pt-6 border-t border-slate-800">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-3 mb-1">
+          <span className="text-3xl">🔍</span> Perplexity — Sonar
+        </h2>
+        <p className="text-slate-400 text-sm mb-6">
+          Clé API Perplexity (modèle <code className="text-orange-400">sonar</code>) — utilisée pour les circuits de prospection automatiques.
+        </p>
+
+        {pxMsg && (
+          <div className={`rounded-xl border p-4 text-sm font-semibold mb-4 ${
+            pxMsg.type === "ok"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+              : "border-red-500/30 bg-red-500/10 text-red-400"
+          }`}>{pxMsg.text}</div>
+        )}
+
+        {/* Statut + affichage de la clé */}
+        <div className={`rounded-2xl border p-5 mb-5 flex items-start gap-4 ${
+          pxHasKey ? "border-blue-500/30 bg-blue-500/5" : "border-slate-700 bg-slate-900"
+        }`}>
+          <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${pxHasKey ? "bg-blue-400 animate-pulse" : "bg-slate-600"}`} />
+          <div className="flex-1 min-w-0">
+            {pxHasKey ? (
+              <>
+                <p className="text-blue-300 font-bold text-sm">Clé Perplexity configurée ✓</p>
+                {pxCurrentKey && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <code className="flex-1 font-mono text-xs bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-slate-300 truncate">
+                      {pxVisible ? pxCurrentKey : pxCurrentKey.slice(0, 8) + "•".repeat(20) + pxCurrentKey.slice(-4)}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => setPxVisible(v => !v)}
+                      className="text-xs text-slate-400 hover:text-white px-2 py-2 bg-slate-800 rounded-lg transition-colors"
+                    >{pxVisible ? "🙈" : "👁️"}</button>
+                    <button
+                      type="button"
+                      onClick={() => { navigator.clipboard.writeText(pxCurrentKey!); setPxMsg({ type: "ok", text: "Clé copiée !" }); }}
+                      className="text-xs text-orange-400 hover:text-orange-300 px-2 py-2 bg-slate-800 rounded-lg transition-colors"
+                    >📋</button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-slate-400 font-bold text-sm">Aucune clé configurée</p>
+                <p className="text-slate-600 text-xs mt-0.5">Les circuits de prospection ne fonctionneront pas sans cette clé.</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        <form onSubmit={handleSavePx} className="space-y-3">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-white text-sm">Clé API Perplexity</h3>
+              <a href="https://www.perplexity.ai/settings/api" target="_blank" rel="noopener"
+                className="text-xs text-slate-500 hover:text-orange-400 transition-colors">
+                Obtenir une clé sur perplexity.ai →
+              </a>
+            </div>
+            <input
+              value={pxKey}
+              onChange={(e) => setPxKey(e.target.value)}
+              type="password"
+              autoComplete="off"
+              placeholder={pxHasKey ? "Laisser vide pour garder la clé actuelle" : "pplx-xxxxxxxxxxxxxxxx..."}
+              className="w-full bg-black/40 border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-white font-mono text-sm placeholder-slate-600 focus:outline-none transition-colors"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={pxSaving || (!pxKey.trim() && !pxHasKey)}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-colors disabled:opacity-50"
+          >
+            {pxSaving ? "Sauvegarde..." : "Sauvegarder la clé Perplexity"}
+          </button>
+        </form>
+      </div>
 
     </div>
   );
