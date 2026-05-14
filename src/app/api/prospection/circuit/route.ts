@@ -248,30 +248,30 @@ export async function POST(req: Request) {
       ? `\n\nNE PAS inclure ces restaurants déjà connus (ils sont déjà dans notre base) :\n${allExcluded.slice(0, 60).map(n => `- ${n}`).join("\n")}`
       : "";
 
-    const prompt = `Tu es un expert local de la restauration française. Trouve exactement 15 restaurants indépendants ${zone}, France.
+    const prompt = `Tu es un expert en prospection commerciale pour la restauration française. Recherche en temps réel sur Google Maps, Pages Jaunes, Tripadvisor et les sites locaux pour trouver exactement 15 restaurants indépendants ${zone}, France.
 
-Critères OBLIGATOIRES :
-- Restaurants INDÉPENDANTS uniquement (pas de chaînes : McDonald's, KFC, Pizza Hut, Buffalo Grill, etc.)
-- Restaurants qui existent RÉELLEMENT et sont actuellement OUVERTS
-- Privilégie les restaurants sans site web ou avec un site basique (meilleur potentiel commercial)
-- Données les plus récentes et précises possible${excludeBlock}
+RÈGLES ABSOLUES :
+1. Restaurants INDÉPENDANTS uniquement — aucune chaîne (McDonald's, KFC, Pizza Hut, Buffalo Grill, Flunch, Courtepaille, etc.)
+2. Restaurants RÉELLEMENT OUVERTS actuellement
+3. Pour CHAQUE restaurant, tu DOIS chercher et fournir le numéro de téléphone — consulte Google Maps, Pages Jaunes (pagesjaunes.fr), le site web du restaurant, ou Tripadvisor pour le trouver. Le téléphone est une donnée CRITIQUE pour nous contacter.
+4. Privilégie les restaurants sans site web professionnel (meilleur potentiel de vente logiciel)${excludeBlock}
 
-Pour chaque restaurant, fournis un objet JSON avec EXACTEMENT ces champs :
-- name: string — nom exact du restaurant
-- address: string — adresse complète (numéro, rue, code postal)
-- city: string — "${city}"
-- phone: string|null — numéro de téléphone français au format 0X XX XX XX XX (null si inconnu)
-- website: string|null — URL complète avec https:// (null si pas de site)
-- google_rating: number|null — note Google Maps entre 1.0 et 5.0
-- reviews_count: number|null — nombre entier d'avis Google
-- category: string — type de cuisine précis (ex: "Bistrot français", "Italien", "Japonais ramen", "Brasserie alsacienne"...)
-- description: string — description en 1 phrase courte et précise
-- lat: number|null — latitude GPS précise (ex: 48.8566)
-- lng: number|null — longitude GPS précise (ex: 2.3522)
-- google_maps_url: string|null — URL Google Maps directe
+CHAMPS OBLIGATOIRES pour chaque restaurant — JSON strict :
+- "name": nom exact tel qu'affiché sur Google Maps
+- "address": adresse complète avec numéro de rue et code postal
+- "city": "${city}"
+- "phone": numéro de téléphone RÉEL trouvé sur Google Maps ou Pages Jaunes, format "0X XX XX XX XX" — cherche activement, ne mets null QUE si vraiment introuvable après recherche
+- "website": URL complète du site web si existant (null sinon)
+- "google_rating": note Google entre 1.0 et 5.0 (number, pas string)
+- "reviews_count": nombre d'avis Google (integer)
+- "category": type de cuisine précis (ex: "Bistrot français", "Pizzeria napolitaine", "Japonais traditionnel", "Brasserie alsacienne")
+- "description": 1 phrase décrivant l'ambiance et la spécialité
+- "lat": latitude GPS exacte (number, ex: 48.8521)
+- "lng": longitude GPS exacte (number, ex: 2.3478)
+- "google_maps_url": lien Google Maps direct vers la fiche du restaurant
 
-RÉPONDS UNIQUEMENT avec un tableau JSON valide, aucun texte avant ou après, aucun markdown.
-Format exact : [{"name":"...","address":"...","city":"${city}",...}]`;
+IMPORTANT : Réponds UNIQUEMENT avec le tableau JSON. Zéro texte avant ou après. Zéro markdown. Zéro backtick.
+Exemple de format : [{"name":"Le Zinc","address":"12 rue de la Paix, 69001 Lyon","city":"${city}","phone":"04 72 00 00 00","website":null,"google_rating":4.2,"reviews_count":187,"category":"Bistrot lyonnais","description":"Bouchon traditionnel avec spécialités lyonnaises maison.","lat":45.7640,"lng":4.8357,"google_maps_url":"https://maps.google.com/?cid=..."}]`;
 
     const pRes = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
@@ -281,12 +281,12 @@ Format exact : [{"name":"...","address":"...","city":"${city}",...}]`;
         messages: [
           {
             role: "system",
-            content: "Tu es un assistant expert en restauration locale française. Tu fournis uniquement des données JSON précises et vérifiables sur des restaurants réels. Zéro texte hors JSON.",
+            content: "Tu es un expert en prospection commerciale pour la restauration. Tu effectues des recherches web en temps réel (Google Maps, Pages Jaunes, Tripadvisor) pour trouver des données précises et à jour sur des restaurants français. Tu fournis UNIQUEMENT du JSON valide, sans aucun texte autour.",
           },
           { role: "user", content: prompt },
         ],
-        temperature: 0.2,
-        max_tokens: 6000,
+        temperature: 0.1,
+        max_tokens: 8000,
       }),
     });
 
@@ -309,6 +309,21 @@ Format exact : [{"name":"...","address":"...","city":"${city}",...}]`;
       }
     }
     if (!Array.isArray(restaurants)) restaurants = [];
+
+    // Normalize phone numbers: +33 → 0X, strip dots/dashes, format XX XX XX XX XX
+    restaurants = restaurants.map(r => {
+      if (!r.phone) return r;
+      let p = String(r.phone).replace(/\s+/g, "").replace(/[.\-()]/g, "");
+      if (p.startsWith("+33")) p = "0" + p.slice(3);
+      if (p.startsWith("0033")) p = "0" + p.slice(4);
+      // Keep only digits
+      p = p.replace(/\D/g, "");
+      // Must be 10 digits starting with 0
+      if (p.length !== 10 || !p.startsWith("0")) return { ...r, phone: undefined };
+      // Format: 0X XX XX XX XX
+      const fmt = p.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
+      return { ...r, phone: fmt };
+    });
 
     // Filter out already-excluded names (case-insensitive)
     const excludedLower = new Set(allExcluded.map(n => n.toLowerCase().trim()));
