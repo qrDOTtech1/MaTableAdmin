@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import CircuitTab from "./CircuitTab";
+import dynamic from "next/dynamic";
+const MapProspectTab = dynamic(() => import("./MapProspectTab"), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type ProspectStatus = "NEW" | "CONTACTED" | "ACTIVATED" | "IGNORED";
@@ -70,7 +72,7 @@ const PLAN_PRICES: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ProspectionPage() {
-  const [activeTab, setActiveTab] = useState<"crm" | "circuit">("crm");
+  const [activeTab, setActiveTab] = useState<"crm" | "circuit" | "map">("crm");
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Prospect | null>(null);
@@ -267,8 +269,9 @@ export default function ProspectionPage() {
       <div className="flex items-center gap-1 px-6 pt-4 pb-0 border-b border-slate-800 flex-shrink-0 bg-slate-950">
         {([
           { id: "crm", label: "📋 Base CRM" },
-          { id: "circuit", label: "🗺️ Circuits de Prospection" },
-        ] as { id: "crm" | "circuit"; label: string }[]).map(tab => (
+          { id: "circuit", label: "🗺️ Circuits" },
+          { id: "map", label: "🌍 Carte Globale" },
+        ] as { id: "crm" | "circuit" | "map"; label: string }[]).map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -290,8 +293,15 @@ export default function ProspectionPage() {
         </div>
       )}
 
+      {/* ── Map tab ── */}
+      {activeTab === "map" && (
+        <div className="flex-1 overflow-hidden">
+          <MapProspectTab />
+        </div>
+      )}
+
       {/* ── CRM tab ── */}
-      {activeTab === "crm" && <div className="flex flex-1 overflow-hidden">
+      {activeTab === "crm" && <div className="flex flex-1 overflow-hidden" style={{ minHeight: 0 }}>
 
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <div className={`flex flex-col flex-1 overflow-hidden transition-all duration-300 ${selected ? "mr-[420px]" : ""}`}>
