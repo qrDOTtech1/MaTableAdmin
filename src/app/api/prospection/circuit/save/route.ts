@@ -23,6 +23,8 @@ export interface CircuitSaveBody {
     lng?: number;
     google_maps_url?: string;
     photo_url?: string;
+    autoScore?: number;
+    autoScoreEmoji?: string;
   }>;
   searchCity: string;
 }
@@ -70,9 +72,9 @@ export async function POST(req: Request) {
       } else {
         await prisma.$executeRawUnsafe(
           `INSERT INTO "Prospect"
-            (id, name, city, address, phone, email, website, description, category, "imageUrl", "sourceUrl", status, "lat", "lng", source, "createdAt", "updatedAt")
+            (id, name, city, address, phone, email, website, description, category, "imageUrl", "sourceUrl", status, "lat", "lng", source, score, "createdAt", "updatedAt")
           VALUES
-            (gen_random_uuid(), $1, $2, $3, $4, NULL, $5, $6, $7, $8, $9, 'NEW', $10, $11, 'circuit', NOW(), NOW())`,
+            (gen_random_uuid(), $1, $2, $3, $4, NULL, $5, $6, $7, $8, $9, 'NEW', $10, $11, 'circuit', $12, NOW(), NOW())`,
           r.name,
           r.city ?? searchCity ?? null,
           r.address ?? null,
@@ -84,6 +86,7 @@ export async function POST(req: Request) {
           r.google_maps_url ?? null,
           r.lat ?? null,
           r.lng ?? null,
+          r.autoScoreEmoji ?? null,
         );
         saved++;
       }
