@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { CircuitRestaurant } from "@/app/api/prospection/circuit/route";
+import CallModeOverlay from "./CallModeOverlay";
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false });
 
@@ -66,7 +67,7 @@ function Stars({ rating }: { rating?: number | null }) {
 // ─── Restaurant Card ──────────────────────────────────────────────────────────
 function RestaurantCard({
   r, mode, selected, onSelect, expanded, onToggleExpand,
-  savedProspect, onStatusChange, onActivate, onEnrich, enriching, enrichResult,
+  savedProspect, onStatusChange, onActivate, onEnrich, enriching, enrichResult, onCallMode,
 }: {
   r: CircuitRestaurant; mode: Mode; selected: boolean;
   onSelect: () => void; expanded: boolean; onToggleExpand: () => void;
@@ -74,6 +75,7 @@ function RestaurantCard({
   onStatusChange?: (s: Status) => void; onActivate?: () => void;
   onEnrich?: () => void; enriching?: boolean;
   enrichResult?: { phone?: string | null; website?: string | null; [k: string]: any } | null;
+  onCallMode?: () => void;
 }) {
   const mapsUrl = r.google_maps_url || (r.lat && r.lng
     ? `https://www.google.com/maps?q=${r.lat},${r.lng}`
@@ -158,6 +160,12 @@ function RestaurantCard({
                 className={`inline-flex items-center gap-1 text-xs px-2 py-1 border rounded-lg transition-colors ${expanded ? "bg-slate-700 border-slate-600 text-white" : "bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500"}`}>
                 {expanded ? "▲ Moins" : "▼ Plus d'infos"}
               </button>
+              {onCallMode && (
+                <button onClick={(e) => { e.stopPropagation(); onCallMode(); }}
+                  className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-red-500/15 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/25 transition-colors font-semibold">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" /> Appel
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -301,6 +309,9 @@ export default function CircuitTab() {
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<{ saved: number; skipped: number } | null>(null);
   const [savedProspects, setSavedProspects] = useState<Record<string, SavedProspect>>({});
+
+  // Call mode
+  const [callIdx, setCallIdx] = useState<number | null>(null);
 
   // Activate
   const [activatingIdx, setActivatingIdx] = useState<number | null>(null);
@@ -686,6 +697,7 @@ export default function CircuitTab() {
                     onEnrich={() => enrichCard(i)}
                     enriching={enrichingIdx === i}
                     enrichResult={enrichResults[i]}
+                    onCallMode={() => setCallIdx(i)}
                   />
                 ))}
 
@@ -725,6 +737,46 @@ export default function CircuitTab() {
           </div>
         )}
       </div>
+
+      {/* ── Call Mode Overlay ── */}
+      {callIdx !== null && restaurants[callIdx] && (() => {
+        const r = restaurants[callIdx];
+        const sp = getSavedProspect(r);
+        const prospect = {
+          id: sp?.id ?? r.name,
+          name: r.name,
+          city: r.city,
+          address: r.address,
+          phone: r.phone,
+          website: r.website,
+          category: r.category,
+          description: r.description,
+          sourceUrl: r.google_maps_url,
+          status: sp?.status ?? "NEW",
+          notes: sp?.notes ?? null,
+          restaurantId: sp?.restaurantId ?? null,
+          slug: sp?.slug ?? null,
+          score: r.autoScoreEmoji ?? null,
+          lat: r.lat ?? 0,
+          lng: r.lng ?? 0,
+          autoScore: r.autoScore,
+          autoScoreEmoji: r.autoScoreEmoji,
+          autoScoreLabel: r.autoScoreLabel,
+          autoScoreReasons: r.autoScoreReasons,
+          reviews_count: r.reviews_count,
+        };
+        return (
+          <CallModeOverlay
+            prospect={prospect}
+            onClose={() => setCallIdx(null)}
+            onSaved={({ status }) => {
+              if (sp && status) {
+                setSavedProspects(prev => ({ ...prev, [r.name.toLowerCase()]: { ...sp, status: status as Status } }));
+              }
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

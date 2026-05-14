@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { MapProspect } from "./LeafletMap";
 import { STATUS_COLOR, STATUS_LABEL, SCORE_OPTIONS } from "./LeafletMap";
+import CallModeOverlay from "./CallModeOverlay";
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), { ssr: false });
 
@@ -37,7 +38,7 @@ function buildForm(p: MapProspect): EditForm {
 }
 
 // ─── Call list item ───────────────────────────────────────────────────────────
-function CallItem({ p, idx, onSelect }: { p: MapProspect; idx: number; onSelect: () => void }) {
+function CallItem({ p, idx, onSelect, onCall }: { p: MapProspect; idx: number; onSelect: () => void; onCall: () => void }) {
   const scoreEmoji = p.score ?? "—";
   return (
     <div
@@ -55,6 +56,11 @@ function CallItem({ p, idx, onSelect }: { p: MapProspect; idx: number; onSelect:
           <span className="text-slate-600 text-xs">Pas de numéro</span>
         )}
       </div>
+      <button
+        onClick={(e) => { e.stopPropagation(); onCall(); }}
+        className="flex-shrink-0 px-2 py-1 bg-red-500/15 border border-red-500/30 text-red-400 rounded-lg text-[10px] font-bold hover:bg-red-500/25 transition-colors">
+        📞
+      </button>
       <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-bold flex-shrink-0 ${STATUS_CLASSES[p.status as Status] ?? ""}`}>
         {STATUS_LABEL[p.status] ?? p.status}
       </span>
@@ -82,6 +88,9 @@ export default function MapProspectTab() {
 
   // Score
   const [scoreSaving, setScoreSaving] = useState(false);
+
+  // Call mode
+  const [callProspect, setCallProspect] = useState<MapProspect | null>(null);
 
   // Enrich
   const [enriching, setEnriching] = useState(false);
@@ -342,6 +351,12 @@ export default function MapProspectTab() {
         </Link>
       </div>
 
+      {/* Call mode */}
+      <button onClick={() => setCallProspect(selected)}
+        className="w-full py-3 bg-red-500/15 border border-red-500/30 text-red-400 rounded-xl text-sm font-bold hover:bg-red-500/25 transition-colors flex items-center justify-center gap-2">
+        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> 📞 Mode Appel
+      </button>
+
       {/* Dashboard / Create account */}
       {selected!.status === "ACTIVATED" && selected!.slug ? (
         <a href={`https://matable.pro/${selected!.slug}`} target="_blank" rel="noopener"
@@ -501,7 +516,7 @@ export default function MapProspectTab() {
                     {callList.length === 0 ? (
                       <p className="text-slate-500 text-xs text-center py-6">Aucun prospect actif</p>
                     ) : callList.map((p, i) => (
-                      <CallItem key={p.id} p={p} idx={i} onSelect={() => selectProspect(p)} />
+                      <CallItem key={p.id} p={p} idx={i} onSelect={() => selectProspect(p)} onCall={() => setCallProspect(p)} />
                     ))}
                   </div>
                 </div>
@@ -566,6 +581,21 @@ export default function MapProspectTab() {
           {panel === "edit" && <EditPanel />}
           {panel === "activate" && <ActivatePanel />}
         </div>
+      )}
+
+      {/* ── Call Mode Overlay ── */}
+      {callProspect && (
+        <CallModeOverlay
+          prospect={callProspect}
+          onClose={() => setCallProspect(null)}
+          onSaved={({ status, notes }) => {
+            const updates: Partial<MapProspect> = {};
+            if (status) updates.status = status as any;
+            if (notes) updates.notes = notes;
+            setProspects(prev => prev.map(p => p.id === callProspect.id ? { ...p, ...updates } : p));
+            if (selected?.id === callProspect.id) setSelected(prev => prev ? { ...prev, ...updates } : null);
+          }}
+        />
       )}
     </div>
   );
