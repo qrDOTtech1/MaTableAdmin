@@ -14,6 +14,7 @@ import {
   deleteRestaurant,
 } from "@/lib/admin-actions";
 import Link from "next/link";
+import UsersManager from "./UsersManager";
 
 export const dynamic = "force-dynamic";
 
@@ -156,16 +157,29 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
               <div className="text-3xl font-bold">{restaurant.menuItems.length}</div>
             </div>
           </div>
-          <div className="pt-2 border-t border-slate-800">
-            <h3 className="text-sm font-bold text-slate-400 mb-2">Utilisateurs</h3>
-            {restaurant.users.map(u => (
-              <div key={u.id} className="flex items-center justify-between text-sm text-slate-300 py-1">
-                <span>{u.email}</span>
-                <span className="text-[10px] bg-slate-700 px-1.5 py-0.5 rounded uppercase">Owner</span>
-              </div>
-            ))}
+          <div className="pt-3 border-t border-slate-800">
+            <h3 className="text-sm font-bold text-slate-400 mb-3">👤 Utilisateurs & Accès</h3>
+            <UsersManager restaurantId={restaurant.id} restaurantSlug={restaurant.slug ?? ""} />
           </div>
         </div>
+      </div>
+
+      {/* ── Compte & Accès ── */}
+      <div className="bg-slate-900 border border-blue-500/20 p-6 rounded-xl space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center text-xl">🔐</div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Compte &amp; Accès</h2>
+            <p className="text-slate-400 text-sm">Utilisateurs, mots de passe, réinitialisations</p>
+          </div>
+          {restaurant.slug && (
+            <a href={`https://matable.pro/${restaurant.slug}`} target="_blank" rel="noopener"
+              className="ml-auto px-4 py-2 bg-emerald-500/15 border border-emerald-500/20 text-emerald-400 rounded-xl text-sm font-bold hover:bg-emerald-500/25 transition-colors flex-shrink-0">
+              🚀 Dashboard client
+            </a>
+          )}
+        </div>
+        <UsersManager restaurantId={restaurant.id} restaurantSlug={restaurant.slug ?? ""} />
       </div>
 
       {/* ── Applications activees (modular pricing) ── */}
