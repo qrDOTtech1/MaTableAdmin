@@ -83,6 +83,10 @@ export default function MapProspectTab() {
   // Score
   const [scoreSaving, setScoreSaving] = useState(false);
 
+  // Enrich
+  const [enriching, setEnriching] = useState(false);
+  const [enrichResult, setEnrichResult] = useState<{ phone?: string | null; website?: string | null; [k: string]: any } | null>(null);
+
   // Activate
   const [activateEmail, setActivateEmail] = useState("");
   const [activateLoading, setActivateLoading] = useState(false);
@@ -167,6 +171,37 @@ export default function MapProspectTab() {
       setSelected(prev => prev ? { ...prev, status: "ACTIVATED", restaurantId: json.restaurant.id, slug: json.restaurant.slug } : null);
     } catch (e: any) { setActivateError(e.message ?? "Erreur"); }
     setActivateLoading(false);
+  }
+
+  async function enrich() {
+    if (!selected) return;
+    setEnriching(true);
+    setEnrichResult(null);
+    try {
+      const res = await fetch("/api/prospection/enrich", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selected.id, name: selected.name, city: selected.city, address: selected.address }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erreur");
+      const u = json.updated;
+      setEnrichResult(u);
+      // Patch local state with non-null fields
+      const updates: Partial<MapProspect> = {};
+      if (u.phone) updates.phone = u.phone;
+      if (u.website) updates.website = u.website;
+      if (u.address) updates.address = u.address;
+      if (u.category) updates.category = u.category;
+      if (u.description) updates.description = u.description;
+      if (u.lat) updates.lat = u.lat;
+      if (u.lng) updates.lng = u.lng;
+      if (u.google_maps_url) updates.sourceUrl = u.google_maps_url;
+      setProspects(prev => prev.map(p => p.id === selected.id ? { ...p, ...updates } : p));
+      setSelected(prev => prev ? { ...prev, ...updates } : null);
+    } catch (e: any) {
+      setEnrichResult({ error: e.message });
+    }
+    setEnriching(false);
   }
 
   const filtered = filterStatus === "ALL" ? prospects : prospects.filter(p => p.status === filterStatus);
@@ -260,6 +295,29 @@ export default function MapProspectTab() {
             className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-400 text-sm hover:border-slate-500 transition-colors">
             🗺️ Google Maps
           </a>
+        )}
+        {/* Enrich button */}
+        <button
+          onClick={enrich}
+          disabled={enriching}
+          className="flex items-center gap-2 w-full px-3 py-2.5 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 text-sm font-semibold hover:bg-violet-500/20 transition-colors disabled:opacity-50">
+          {enriching
+            ? <><span className="w-4 h-4 border-2 border-violet-400/30 border-t-violet-400 rounded-full animate-spin flex-shrink-0" />Recherche en cours…</>
+            : <>✨ Améliorer les infos via IA</>}
+        </button>
+        {enrichResult && !enrichResult.error && (
+          <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-3 space-y-1.5">
+            <p className="text-violet-400 text-xs font-bold">✅ Infos mises à jour</p>
+            {enrichResult.phone && <p className="text-xs text-slate-300">📞 {enrichResult.phone}</p>}
+            {enrichResult.website && <p className="text-xs text-slate-300 truncate">🌐 {enrichResult.website}</p>}
+            {enrichResult.address && <p className="text-xs text-slate-300">📍 {enrichResult.address}</p>}
+            {!enrichResult.phone && !enrichResult.website && !enrichResult.address && (
+              <p className="text-xs text-slate-500">Aucune nouvelle donnée trouvée.</p>
+            )}
+          </div>
+        )}
+        {enrichResult?.error && (
+          <p className="text-red-400 text-xs px-1">{enrichResult.error}</p>
         )}
       </div>
 

@@ -66,12 +66,14 @@ function Stars({ rating }: { rating?: number | null }) {
 // ─── Restaurant Card ──────────────────────────────────────────────────────────
 function RestaurantCard({
   r, mode, selected, onSelect, expanded, onToggleExpand,
-  savedProspect, onStatusChange, onActivate,
+  savedProspect, onStatusChange, onActivate, onEnrich, enriching, enrichResult,
 }: {
   r: CircuitRestaurant; mode: Mode; selected: boolean;
   onSelect: () => void; expanded: boolean; onToggleExpand: () => void;
   savedProspect?: SavedProspect | null;
   onStatusChange?: (s: Status) => void; onActivate?: () => void;
+  onEnrich?: () => void; enriching?: boolean;
+  enrichResult?: { phone?: string | null; website?: string | null; [k: string]: any } | null;
 }) {
   const mapsUrl = r.google_maps_url || (r.lat && r.lng
     ? `https://www.google.com/maps?q=${r.lat},${r.lng}`
@@ -218,6 +220,30 @@ function RestaurantCard({
             )}
           </div>
 
+          {/* Enrich button */}
+          <div className="pt-2 border-t border-slate-700/50 space-y-2">
+            <button
+              onClick={onEnrich}
+              disabled={enriching}
+              className="flex items-center gap-2 w-full px-3 py-2 bg-violet-500/10 border border-violet-500/20 rounded-xl text-violet-400 text-xs font-semibold hover:bg-violet-500/20 transition-colors disabled:opacity-50">
+              {enriching
+                ? <><span className="w-3.5 h-3.5 border border-violet-400/30 border-t-violet-400 rounded-full animate-spin flex-shrink-0" />Recherche en cours…</>
+                : <>✨ Améliorer les infos via IA</>}
+            </button>
+            {enrichResult && !enrichResult.error && (
+              <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-2.5 space-y-1">
+                <p className="text-violet-400 text-[10px] font-bold uppercase tracking-wide">✅ Infos mises à jour</p>
+                {enrichResult.phone && <p className="text-xs text-slate-300">📞 {enrichResult.phone}</p>}
+                {enrichResult.website && <p className="text-xs text-slate-300 truncate">🌐 {enrichResult.website}</p>}
+                {enrichResult.address && <p className="text-xs text-slate-300">📍 {enrichResult.address}</p>}
+                {!enrichResult.phone && !enrichResult.website && !enrichResult.address && (
+                  <p className="text-xs text-slate-500">Aucune nouvelle donnée trouvée.</p>
+                )}
+              </div>
+            )}
+            {enrichResult?.error && <p className="text-red-400 text-xs">{enrichResult.error}</p>}
+          </div>
+
           {/* Status change si sauvegardé */}
           {savedProspect && (
             <div className="space-y-2 pt-2 border-t border-slate-700/50">
@@ -278,6 +304,8 @@ export default function CircuitTab() {
 
   // Activate
   const [activatingIdx, setActivatingIdx] = useState<number | null>(null);
+  const [enrichingIdx, setEnrichingIdx] = useState<number | null>(null);
+  const [enrichResults, setEnrichResults] = useState<Record<number, any>>({});
   const [activateEmail, setActivateEmail] = useState("");
   const [activateLoading, setActivateLoading] = useState(false);
   const [activateResult, setActivateResult] = useState<{ email: string; password: string; loginUrl: string } | null>(null);
@@ -406,6 +434,38 @@ export default function CircuitTab() {
       setSavedProspects(prev => ({ ...prev, [r.name.toLowerCase()]: { ...sp, status: "ACTIVATED", restaurantId: json.restaurant.id, slug: json.restaurant.slug } }));
     } catch (e: any) { setActivateError(e.message); }
     setActivateLoading(false);
+  }
+
+  async function enrichCard(idx: number) {
+    const r = restaurants[idx];
+    const sp = getSavedProspect(r);
+    setEnrichingIdx(idx);
+    setEnrichResults(prev => { const n = { ...prev }; delete n[idx]; return n; });
+    try {
+      const res = await fetch("/api/prospection/enrich", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: sp?.id ?? null, name: r.name, city: r.city, address: r.address }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erreur");
+      setEnrichResults(prev => ({ ...prev, [idx]: json.updated }));
+      // Update local restaurant data
+      const u = json.updated;
+      setRestaurants(prev => prev.map((item, i) => i !== idx ? item : {
+        ...item,
+        ...(u.phone ? { phone: u.phone } : {}),
+        ...(u.website ? { website: u.website } : {}),
+        ...(u.address ? { address: u.address } : {}),
+        ...(u.category ? { category: u.category } : {}),
+        ...(u.description ? { description: u.description } : {}),
+        ...(u.lat ? { lat: u.lat } : {}),
+        ...(u.lng ? { lng: u.lng } : {}),
+        ...(u.google_maps_url ? { google_maps_url: u.google_maps_url } : {}),
+      }));
+    } catch (e: any) {
+      setEnrichResults(prev => ({ ...prev, [idx]: { error: e.message } }));
+    }
+    setEnrichingIdx(null);
   }
 
   function buildItineraryUrl() {
@@ -623,6 +683,9 @@ export default function CircuitTab() {
                     savedProspect={getSavedProspect(r)}
                     onStatusChange={(s) => patchStatus(r, s)}
                     onActivate={() => { setActivatingIdx(i); setActivateEmail(`${slugify(r.name)}@matable.pro`); setActivateResult(null); setActivateError(null); }}
+                    onEnrich={() => enrichCard(i)}
+                    enriching={enrichingIdx === i}
+                    enrichResult={enrichResults[i]}
                   />
                 ))}
 
