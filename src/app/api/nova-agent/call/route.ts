@@ -66,8 +66,8 @@ Parle UNIQUEMENT en français.`;
             similarityBoost: 0.8,
           }
         : {
-            provider: "azure",
-            voiceId: "fr-FR-HenriNeural",
+            provider: "vapi",
+            voiceId: "Emma",
           },
       transcriber: {
         provider: "deepgram",

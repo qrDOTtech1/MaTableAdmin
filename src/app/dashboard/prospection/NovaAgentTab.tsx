@@ -221,8 +221,22 @@ export default function NovaAgentTab() {
     if (!SR) { alert("Microphone non supporté — utilisez Chrome."); return; }
     const r = new SR();
     r.lang = "fr-FR"; r.continuous = false; r.interimResults = false;
-    r.onresult = (e: any) => { setSimInput(e.results[0]?.[0]?.transcript ?? ""); setMicOn(false); };
-    r.onend = r.onerror = () => setMicOn(false);
+    r.onresult = (e: any) => {
+      const transcript = e.results[0]?.[0]?.transcript ?? "";
+      if (transcript.trim()) {
+        // Auto-send immediately on voice input
+        const userMsg: ChatMsg = { role: "user", text: transcript.trim(), ts: Date.now() };
+        setSimMessages(prev => {
+          const next = [...prev, userMsg];
+          callMax(next, false);
+          return next;
+        });
+        setSimInput("");
+      }
+      setMicOn(false);
+    };
+    r.onerror = () => setMicOn(false);
+    r.onend = () => setMicOn(false);
     recogRef.current = r; r.start(); setMicOn(true);
   }
 
