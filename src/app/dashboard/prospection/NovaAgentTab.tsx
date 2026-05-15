@@ -76,9 +76,10 @@ export default function NovaAgentTab() {
   const [simTimer, setSimTimer]         = useState(0);
   const [voiceOn, setVoiceOn]   = useState(true);
   const [micOn, setMicOn]       = useState(false);
-  const timerRef   = useRef<any>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
-  const recogRef    = useRef<any>(null);
+  const timerRef        = useRef<any>(null);
+  const messagesRef     = useRef<HTMLDivElement>(null);
+  const recogRef        = useRef<any>(null);
+  const simMessagesRef  = useRef<ChatMsg[]>([]);
 
   // Real call
   const [realCall, setRealCall]     = useState<RealCallState | null>(null);
@@ -117,6 +118,9 @@ export default function NovaAgentTab() {
     }, 1000);
     return () => clearInterval(iv);
   }, [realCall?.status]);
+
+  // Keep ref in sync with state (needed for async handlers)
+  useEffect(() => { simMessagesRef.current = simMessages; }, [simMessages]);
 
   // Auto-scroll sim messages
   useEffect(() => {
@@ -169,10 +173,15 @@ export default function NovaAgentTab() {
     if (!voiceOn || typeof window === "undefined") return;
     window.speechSynthesis?.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "fr-FR"; u.rate = 1.05; u.pitch = 0.85;
-    const fr = window.speechSynthesis?.getVoices().find(v => v.lang.startsWith("fr-FR") && /male|homme|Henri/i.test(v.name))
-      ?? window.speechSynthesis?.getVoices().find(v => v.lang.startsWith("fr")) ?? null;
-    if (fr) u.voice = fr;
+    u.lang = "fr-FR"; u.rate = 1.08; u.pitch = 0.9;
+    const voices = window.speechSynthesis?.getVoices() ?? [];
+    // Priority: Google fr-FR (Chrome) > any fr-FR > any fr
+    const voice =
+      voices.find(v => v.lang === "fr-FR" && v.name.toLowerCase().includes("google")) ??
+      voices.find(v => v.lang === "fr-FR" && !v.name.toLowerCase().includes("azure") && !v.name.toLowerCase().includes("microsoft")) ??
+      voices.find(v => v.lang === "fr-FR") ??
+      voices.find(v => v.lang.startsWith("fr")) ?? null;
+    if (voice) u.voice = voice;
     window.speechSynthesis?.speak(u);
   }
 
@@ -224,14 +233,13 @@ export default function NovaAgentTab() {
     r.onresult = (e: any) => {
       const transcript = e.results[0]?.[0]?.transcript ?? "";
       if (transcript.trim()) {
-        // Auto-send immediately on voice input
+        // Add user message then call Max using the ref (avoids stale closure in setter)
         const userMsg: ChatMsg = { role: "user", text: transcript.trim(), ts: Date.now() };
-        setSimMessages(prev => {
-          const next = [...prev, userMsg];
-          callMax(next, false);
-          return next;
-        });
+        const next = [...simMessagesRef.current, userMsg];
+        simMessagesRef.current = next;
+        setSimMessages(next);
         setSimInput("");
+        callMax(next, false);
       }
       setMicOn(false);
     };
