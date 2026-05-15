@@ -166,6 +166,71 @@ const CITY_SECTORS: Record<string, string[]> = {
     "Bréquigny, Beauregard, Maurepas",
     "Beaulieu, Longchamps, Arsenal",
   ],
+  // ── US ──
+  "new york": [
+    "Manhattan Midtown (Times Square, Hell's Kitchen, Murray Hill)",
+    "Manhattan Downtown (Financial District, Tribeca, SoHo, Lower East Side)",
+    "Manhattan Uptown (Upper East Side, Upper West Side, Harlem)",
+    "Brooklyn (Williamsburg, DUMBO, Park Slope, Bushwick)",
+    "Queens (Astoria, Jackson Heights, Flushing, Long Island City)",
+    "The Bronx & Staten Island",
+  ],
+  "los angeles": [
+    "Downtown LA, Arts District, Little Tokyo",
+    "Hollywood, Los Feliz, Silver Lake, Echo Park",
+    "West Hollywood, Beverly Hills, Brentwood",
+    "Santa Monica, Venice, Culver City",
+    "Koreatown, Mid-City, Fairfax",
+    "Pasadena, Alhambra, Monterey Park",
+  ],
+  chicago: [
+    "The Loop, River North, Streeterville",
+    "Lincoln Park, Lakeview, Wrigleyville",
+    "Wicker Park, Bucktown, Logan Square",
+    "Pilsen, Bridgeport, Chinatown",
+    "Hyde Park, South Loop, Bronzeville",
+  ],
+  miami: [
+    "South Beach, Collins Ave, Ocean Drive",
+    "Wynwood, Midtown, Design District",
+    "Brickell, Downtown, Coconut Grove",
+    "Little Havana, Little Haiti, Edgewater",
+  ],
+  "san francisco": [
+    "Financial District, Union Square, SoMa",
+    "Mission District, Castro, Noe Valley",
+    "North Beach, Chinatown, Fisherman's Wharf",
+    "Richmond, Sunset, Inner Sunset",
+    "Hayes Valley, Haight-Ashbury, Cole Valley",
+  ],
+  // ── UK ──
+  london: [
+    "Central London (Soho, Covent Garden, Fitzrovia, Marylebone)",
+    "East London (Shoreditch, Bethnal Green, Hackney, Dalston)",
+    "South London (Borough, Bermondsey, Brixton, Clapham)",
+    "West London (Notting Hill, Chelsea, Fulham, Hammersmith)",
+    "North London (Islington, Camden, Kentish Town, Crouch End)",
+  ],
+  // ── Canada ──
+  toronto: [
+    "Downtown Core, Financial District, Entertainment District",
+    "Kensington Market, Chinatown, Little Italy",
+    "Leslieville, Distillery District, Riverside",
+    "Yorkville, Annex, Bloor West Village",
+  ],
+  montreal: [
+    "Plateau-Mont-Royal, Mile End, Outremont",
+    "Vieux-Montréal, Centre-Ville, Quartier des Spectacles",
+    "Rosemont, Villeray, Petite-Patrie",
+    "NDG, Côte-des-Neiges, Côte-Saint-Luc",
+  ],
+  // ── Australia ──
+  sydney: [
+    "CBD, The Rocks, Circular Quay, Darling Harbour",
+    "Surry Hills, Newtown, Glebe, Erskineville",
+    "Bondi, Coogee, Randwick, Paddington",
+    "Balmain, Rozelle, Leichhardt, Annandale",
+  ],
 };
 
 function getCitySectors(city: string): string[] | null {
@@ -307,18 +372,31 @@ Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","c
 
     const pData = await pRes.json();
     const content: string = pData.choices?.[0]?.message?.content ?? "[]";
+    console.log("[circuit] raw content length:", content.length, "| first 300:", content.slice(0, 300));
 
     let restaurants: CircuitRestaurant[] = [];
-    try {
-      const clean = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-      restaurants = JSON.parse(clean);
-    } catch {
-      const match = content.match(/\[[\s\S]*\]/);
-      if (match) {
-        try { restaurants = JSON.parse(match[0]); } catch {}
-      }
+
+    // Ultra-robust JSON extraction
+    const parseAttempts = [
+      // 1. Direct after stripping markdown fences
+      () => JSON.parse(content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim()),
+      // 2. First [...] block (greedy)
+      () => { const m = content.match(/\[[\s\S]*\]/); if (!m) throw new Error("no array"); return JSON.parse(m[0]); },
+      // 3. Last [...] block (sometimes there's text before)
+      () => { const all = [...content.matchAll(/\[[\s\S]*?\]/g)]; if (!all.length) throw new Error("no array"); return JSON.parse(all[all.length - 1][0]); },
+      // 4. Find first [ and last ] and extract
+      () => { const s = content.indexOf("["); const e = content.lastIndexOf("]"); if (s === -1 || e === -1) throw new Error("no brackets"); return JSON.parse(content.slice(s, e + 1)); },
+    ];
+
+    for (const attempt of parseAttempts) {
+      try {
+        const parsed = attempt();
+        if (Array.isArray(parsed) && parsed.length > 0) { restaurants = parsed; break; }
+      } catch {}
     }
+
     if (!Array.isArray(restaurants)) restaurants = [];
+    console.log("[circuit] parsed restaurants:", restaurants.length);
 
     // Normalize phone numbers — support French + international formats
     restaurants = restaurants.map(r => {

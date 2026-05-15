@@ -534,7 +534,7 @@ export default function CircuitTab() {
           <input type="text" value={city}
             onChange={(e) => setCity(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && doSearch(true)}
-            placeholder="Ville (ex: Lyon, Bordeaux, Paris 11ème…)"
+            placeholder="Ville (ex: Lyon, Los Angeles, London, Tokyo…)"
             className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-orange-500 text-sm"
           />
           <button onClick={() => doSearch(true)} disabled={loading || !city.trim()}
@@ -579,7 +579,7 @@ export default function CircuitTab() {
           <div className="flex flex-col items-center justify-center flex-1 text-center p-8">
             <div className="text-6xl mb-4">🗺️</div>
             <p className="text-white font-bold text-lg mb-2">Scan de ville par quadrillage IA</p>
-            <p className="text-slate-400 text-sm max-w-sm">Entrez une ville. Pour les grandes villes (Paris, Lyon, Marseille…), la recherche s'effectue secteur par secteur — cumulez les résultats pour couvrir toute la ville.</p>
+            <p className="text-slate-400 text-sm max-w-sm">Entrez n'importe quelle ville dans le monde. Pour les grandes métropoles (Paris, New York, London…), la recherche s'effectue secteur par secteur.</p>
           </div>
         )}
 
