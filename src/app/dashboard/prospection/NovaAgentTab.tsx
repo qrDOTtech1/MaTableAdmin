@@ -29,6 +29,7 @@ interface RealCallState {
 
 type Section = "sim" | "auto" | "history" | "config";
 type CallMode = "sim" | "real";
+type PickerMode = "list" | "dial";
 
 const SCORE_ORDER = ["🔥", "😊", "🤔", "❄️"];
 const OUTCOMES = [
@@ -61,6 +62,10 @@ export default function NovaAgentTab() {
   const [cfgSaved, setCfgSaved]   = useState(false);
 
   // Simulation
+  const [pickerMode, setPickerMode] = useState<PickerMode>("list");
+  const [dialNumber, setDialNumber] = useState("");
+  const [dialName, setDialName]     = useState("");
+
   const [simProspect, setSimProspect] = useState<ProspectItem | null>(null);
   const [simState, setSimState]       = useState<"idle" | "ringing" | "active" | "ended">("idle");
   const [simMessages, setSimMessages] = useState<ChatMsg[]>([]);
@@ -367,32 +372,126 @@ export default function NovaAgentTab() {
 
             {/* Prospect picker */}
             <div className="w-64 flex-shrink-0 border-r border-slate-800 flex flex-col overflow-hidden">
-              <div className="px-3 py-3 border-b border-slate-800 space-y-2 flex-shrink-0">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Prospect</p>
-                <input value={prospectSearch} onChange={e => setProspectSearch(e.target.value)}
-                  placeholder="🔍 Rechercher…"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-violet-500" />
+
+              {/* Tab switcher: Liste / Numéro libre */}
+              <div className="flex border-b border-slate-800 flex-shrink-0">
+                <button onClick={() => setPickerMode("list")}
+                  className={`flex-1 py-2.5 text-xs font-bold transition-all ${pickerMode === "list" ? "text-violet-300 border-b-2 border-violet-500 bg-violet-500/5" : "text-slate-500 hover:text-slate-300"}`}>
+                  📋 Liste
+                </button>
+                <button onClick={() => setPickerMode("dial")}
+                  className={`flex-1 py-2.5 text-xs font-bold transition-all ${pickerMode === "dial" ? "text-emerald-300 border-b-2 border-emerald-500 bg-emerald-500/5" : "text-slate-500 hover:text-slate-300"}`}>
+                  🔢 Numéro libre
+                </button>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                {loadingP ? (
-                  <div className="flex items-center justify-center py-8"><div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>
-                ) : simProspects.length === 0 ? (
-                  <p className="text-center text-slate-500 text-xs py-8 px-3">Aucun prospect sauvegardé</p>
-                ) : simProspects.map(p => (
-                  <button key={p.id}
-                    onClick={() => { setSimProspect(p); resetSim(); setRealCall(null); setRealOutcome(null); stopRealCall(); }}
-                    disabled={simState === "active" || simState === "ringing"}
-                    className={`w-full text-left flex items-start gap-2 px-3 py-3 border-b border-slate-800/50 transition-all hover:bg-slate-800/40 disabled:opacity-40 ${simProspect?.id === p.id ? "bg-violet-500/10 border-l-2 border-l-violet-500" : ""}`}>
-                    <span className="text-base flex-shrink-0 mt-0.5">{p.score ?? "·"}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-semibold truncate">{p.name}</p>
-                      <p className="text-slate-500 text-[10px] truncate">{p.city}</p>
-                      {p.phone ? <p className="text-emerald-400 text-[10px] font-mono">{p.phone}</p>
-                        : <p className="text-slate-700 text-[10px] italic">Sans numéro</p>}
-                    </div>
+
+              {/* ── LISTE MODE ── */}
+              {pickerMode === "list" && (
+                <>
+                  <div className="px-3 py-2 border-b border-slate-800 flex-shrink-0">
+                    <input value={prospectSearch} onChange={e => setProspectSearch(e.target.value)}
+                      placeholder="🔍 Rechercher…"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-violet-500" />
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {loadingP ? (
+                      <div className="flex items-center justify-center py-8"><div className="w-5 h-5 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" /></div>
+                    ) : simProspects.length === 0 ? (
+                      <p className="text-center text-slate-500 text-xs py-8 px-3">Aucun prospect sauvegardé</p>
+                    ) : simProspects.map(p => (
+                      <button key={p.id}
+                        onClick={() => { setSimProspect(p); resetSim(); setRealCall(null); setRealOutcome(null); stopRealCall(); }}
+                        disabled={simState === "active" || simState === "ringing"}
+                        className={`w-full text-left flex items-start gap-2 px-3 py-3 border-b border-slate-800/50 transition-all hover:bg-slate-800/40 disabled:opacity-40 ${simProspect?.id === p.id ? "bg-violet-500/10 border-l-2 border-l-violet-500" : ""}`}>
+                        <span className="text-base flex-shrink-0 mt-0.5">{p.score ?? "·"}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{p.name}</p>
+                          <p className="text-slate-500 text-[10px] truncate">{p.city}</p>
+                          {p.phone ? <p className="text-emerald-400 text-[10px] font-mono">{p.phone}</p>
+                            : <p className="text-slate-700 text-[10px] italic">Sans numéro</p>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* ── DIAL MODE ── */}
+              {pickerMode === "dial" && (
+                <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3">
+                  {/* Name input */}
+                  <input value={dialName} onChange={e => setDialName(e.target.value)}
+                    placeholder="Nom (optionnel)"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500" />
+
+                  {/* Number display */}
+                  <div className="bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 flex items-center justify-between gap-2">
+                    <span className="text-white font-mono text-base tracking-widest flex-1 truncate min-h-[1.5rem]">
+                      {dialNumber || <span className="text-slate-600">+33 …</span>}
+                    </span>
+                    <button onClick={() => setDialNumber(d => d.slice(0, -1))} disabled={!dialNumber}
+                      className="text-slate-400 hover:text-white disabled:opacity-20 text-lg transition-colors flex-shrink-0">
+                      ⌫
+                    </button>
+                  </div>
+
+                  {/* Keypad */}
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {["1","2","3","4","5","6","7","8","9","+","0","#"].map(k => (
+                      <button key={k}
+                        onClick={() => setDialNumber(d => (d + k).slice(0, 15))}
+                        className="h-11 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-white font-bold text-sm border border-slate-700/50 transition-all active:scale-95 flex flex-col items-center justify-center leading-none">
+                        <span>{k}</span>
+                        {k === "2" && <span className="text-[7px] text-slate-500 font-normal">ABC</span>}
+                        {k === "3" && <span className="text-[7px] text-slate-500 font-normal">DEF</span>}
+                        {k === "4" && <span className="text-[7px] text-slate-500 font-normal">GHI</span>}
+                        {k === "5" && <span className="text-[7px] text-slate-500 font-normal">JKL</span>}
+                        {k === "6" && <span className="text-[7px] text-slate-500 font-normal">MNO</span>}
+                        {k === "7" && <span className="text-[7px] text-slate-500 font-normal">PQRS</span>}
+                        {k === "8" && <span className="text-[7px] text-slate-500 font-normal">TUV</span>}
+                        {k === "9" && <span className="text-[7px] text-slate-500 font-normal">WXYZ</span>}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Call button */}
+                  <button
+                    disabled={dialNumber.length < 4 || simState === "active" || simState === "ringing"}
+                    onClick={() => {
+                      const p: ProspectItem = {
+                        id: `dial-${Date.now()}`,
+                        name: dialName.trim() || dialNumber,
+                        city: undefined,
+                        phone: dialNumber,
+                        category: undefined,
+                        score: undefined,
+                        website: undefined,
+                        google_rating: undefined,
+                        reviews_count: undefined,
+                        autoScoreLabel: undefined,
+                        description: undefined,
+                        status: "NEW",
+                        sourceUrl: undefined,
+                      };
+                      setSimProspect(p);
+                      resetSim();
+                      setRealCall(null);
+                      setRealOutcome(null);
+                      stopRealCall();
+                    }}
+                    className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span className="text-base">📞</span>
+                    {dialNumber.length < 4 ? "Entrez un numéro" : `Appeler ${dialName.trim() || dialNumber}`}
                   </button>
-                ))}
-              </div>
+
+                  {simProspect?.id.startsWith("dial-") && (
+                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-center">
+                      <p className="text-emerald-300 text-xs font-bold truncate">{simProspect.name}</p>
+                      <p className="text-emerald-400/60 text-[10px] font-mono">{simProspect.phone}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Phone panel */}
