@@ -95,9 +95,15 @@ Tu lis TOUT l'historique ci-dessous avant de répondre.
       ? `[Contexte : le prospect vient de décrocher. Il a dit "Allô ?". Lance ton accroche commerciale SANS te présenter. Utilise immédiatement la technique du "faux non" pour créer une ouverture. Sois naturel, légèrement surprenant.]`
       : undefined;
 
+    // Ensure the first non-system message is always "user" (required by OpenAI-compatible APIs).
+    // When Max spoke first (isFirst), history[0] is "assistant" — prepend a silent user anchor.
+    const normalizedHistory = history.length > 0 && history[0].role === "assistant"
+      ? [{ role: "user", content: "[le prospect décroche]" }, ...history]
+      : history;
+
     const payload = [
       { role: "system", content: systemPrompt },
-      ...history,
+      ...normalizedHistory,
       ...(userTrigger ? [{ role: "user", content: userTrigger }] : []),
     ];
 
