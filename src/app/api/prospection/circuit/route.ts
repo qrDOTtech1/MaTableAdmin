@@ -241,6 +241,40 @@ function getCitySectors(city: string): string[] | null {
   return null;
 }
 
+// ─── Nominatim geocoding (OpenStreetMap, free, no key) ───────────────────────
+async function geocodeAddress(address: string, city: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const query = encodeURIComponent(`${address}, ${city}`);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&addressdetails=0`,
+      { headers: { "User-Agent": "MaTable-Prospection/1.0 (contact@matable.fr)" }, signal: AbortSignal.timeout(4000) }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.[0]) return null;
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch { return null; }
+}
+
+async function geocodeAll(restaurants: CircuitRestaurant[]): Promise<CircuitRestaurant[]> {
+  // Batch of 3 parallel requests, 1.1s between batches → 15 restaurants ≈ 6s extra
+  const BATCH = 3;
+  const result = [...restaurants];
+  for (let i = 0; i < restaurants.length; i += BATCH) {
+    const batch = restaurants.slice(i, i + BATCH);
+    const geos = await Promise.all(
+      batch.map(r => geocodeAddress(r.address ?? r.name, r.city ?? ""))
+    );
+    geos.forEach((geo, j) => {
+      if (geo) result[i + j] = { ...result[i + j], lat: geo.lat, lng: geo.lng };
+    });
+    if (i + BATCH < restaurants.length) {
+      await new Promise(res => setTimeout(res, 1100)); // respect Nominatim 1 req/s
+    }
+  }
+  return result;
+}
+
 // ─── Nearest-neighbor TSP ─────────────────────────────────────────────────────
 function optimizeRoute(restaurants: CircuitRestaurant[]): CircuitRestaurant[] {
   const withGeo = restaurants.filter(r => r.lat && r.lng);
@@ -425,6 +459,11 @@ Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","c
     // Filter out already-excluded names (case-insensitive)
     const excludedLower = new Set(allExcluded.map(n => n.toLowerCase().trim()));
     restaurants = restaurants.filter(r => !excludedLower.has(r.name?.toLowerCase()?.trim() ?? ""));
+
+    // Re-geocode all addresses via Nominatim for accurate map pins
+    // (Perplexity coords are often wrong — OSM is the ground truth)
+    restaurants = await geocodeAll(restaurants);
+    console.log("[circuit] after geocoding:", restaurants.filter(r => r.lat && r.lng).length, "with coords");
 
     // Compute auto-score for each
     restaurants = restaurants.map(r => {
