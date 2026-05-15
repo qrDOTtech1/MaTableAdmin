@@ -322,9 +322,109 @@ export default function CircuitTab() {
   const [activateResult, setActivateResult] = useState<{ email: string; password: string; loginUrl: string } | null>(null);
   const [activateError, setActivateError] = useState<string | null>(null);
 
+  // Normalize French/other language place names to English equivalents
+  function normalizeCity(input: string): string {
+    const map: Record<string, string> = {
+      // French → English countries/states/cities
+      "californie": "California",
+      "new york": "New York",
+      "los angeles": "Los Angeles",
+      "san francisco": "San Francisco",
+      "chicago": "Chicago",
+      "miami": "Miami",
+      "las vegas": "Las Vegas",
+      "boston": "Boston",
+      "seattle": "Seattle",
+      "houston": "Houston",
+      "dallas": "Dallas",
+      "atlanta": "Atlanta",
+      "washington": "Washington DC",
+      "philadelphie": "Philadelphia",
+      "phoenix": "Phoenix",
+      "denver": "Denver",
+      "texte": "Texas",
+      "floride": "Florida",
+      "new-york": "New York",
+      "nouvelle-york": "New York",
+      "nouvelle orléans": "New Orleans",
+      "la nouvelle-orléans": "New Orleans",
+      // UK
+      "londres": "London",
+      "manchest": "Manchester",
+      "edimbourg": "Edinburgh",
+      "édimbourg": "Edinburgh",
+      "glasgow": "Glasgow",
+      // Europe
+      "barcelone": "Barcelona",
+      "milan": "Milan",
+      "rome": "Rome",
+      "berlin": "Berlin",
+      "vienne": "Vienna",
+      "lisbonne": "Lisbon",
+      "amsterdam": "Amsterdam",
+      "bruxelles": "Brussels",
+      "genève": "Geneva",
+      "zurich": "Zurich",
+      "stockholm": "Stockholm",
+      "oslo": "Oslo",
+      "copenhague": "Copenhagen",
+      "prague": "Prague",
+      "varsovie": "Warsaw",
+      "budapest": "Budapest",
+      "athènes": "Athens",
+      // Asia
+      "tokyo": "Tokyo",
+      "osaka": "Osaka",
+      "pékin": "Beijing",
+      "shanghaï": "Shanghai",
+      "shanghai": "Shanghai",
+      "séoul": "Seoul",
+      "bangkok": "Bangkok",
+      "singapour": "Singapore",
+      "hong kong": "Hong Kong",
+      "dubaï": "Dubai",
+      "dubai": "Dubai",
+      // Americas
+      "montréal": "Montreal",
+      "québec": "Quebec City",
+      "vancouver": "Vancouver",
+      "toronto": "Toronto",
+      "mexico": "Mexico City",
+      "buenos aires": "Buenos Aires",
+      "rio de janeiro": "Rio de Janeiro",
+      "são paulo": "Sao Paulo",
+      "sao paulo": "Sao Paulo",
+      "santiago": "Santiago",
+      "lima": "Lima",
+      // Africa/Middle East
+      "le caire": "Cairo",
+      "casablanca": "Casablanca",
+      "marrakech": "Marrakech",
+      "tunis": "Tunis",
+      "lagos": "Lagos",
+      "nairobi": "Nairobi",
+      "johannesburg": "Johannesburg",
+      "cape town": "Cape Town",
+      "le cap": "Cape Town",
+      "tel-aviv": "Tel Aviv",
+      "tel aviv": "Tel Aviv",
+      // Australia
+      "sydney": "Sydney",
+      "melbourne": "Melbourne",
+      "brisbane": "Brisbane",
+      "perth": "Perth",
+    };
+    const lower = input.toLowerCase().trim().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    for (const [fr, en] of Object.entries(map)) {
+      if (lower === fr || lower.startsWith(fr)) return en;
+    }
+    return input.trim(); // return as-is if no match
+  }
+
   async function doSearch(isNewSearch: boolean) {
-    const searchCity = isNewSearch ? city.trim() : savedCity;
-    if (!searchCity) return;
+    const rawCity = isNewSearch ? city.trim() : savedCity;
+    if (!rawCity) return;
+    const searchCity = isNewSearch ? normalizeCity(rawCity) : savedCity;
 
     const currentPage = isNewSearch ? 0 : page;
     const currentExcludes = isNewSearch ? [] : restaurants.map(r => r.name);
@@ -730,10 +830,19 @@ export default function CircuitTab() {
         )}
 
         {!loading && searched && restaurants.length === 0 && !error && (
-          <div className="flex flex-col items-center justify-center flex-1 text-center p-8">
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-slate-300 font-bold">Aucun résultat</p>
-            <p className="text-slate-500 text-sm mt-1">Vérifiez votre clé API Perplexity dans ⚙️ Paramètres.</p>
+          <div className="flex flex-col items-center justify-center flex-1 text-center p-8 gap-4">
+            <p className="text-4xl">🔍</p>
+            <div>
+              <p className="text-slate-300 font-bold text-lg">Aucun résultat pour "{savedCity}"</p>
+              <p className="text-slate-500 text-sm mt-1 max-w-sm">
+                Essayez avec une <strong className="text-white">ville précise</strong> plutôt qu'un pays ou un état.<br />
+                Ex : <span className="text-orange-400 cursor-pointer hover:underline" onClick={() => { setCity("Los Angeles"); }}>Los Angeles</span>, <span className="text-orange-400 cursor-pointer hover:underline" onClick={() => { setCity("San Francisco"); }}>San Francisco</span>, <span className="text-orange-400 cursor-pointer hover:underline" onClick={() => { setCity("New York"); }}>New York</span>
+              </p>
+            </div>
+            <button onClick={() => { setCity(savedCity); doSearch(true); }}
+              className="px-4 py-2 bg-orange-500/20 border border-orange-500/30 text-orange-300 rounded-xl text-sm font-bold hover:bg-orange-500/30 transition-colors">
+              🔄 Réessayer
+            </button>
           </div>
         )}
       </div>
