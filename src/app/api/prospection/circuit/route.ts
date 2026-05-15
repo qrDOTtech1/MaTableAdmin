@@ -225,6 +225,12 @@ export async function POST(req: Request) {
     const isLargeCity = !!sectors;
     const hasMoreSectors = sectors ? page + 1 < sectors.length : false;
 
+    // Detect if city is likely French (for phone format hints)
+    const frenchCityHints = ["paris","lyon","marseille","toulouse","nice","nantes","strasbourg","montpellier","bordeaux","rennes","reims","le havre","saint-etienne","toulon","grenoble","dijon","angers","nîmes","villeurbanne","le mans","aix-en-provence","clermont","brest","limoges","amiens","perpignan","metz","besançon","orléans","rouen","mulhouse","caen","nancy","argenteuil","montreuil","roubaix","tourcoing","dunkerque","avignon","poitiers","pau","calais","mérignac","versailles","saint-denis","saint-paul","aubervilliers","aulnay","champigny"];
+    const cityLower = city.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const isFrench = frenchCityHints.some(h => cityLower.includes(h))
+      || /\b(0[1-9])(\s?\d{2}){4}\b/.test(city);
+
     // Load already-saved prospects for this city from DB (avoid duplicates)
     const dbNames: string[] = [];
     try {
@@ -241,37 +247,41 @@ export async function POST(req: Request) {
 
     // Build zone description
     const zone = currentSector
-      ? `dans le secteur "${currentSector}" de ${city}`
-      : `à ${city}`;
+      ? `in the "${currentSector}" district of ${city}`
+      : `in ${city}`;
+
+    const phoneFormatHint = isFrench
+      ? `format français "0X XX XX XX XX"`
+      : `format international local (ex: "+1 415 000 0000" pour USA, "+44 20 0000 0000" pour UK, etc.)`;
 
     const excludeBlock = allExcluded.length > 0
-      ? `\n\nNE PAS inclure ces restaurants déjà connus (ils sont déjà dans notre base) :\n${allExcluded.slice(0, 60).map(n => `- ${n}`).join("\n")}`
+      ? `\n\nDO NOT include these restaurants already in our database:\n${allExcluded.slice(0, 60).map(n => `- ${n}`).join("\n")}`
       : "";
 
-    const prompt = `Tu es un expert en prospection commerciale pour la restauration française. Recherche en temps réel sur Google Maps, Pages Jaunes, Tripadvisor et les sites locaux pour trouver exactement 15 restaurants indépendants ${zone}, France.
+    const prompt = `You are a commercial prospecting expert for the restaurant industry. Search in real time on Google Maps, Yelp, TripAdvisor, and local directories to find exactly 15 independent restaurants ${zone}.
 
-RÈGLES ABSOLUES :
-1. Restaurants INDÉPENDANTS uniquement — aucune chaîne (McDonald's, KFC, Pizza Hut, Buffalo Grill, Flunch, Courtepaille, etc.)
-2. Restaurants RÉELLEMENT OUVERTS actuellement
-3. Pour CHAQUE restaurant, tu DOIS chercher et fournir le numéro de téléphone — consulte Google Maps, Pages Jaunes (pagesjaunes.fr), le site web du restaurant, ou Tripadvisor pour le trouver. Le téléphone est une donnée CRITIQUE pour nous contacter.
-4. Privilégie les restaurants sans site web professionnel (meilleur potentiel de vente logiciel)${excludeBlock}
+ABSOLUTE RULES:
+1. INDEPENDENT restaurants only — no chains (McDonald's, KFC, Pizza Hut, Starbucks, Subway, etc.)
+2. Restaurants ACTUALLY OPEN right now
+3. For EACH restaurant you MUST find and provide the phone number — check Google Maps, Yelp, TripAdvisor, the restaurant's website. Phone is CRITICAL.
+4. Prioritize restaurants without a professional website (better sales potential for our software)${excludeBlock}
 
-CHAMPS OBLIGATOIRES pour chaque restaurant — JSON strict :
-- "name": nom exact tel qu'affiché sur Google Maps
-- "address": adresse complète avec numéro de rue et code postal
+REQUIRED FIELDS for each restaurant — strict JSON:
+- "name": exact name as shown on Google Maps
+- "address": full address with street number and postal/zip code
 - "city": "${city}"
-- "phone": numéro de téléphone RÉEL trouvé sur Google Maps ou Pages Jaunes, format "0X XX XX XX XX" — cherche activement, ne mets null QUE si vraiment introuvable après recherche
-- "website": URL complète du site web si existant (null sinon)
-- "google_rating": note Google entre 1.0 et 5.0 (number, pas string)
-- "reviews_count": nombre d'avis Google (integer)
-- "category": type de cuisine précis (ex: "Bistrot français", "Pizzeria napolitaine", "Japonais traditionnel", "Brasserie alsacienne")
-- "description": 1 phrase décrivant l'ambiance et la spécialité
-- "lat": latitude GPS exacte (number, ex: 48.8521)
-- "lng": longitude GPS exacte (number, ex: 2.3478)
-- "google_maps_url": lien Google Maps direct vers la fiche du restaurant
+- "phone": REAL phone number found on Google Maps or local directories, ${phoneFormatHint} — search actively, set null ONLY if truly not found after searching
+- "website": full URL of website if exists (null otherwise)
+- "google_rating": Google rating between 1.0 and 5.0 (number, not string)
+- "reviews_count": number of Google reviews (integer)
+- "category": precise cuisine type (e.g. "French bistro", "Neapolitan pizza", "Traditional Japanese", "Alsatian brasserie", "Mexican tacos", "American burger", etc.)
+- "description": 1 sentence describing the ambiance and specialty
+- "lat": exact GPS latitude (number, e.g. 48.8521)
+- "lng": exact GPS longitude (number, e.g. 2.3478)
+- "google_maps_url": direct Google Maps link to the restaurant
 
-IMPORTANT : Réponds UNIQUEMENT avec le tableau JSON. Zéro texte avant ou après. Zéro markdown. Zéro backtick.
-Exemple de format : [{"name":"Le Zinc","address":"12 rue de la Paix, 69001 Lyon","city":"${city}","phone":"04 72 00 00 00","website":null,"google_rating":4.2,"reviews_count":187,"category":"Bistrot lyonnais","description":"Bouchon traditionnel avec spécialités lyonnaises maison.","lat":45.7640,"lng":4.8357,"google_maps_url":"https://maps.google.com/?cid=..."}]`;
+IMPORTANT: Reply ONLY with the JSON array. Zero text before or after. Zero markdown. Zero backticks.
+Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","city":"${city}","phone":"+1 310 000 0000","website":null,"google_rating":4.2,"reviews_count":187,"category":"French bistro","description":"Cozy French bistro with homemade specials.","lat":34.0522,"lng":-118.2437,"google_maps_url":"https://maps.google.com/?cid=..."}]`;
 
     const pRes = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
@@ -281,7 +291,7 @@ Exemple de format : [{"name":"Le Zinc","address":"12 rue de la Paix, 69001 Lyon"
         messages: [
           {
             role: "system",
-            content: "Tu es un expert en prospection commerciale pour la restauration. Tu effectues des recherches web en temps réel (Google Maps, Pages Jaunes, Tripadvisor) pour trouver des données précises et à jour sur des restaurants français. Tu fournis UNIQUEMENT du JSON valide, sans aucun texte autour.",
+            content: "You are a commercial prospecting expert for the restaurant industry worldwide. You perform real-time web searches (Google Maps, Yelp, TripAdvisor, local directories) to find accurate, up-to-date data on independent restaurants anywhere in the world. You reply ONLY with valid JSON arrays, no text around it.",
           },
           { role: "user", content: prompt },
         ],
@@ -310,19 +320,28 @@ Exemple de format : [{"name":"Le Zinc","address":"12 rue de la Paix, 69001 Lyon"
     }
     if (!Array.isArray(restaurants)) restaurants = [];
 
-    // Normalize phone numbers: +33 → 0X, strip dots/dashes, format XX XX XX XX XX
+    // Normalize phone numbers — support French + international formats
     restaurants = restaurants.map(r => {
       if (!r.phone) return r;
-      let p = String(r.phone).replace(/\s+/g, "").replace(/[.\-()]/g, "");
-      if (p.startsWith("+33")) p = "0" + p.slice(3);
+      const raw = String(r.phone).trim();
+      // If it starts with + it's already international format — keep as-is (light clean)
+      if (raw.startsWith("+")) {
+        const cleaned = raw.replace(/[.\-()]/g, "").replace(/\s+/g, " ").trim();
+        return { ...r, phone: cleaned };
+      }
+      let p = raw.replace(/\s+/g, "").replace(/[.\-()]/g, "");
+      // French: 0033 or 33 prefix → convert to 0X
       if (p.startsWith("0033")) p = "0" + p.slice(4);
-      // Keep only digits
-      p = p.replace(/\D/g, "");
-      // Must be 10 digits starting with 0
-      if (p.length !== 10 || !p.startsWith("0")) return { ...r, phone: undefined };
-      // Format: 0X XX XX XX XX
-      const fmt = p.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
-      return { ...r, phone: fmt };
+      else if (p.startsWith("33") && p.length === 11) p = "0" + p.slice(2);
+      const digits = p.replace(/\D/g, "");
+      // French 10-digit format
+      if (digits.length === 10 && digits.startsWith("0")) {
+        const fmt = digits.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4 $5");
+        return { ...r, phone: fmt };
+      }
+      // International fallback: keep raw if it has at least 7 digits
+      if (digits.length >= 7) return { ...r, phone: raw };
+      return { ...r, phone: undefined };
     });
 
     // Filter out already-excluded names (case-insensitive)
