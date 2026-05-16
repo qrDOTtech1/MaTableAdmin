@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin-actions";
 import Link from "next/link";
 import UsersManager from "./UsersManager";
+import QrStickerWidget from "./QrStickerWidget";
 
 export const dynamic = "force-dynamic";
 
@@ -560,11 +561,16 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
           </div>
 
           {!serverUniqueReviewQr && (
-            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3">
-              <p className="text-xs text-amber-400">
-                ⚠️ Mode <strong>QR unique restaurant</strong> actif — les serveurs ne peuvent pas être créés.
-                Pour créer des serveurs et activer l'attribution nominative, activez l'option ci-dessus.
-              </p>
+            <div className="space-y-3">
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3">
+                <p className="text-xs text-amber-400">
+                  ⚠️ Mode <strong>QR unique restaurant</strong> actif — les serveurs ne peuvent pas être créés.
+                  Pour créer des serveurs et activer l'attribution nominative, activez l'option ci-dessus.
+                </p>
+              </div>
+              {restaurant.slug && (
+                <QrStickerWidget slug={restaurant.slug} restaurantName={restaurant.name} />
+              )}
             </div>
           )}
 

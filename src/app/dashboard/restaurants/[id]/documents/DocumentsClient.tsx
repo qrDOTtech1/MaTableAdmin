@@ -51,6 +51,62 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     }).then(setNfcQrCode).catch(() => {});
   }, [docType, reviewUrl]);
 
+  const printStickerQR = (qrDataUrl: string, label: string = restaurant.name) => {
+    const win = window.open("", "_blank", "width=800,height=600");
+    if (!win) return;
+    // 3 identical stickers — optimized for label/sticker printers (62mm rolls etc.)
+    const stickerHtml = `
+      <!DOCTYPE html><html><head><meta charset="utf-8">
+      <title>Autocollants QR Avis — ${label}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #fff; font-family: 'Helvetica Neue', Arial, sans-serif; }
+        @media print {
+          body { margin: 0; }
+          .sticker { break-inside: avoid; page-break-inside: avoid; }
+        }
+        .page { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 20px; }
+        .sticker {
+          display: flex; flex-direction: column; align-items: center;
+          width: 200px; border: 1.5px dashed #ccc; border-radius: 16px;
+          padding: 18px 16px 14px; background: #fff; gap: 10px;
+        }
+        .headline {
+          font-size: 13px; font-weight: 900; color: #111; text-align: center;
+          letter-spacing: -0.3px; line-height: 1.25;
+        }
+        .stars { font-size: 18px; letter-spacing: 2px; }
+        .qr img { width: 130px; height: 130px; display: block; }
+        .cta {
+          font-size: 11px; font-weight: 700; color: #f97316;
+          text-align: center; letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .brand {
+          font-size: 9px; color: #94a3b8; font-weight: 600;
+          letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
+        }
+        .sep { width: 80%; height: 1px; background: #f1f5f9; }
+      </style>
+      </head><body>
+      <div class="page">
+        ${[0,1,2].map(() => `
+        <div class="sticker">
+          <p class="headline">⭐ Donnez-nous<br>un avis !</p>
+          <p class="stars">⭐⭐⭐⭐⭐</p>
+          <div class="sep"></div>
+          <div class="qr"><img src="${qrDataUrl}" alt="QR avis"/></div>
+          <div class="sep"></div>
+          <p class="cta">Scannez &amp; laissez votre avis</p>
+          <p class="brand">MaTable.Pro — ${label}</p>
+        </div>
+        `).join("")}
+      </div>
+      <script>window.onload = () => { window.print(); }<\/script>
+      </body></html>`;
+    win.document.write(stickerHtml);
+    win.document.close();
+  };
+
   const writeNfc = async () => {
     if (!reviewUrl) return;
     if (!("NDEFReader" in window)) {
@@ -538,20 +594,31 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
               </div>
 
               {nfcQrCode ? (
-                <div className="flex items-center gap-3 p-3 bg-slate-900 border border-slate-700 rounded-xl">
-                  <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-600 shrink-0">
-                    <img src={nfcQrCode} alt="QR restaurant" className="w-full h-full" />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 p-3 bg-slate-900 border border-slate-700 rounded-xl">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border border-slate-600 shrink-0 bg-black flex items-center justify-center">
+                      <img src={nfcQrCode} alt="QR restaurant" className="w-full h-full" />
+                    </div>
+                    <div className="space-y-2 min-w-0 flex-1">
+                      <p className="text-xs text-slate-400 leading-relaxed">QR global du restaurant — tables, cartes NFC, autocollants.</p>
+                      <a
+                        href={nfcQrCode}
+                        download={`qr-avis-${restaurant.slug || "restaurant"}.png`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+                      >
+                        ⬇ PNG
+                      </a>
+                    </div>
                   </div>
-                  <div className="space-y-2 min-w-0">
-                    <p className="text-xs text-slate-400 leading-relaxed">QR global du restaurant — à coller sur les tables ou cartes NFC.</p>
-                    <a
-                      href={nfcQrCode}
-                      download={`nfc-${restaurant.slug || "restaurant"}.png`}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
-                    >
-                      ⬇ Télécharger PNG
-                    </a>
-                  </div>
+                  {/* Sticker print button */}
+                  <button
+                    type="button"
+                    onClick={() => printStickerQR(nfcQrCode, restaurant.name)}
+                    className="w-full inline-flex items-center justify-center gap-2 text-xs font-bold px-3 py-2.5 bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 rounded-xl text-orange-300 transition-colors"
+                  >
+                    🖨️ Imprimer autocollants ×3
+                    <span className="text-[10px] text-orange-400/60 font-normal">"Donnez-nous un avis !"</span>
+                  </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-xs text-slate-500">
