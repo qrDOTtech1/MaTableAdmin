@@ -551,6 +551,48 @@ Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","c
       }
     }
 
+    // Tentative 4 : fallback "zone élargie" — si toujours vide, on élargit la recherche
+    // à la commune voisine / département / région pour les petites villes
+    if (restaurants.length === 0) {
+      const widerPrompt = `List up to 8 independent restaurants near "${city}" (include nearby towns if "${city}" is very small). For each give: name, address, city, phone, google_rating, reviews_count, category, lat, lng. Reply ONLY with a JSON array, no text around it.`;
+      async function callWider(model: string): Promise<{ content: string; citations: any[] } | null> {
+        try {
+          const res = await fetch("https://api.perplexity.ai/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: "system", content: "You are a restaurant finder. Reply ONLY with a JSON array. No text, no markdown." },
+                { role: "user", content: widerPrompt },
+              ],
+              temperature: 0.3,
+              max_tokens: 4000,
+            }),
+            signal: AbortSignal.timeout(40000),
+          });
+          if (!res.ok) return null;
+          const data = await res.json();
+          return { content: data.choices?.[0]?.message?.content ?? "[]", citations: data.citations ?? [] };
+        } catch { return null; }
+      }
+      const r4 = await callWider("sonar-pro");
+      if (r4) {
+        const arr = tryParse(r4.content);
+        if (arr.length > 0) { restaurants = arr; citations = r4.citations; }
+        attemptLogs.push(`sonar-pro-wider → ${arr.length}`);
+      }
+      // Dernier recours : sonar standard avec prompt minimal
+      if (restaurants.length === 0) {
+        const r5 = await callWider("sonar");
+        if (r5) {
+          const arr = tryParse(r5.content);
+          if (arr.length > 0) { restaurants = arr; citations = r5.citations; }
+          attemptLogs.push(`sonar-wider → ${arr.length}`);
+        }
+      }
+    }
+
     if (!Array.isArray(restaurants)) restaurants = [];
     console.log("[circuit] FINAL after retries:", restaurants.length, "| attempts:", attemptLogs.join(" | "));
 

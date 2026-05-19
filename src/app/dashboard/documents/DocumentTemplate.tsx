@@ -289,7 +289,7 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis";
+export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco";
 
 // Ligne d'établissement pour les devis chaîne
 export type ChainEstablishment = {
@@ -366,7 +366,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       </div>
 
       {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
-      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && (
+      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && docType !== "tuto-commande" && docType !== "tuto-avis-eco" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
           {docType === "contrat" && "Contrat d'Abonnement — Plateforme MaTable.Pro"}
           {docType === "prestation" && "Contrat de Prestation — MaTable.Pro"}
@@ -1868,6 +1868,16 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         <TutoAvisSheet vendor={vendor} client={clientData} qrCodeDataUrl={tutoQrCode} />
       )}
 
+      {/* ===== TUTO COMMANDE QR — Guide menu & commandes, N&B éco encre ===== */}
+      {docType === "tuto-commande" && (
+        <TutoCommandeSheet vendor={vendor} client={clientData} />
+      )}
+
+      {/* ===== TUTO AVIS ÉCO — Version N&B ultra légère en encre ===== */}
+      {docType === "tuto-avis-eco" && (
+        <TutoAvisEcoSheet vendor={vendor} client={clientData} />
+      )}
+
       {/* ===== FLYER DÉMO — A5 paysage générique, 2 par A4 portrait ===== */}
       {docType === "flyer" && (
         <FlyerSheet vendor={vendor} />
@@ -2399,6 +2409,295 @@ function TutoAvisSheet({ vendor, client, qrCodeDataUrl }: { vendor: Vendor; clie
 
   return <div style={{ fontFamily: "Arial, sans-serif" }}>{cover}{page2}{page3}</div>;
 
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TUTO COMMANDE QR — Guide 2 pages N&B, éco encre
+// Explique au gérant comment déployer le menu QR et gérer les commandes
+// ─────────────────────────────────────────────────────────────────────────────
+function TutoCommandeSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  const bdr = "1px solid #d1d5db";
+  const accent = "#1e293b"; // tout en N&B
+
+  const StepRow = ({ num, title, items }: { num: string; title: string; items: string[] }) => (
+    <div style={{ display: "flex", gap: 12, padding: "12px 14px", border: bdr, borderLeft: `4px solid ${accent}`, borderRadius: 8, marginBottom: 10, pageBreakInside: "avoid" }}>
+      <div style={{ width: 32, height: 32, borderRadius: "50%", background: accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{num}</div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>{title}</div>
+        <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+          {items.map((t, i) => <li key={i} style={{ fontSize: 10, color: "#374151", lineHeight: 1.6, paddingLeft: 10, position: "relative" }}>
+            <span style={{ position: "absolute", left: 0, color: "#6b7280", fontWeight: 700 }}>›</span>{t}
+          </li>)}
+        </ul>
+      </div>
+    </div>
+  );
+
+  const page1 = (
+    <A4Page first>
+      {/* En-tête */}
+      <div style={{ borderBottom: `3px solid ${accent}`, paddingBottom: 14, marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 2, marginBottom: 4 }}>Guide d'utilisation · Menu QR</div>
+          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>Commander avec MaTable.Pro</h1>
+          <div style={{ fontSize: 10, color: "#6b7280", marginTop: 4 }}>Comment déployer votre menu QR et gérer vos commandes en 4 étapes</div>
+        </div>
+        <div style={{ textAlign: "right", fontSize: 9, color: "#6b7280" }}>
+          <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a" }}>MaTable<span style={{ color: "#374151" }}>.Pro</span></div>
+          {client.name && <div style={{ marginTop: 2 }}>{client.name}</div>}
+        </div>
+      </div>
+
+      {/* Intro */}
+      <div style={{ background: "#f9fafb", border: bdr, borderRadius: 8, padding: "12px 16px", marginBottom: 18, display: "flex", gap: 16 }}>
+        <div style={{ fontSize: 9, color: "#374151", lineHeight: 1.7, flex: 1 }}>
+          <strong>Votre menu QR MaTable.Pro</strong> permet à vos clients de <strong>consulter la carte et passer commande depuis leur smartphone</strong>, sans application à télécharger. Le serveur reçoit les commandes en temps réel sur son téléphone ou tablette. Ce guide vous accompagne de la mise en place initiale jusqu'à la gestion quotidienne.
+        </div>
+        <div style={{ flexShrink: 0, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {[["Pas d'app à", "télécharger"], ["Commandes en", "temps réel"], ["Carte modifiable", "en 1 clic"], ["Compatible", "iPhone & Android"]].map(([l1, l2], i) => (
+            <div key={i} style={{ border: bdr, borderRadius: 6, padding: "6px 8px", textAlign: "center" }}>
+              <div style={{ fontSize: 8, fontWeight: 700, color: "#0f172a", lineHeight: 1.3 }}>{l1}<br />{l2}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <StepRow num="1" title="Créer et enrichir votre carte"
+        items={[
+          "Connectez-vous sur matable.pro avec vos identifiants et ouvrez l'onglet Menu.",
+          "Créez vos catégories (Entrées, Plats, Desserts, Boissons...) puis ajoutez vos plats : nom, prix, description, photo.",
+          "Astuce : ajoutez des photos — les plats avec photo ont 38 % de commandes en plus.",
+          "Activez/désactivez un plat en 1 clic si vous êtes en rupture — sans devoir réimprimer quoi que ce soit.",
+        ]}
+      />
+
+      <StepRow num="2" title="Générer et installer les QR codes"
+        items={[
+          "Dans Dashboard → Tables, sélectionnez le nombre de tables et cliquez Générer les QR codes.",
+          "Téléchargez le PDF ou les PNG, puis imprimez et placez sur chaque table (support, ardoise ou plastifié).",
+          "Chaque QR code est unique par table — les commandes arrivent avec le bon numéro de table.",
+          "Optionnel : encodez une carte NFC via le bouton dédié (Chrome Android) — le client pose son téléphone et accède directement au menu.",
+        ]}
+      />
+
+      <StepRow num="3" title="Recevoir et gérer les commandes"
+        items={[
+          "Activez les notifications sur votre téléphone depuis matable.pro/app — chaque nouvelle commande déclenche une alerte.",
+          "Dans Commandes → En cours, validez, préparez ou refusez chaque commande en temps réel.",
+          "Le client voit le statut mis à jour sur son écran : Reçue → En préparation → Prête → Servie.",
+          "En fin de service, exportez le récapitulatif des commandes depuis l'onglet Historique.",
+        ]}
+      />
+
+      <StepRow num="4" title="Encaisser et clôturer"
+        items={[
+          "Le client peut payer directement depuis son téléphone (si le module Paiement est activé) ou appeler le serveur pour régler en caisse.",
+          "Chaque table peut être soldée d'un clic : Commandes → Table N° → Clôturer.",
+          "Les données de vente (CA, plats les plus commandés, heure de pointe) sont disponibles dans Statistiques.",
+        ]}
+      />
+
+      <div style={{ borderTop: bdr, paddingTop: 10, marginTop: 6, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+        <span>{vendor.raisonSociale} · matable.pro · {vendor.email}</span>
+        <span>Page 1 / 2</span>
+      </div>
+    </A4Page>
+  );
+
+  const page2 = (
+    <A4Page>
+      <div style={{ borderBottom: `3px solid ${accent}`, paddingBottom: 12, marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a" }}>Conseils pratiques & FAQ</div>
+        <div style={{ fontSize: 9, color: "#6b7280" }}>Menu QR · MaTable.Pro</div>
+      </div>
+
+      {/* Deux colonnes */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        {/* Conseils */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 10, paddingBottom: 6, borderBottom: bdr }}>Bonnes pratiques</div>
+          {[
+            ["Placez le QR bien visible", "Au centre de la table, lisible sans se baisser. Idéal : support vertical A6."],
+            ["Gardez la carte à jour", "Un plat absent ou un prix erroné = friction client. Mettez à jour le soir."],
+            ["Formez votre équipe", "5 minutes suffisent. Chaque serveur doit savoir valider une commande sur son téléphone."],
+            ["Utilisez les descriptions courtes", "1-2 lignes max par plat. Ça va à l'essentiel et charge plus vite."],
+            ["Testez le parcours client", "Scannez votre propre QR, passez une commande de test, vérifiez la réception."],
+          ].map(([t, d], i) => (
+            <div key={i} style={{ marginBottom: 9 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#0f172a" }}>{t}</div>
+              <div style={{ fontSize: 9, color: "#6b7280", lineHeight: 1.5, marginTop: 2 }}>{d}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* FAQ */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 10, paddingBottom: 6, borderBottom: bdr }}>Questions fréquentes</div>
+          {[
+            ["Mon client n'a pas de smartphone ?", "Gardez une carte physique en parallèle pour les clients qui le souhaitent — le QR est un complément, pas un remplacement."],
+            ["Le QR code ne fonctionne pas ?", "Vérifiez que votre menu est bien publié (statut vert dans Dashboard → Menu). Si le QR est trop petit, augmentez la taille à l'impression."],
+            ["Peut-on modifier le menu en service ?", "Oui ! Les modifications sont instantanées. Le client voit la carte mise à jour à la prochaine ouverture."],
+            ["Combien de temps garde-t-on le QR ?", "Le QR code est permanent. Il n'expire jamais — vous n'avez jamais besoin de le réimprimer sauf si vous changez de table."],
+            ["Y a-t-il un nombre max de plats ?", "Non, aucune limite. Vous pouvez avoir autant de catégories et plats que vous voulez."],
+          ].map(([q, a], i) => (
+            <div key={i} style={{ marginBottom: 9 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: "#0f172a" }}>{q}</div>
+              <div style={{ fontSize: 9, color: "#6b7280", lineHeight: 1.5, marginTop: 2 }}>{a}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Checklist de mise en service */}
+      <div style={{ border: bdr, borderRadius: 8, padding: "14px 16px", marginBottom: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 10 }}>Checklist — Mise en service</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px" }}>
+          {[
+            "Carte créée avec toutes les catégories", "QR codes imprimés et posés sur les tables",
+            "Plats avec photo et prix à jour", "Notifications activées sur le téléphone du serveur",
+            "Menu publié (statut vert)", "Test complet du parcours client effectué",
+            "NFC encodées si option activée", "Équipe formée (5 min de démo suffisent)",
+          ].map((t, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <div style={{ width: 14, height: 14, border: `1.5px solid ${accent}`, borderRadius: 3, flexShrink: 0 }} />
+              <div style={{ fontSize: 9, color: "#374151" }}>{t}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Contact */}
+      <div style={{ background: "#f9fafb", border: bdr, borderRadius: 8, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 4 }}>Une question ? Notre équipe vous répond</div>
+          <div style={{ fontSize: 9, color: "#6b7280" }}>✉ support@matable.pro &nbsp;·&nbsp; matable.pro &nbsp;{vendor.phone ? `·  ${vendor.phone}` : ""}</div>
+        </div>
+        <div style={{ fontSize: 8, color: "#9ca3af", textAlign: "right" }}>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#0f172a" }}>MaTable.Pro</div>
+          <div>Votre partenaire digital</div>
+        </div>
+      </div>
+
+      <div style={{ borderTop: bdr, paddingTop: 10, marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+        <span>{vendor.raisonSociale} · matable.pro · Document confidentiel</span>
+        <span>Page 2 / 2</span>
+      </div>
+    </A4Page>
+  );
+
+  return <div style={{ fontFamily: "Arial, sans-serif" }}>{page1}{page2}</div>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TUTO AVIS ÉCO — 1 page A4 N&B ultra léger en encre
+// Condensé de tuto-avis : checklist + étapes + objectifs, zéro fond coloré
+// ─────────────────────────────────────────────────────────────────────────────
+function TutoAvisEcoSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  const bdr = "1px solid #d1d5db";
+  const thin = "0.5px solid #e5e7eb";
+
+  return (
+    <A4Page first>
+      {/* En-tête compact */}
+      <div style={{ borderBottom: "2px solid #000", paddingBottom: 10, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 2, marginBottom: 3 }}>Guide Avis Google · Éco encre</div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>Vos premiers avis Google — en 5 étapes</h1>
+        </div>
+        <div style={{ textAlign: "right", fontSize: 9, color: "#6b7280" }}>
+          <div style={{ fontSize: 13, fontWeight: 900, color: "#0f172a" }}>MaTable.Pro</div>
+          {client.name && <div>{client.name}</div>}
+        </div>
+      </div>
+
+      {/* Étapes en 2 colonnes */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+        {[
+          { num: "1", title: "Renseigner votre lien Google", items: ["Connectez-vous sur matable.pro → Avis → Paramètres.", "Collez votre lien Google My Business dans le champ dédié.", "Comment trouver ce lien : cherchez votre resto sur Google Maps → \"Donner un avis\" → copiez l'URL."] },
+          { num: "2", title: "Choisir votre mode QR", items: ["Mode serveur (recommandé) : un QR par serveur, avis attribués nominativement.", "Mode restaurant : un seul QR pour tout l'établissement, plus simple.", "Activez/désactivez depuis Avis → Paramètres → ID unique par serveur."] },
+          { num: "3", title: "Imprimer et poser les QR codes", items: ["Téléchargez les QR en PNG depuis le dashboard.", "Imprimez et placez sur chaque table (support, ardoise, autocollant).", "Option NFC : encodez vos cartes via le bouton dédié (Chrome Android)."] },
+          { num: "4", title: "Configurer le bon de réduction", items: ["Dans Avis → Paramètres, activez le voucher post-avis.", "Choisissez : -10% sur la prochaine visite (le plus efficace).", "Le bon est envoyé automatiquement après chaque avis ★★★★★."] },
+          { num: "5", title: "Répondre avec Nova IA", items: ["Dans Avis → Réponses, tous vos nouveaux avis apparaissent.", "Nova IA rédige une réponse personnalisée — relisez et publiez en 1 clic.", "Répondez dans les 24h, même aux avis négatifs."] },
+        ].map(({ num, title, items }) => (
+          <div key={num} style={{ border: bdr, borderLeft: "3px solid #000", borderRadius: 6, padding: "10px 12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid #000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, flexShrink: 0 }}>{num}</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>{title}</div>
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {items.map((t, i) => <li key={i} style={{ fontSize: 9, color: "#374151", lineHeight: 1.6, paddingLeft: 8, position: "relative" }}>
+                <span style={{ position: "absolute", left: 0, color: "#6b7280" }}>›</span>{t}
+              </li>)}
+            </ul>
+          </div>
+        ))}
+
+        {/* Objectifs (6ème cellule = colonne de droite, dernière ligne) */}
+        <div style={{ border: bdr, borderRadius: 6, padding: "10px 12px" }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>Objectifs</div>
+          <table style={{ width: "100%", fontSize: 9, borderCollapse: "collapse" }}>
+            <thead><tr style={{ borderBottom: thin }}>
+              <th style={{ textAlign: "left", color: "#6b7280", paddingBottom: 4, fontWeight: 700 }}>Période</th>
+              <th style={{ textAlign: "left", color: "#6b7280", paddingBottom: 4, fontWeight: 700 }}>Cible</th>
+            </tr></thead>
+            <tbody>
+              {[["Semaine 1", "5 à 10 avis Google"], ["Mois 1", "25+ avis · ≥ 4,3 ★"], ["Mois 3", "50+ avis · ≥ 4,5 ★"]].map(([p, g]) => (
+                <tr key={p} style={{ borderBottom: thin }}>
+                  <td style={{ padding: "4px 0", color: "#374151" }}>{p}</td>
+                  <td style={{ padding: "4px 0", fontWeight: 700, color: "#0f172a" }}>{g}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ marginTop: 8, fontSize: 8, color: "#6b7280", lineHeight: 1.5 }}>
+            +9 % de CA par étoile supplémentaire · 88 % des clients consultent les avis avant de choisir
+          </div>
+        </div>
+      </div>
+
+      {/* Checklist 7 jours */}
+      <div style={{ border: bdr, borderRadius: 6, padding: "12px 14px", marginBottom: 12 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Checklist — 7 premiers jours</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px 16px" }}>
+          {[
+            "J1 : Activer module Avis + lien Google", "J1 : Choisir mode serveur ou restaurant", "J2 : Télécharger et imprimer les QR codes",
+            "J2 : Configurer bon de réduction -10%", "J3 : Poser les QR sur toutes les tables", "J3 : Tester le parcours client (QR → avis → bon)",
+            "J4-7 : Encourager vos clients à scanner", "J5-7 : Répondre aux avis avec Nova IA", "J7 : Vérifier les stats dans le dashboard",
+          ].map((t, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 12, height: 12, border: "1px solid #374151", borderRadius: 2, flexShrink: 0 }} />
+              <div style={{ fontSize: 8.5, color: "#374151", lineHeight: 1.4 }}>{t}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Chiffres clés + Contact */}
+      <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
+        <div style={{ flex: 1, border: bdr, borderRadius: 6, padding: "10px 12px", display: "flex", gap: 16 }}>
+          {[["88%", "clients lisent les avis avant de choisir"], ["+9%", "CA par étoile gagnée sur Google"], ["7j", "pour obtenir les premiers avis"]].map(([v, l]) => (
+            <div key={v} style={{ textAlign: "center", flex: 1 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>{v}</div>
+              <div style={{ fontSize: 8, color: "#6b7280", marginTop: 4, lineHeight: 1.4 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ border: bdr, borderRadius: 6, padding: "10px 14px", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 160 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 4 }}>Support & contact</div>
+          <div style={{ fontSize: 9, color: "#374151", lineHeight: 1.8 }}>
+            ✉ support@matable.pro<br />
+            🌐 matable.pro<br />
+            {vendor.phone ? `📱 ${vendor.phone}` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+        <span>{vendor.raisonSociale} · matable.pro · {vendor.email} — Document optimisé économie d'encre</span>
+        <span>1 / 1 · Imprimer plusieurs copies pour vos serveurs</span>
+      </div>
+    </A4Page>
+  );
 }
 
 // Re-exports depuis pricing.ts pour rétro-compatibilité avec les imports

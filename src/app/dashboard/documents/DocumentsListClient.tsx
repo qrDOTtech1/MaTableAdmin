@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -32,6 +32,9 @@ const TYPE_LABELS: Record<string, string> = {
   "plaquette-chaine": "Plaq. Chaîne",
   "devis-chaine": "Devis Chaîne",
   flyer: "Flyer",
+  "tuto-avis": "Tuto Avis",
+  "tuto-commande": "Tuto Menu QR",
+  "tuto-avis-eco": "Tuto Avis Éco",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -49,11 +52,43 @@ const TYPE_COLORS: Record<string, string> = {
   "plaquette-chaine": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
   "devis-chaine": "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
   flyer: "bg-yellow-500/10 text-yellow-400 border-yellow-500/30",
+  "tuto-avis": "bg-teal-500/10 text-teal-400 border-teal-500/30",
+  "tuto-commande": "bg-sky-500/10 text-sky-400 border-sky-500/30",
+  "tuto-avis-eco": "bg-slate-500/10 text-slate-400 border-slate-500/30",
 };
 
 function euros(cents: number) {
   return (cents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 }
+
+// Tous les types disponibles pour la création
+const ALL_DOC_TYPES: { group: string; options: { value: string; label: string }[] }[] = [
+  { group: "Contrats & Facturation", options: [
+    { value: "contrat", label: "Contrat d'abonnement" },
+    { value: "prestation", label: "Contrat de prestation" },
+    { value: "devis", label: "Devis" },
+    { value: "devis-chaine", label: "Devis Chaîne / Groupe" },
+    { value: "facture", label: "Facture" },
+  ]},
+  { group: "Documents légaux & internes", options: [
+    { value: "cgvu", label: "CGV / CGU" },
+    { value: "onboarding", label: "Fiche Onboarding" },
+    { value: "tarification", label: "Fiche Tarification & Suivi" },
+  ]},
+  { group: "Commercial", options: [
+    { value: "plaquette", label: "Plaquette Standard" },
+    { value: "plaquette-eco", label: "Plaquette Éco encre" },
+    { value: "plaquette-premium", label: "Plaquette Premium" },
+    { value: "plaquette-compact", label: "Plaquette Compacte A5" },
+    { value: "plaquette-chaine", label: "Plaquette Chaîne" },
+    { value: "flyer", label: "Flyer démo" },
+    { value: "tuto-avis", label: "Tuto Avis Google (complet)" },
+    { value: "tuto-avis-eco", label: "Tuto Avis Éco encre (1 page)" },
+  ]},
+  { group: "Fiches tuto opérationnelles", options: [
+    { value: "tuto-commande", label: "Fiche Tuto Menu QR" },
+  ]},
+];
 
 export default function DocumentsListClient({
   documents,
@@ -68,6 +103,30 @@ export default function DocumentsListClient({
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"list" | "folders">(hideRestaurantColumn ? "list" : "folders");
   const [openClients, setOpenClients] = useState<Record<string, boolean>>({});
+
+  // ── Modal "+ Nouveau document" ──────────────────────────────────────────────
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [newRestaurantId, setNewRestaurantId] = useState("");
+  const [newDocTypeVal, setNewDocTypeVal] = useState("contrat");
+  // Liste des restaurants déduite des docs existants + fetch API
+  const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!showNewModal) return;
+    // Construire la liste depuis les docs déjà chargés (pas d'appel API)
+    const seen = new Map<string, string>();
+    for (const d of docs) {
+      if (d.restaurantId && d.restaurantName && !seen.has(d.restaurantId)) {
+        seen.set(d.restaurantId, d.restaurantName);
+      }
+    }
+    setRestaurants(Array.from(seen.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)));
+    if (seen.size > 0 && !newRestaurantId) setNewRestaurantId(Array.from(seen.keys())[0]);
+  }, [showNewModal]);
+
+  const handleCreateDoc = () => {
+    if (!newRestaurantId) return;
+    router.push(`/dashboard/restaurants/${newRestaurantId}/documents?docType=${newDocTypeVal}`);
+  };
 
   const filtered = useMemo(() => {
     return docs.filter((d) => {
@@ -161,7 +220,77 @@ export default function DocumentsListClient({
           <b className="text-slate-300">{totals.count}</b> doc{totals.count > 1 ? "s" : ""} ·
           Total HT : <b className="text-orange-400">{euros(totals.sum)}</b>
         </div>
+        <button
+          onClick={() => setShowNewModal(true)}
+          className="ml-auto shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm rounded-xl transition-colors"
+        >
+          + Nouveau document
+        </button>
       </div>
+
+      {/* ── Modal Nouveau document ── */}
+      {showNewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowNewModal(false)}>
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-black text-white">Nouveau document</h2>
+              <button onClick={() => setShowNewModal(false)} className="text-slate-400 hover:text-slate-200 text-xl leading-none">✕</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Restaurant / Client</label>
+                {restaurants.length > 0 ? (
+                  <select
+                    value={newRestaurantId}
+                    onChange={(e) => setNewRestaurantId(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                  >
+                    {restaurants.map((r) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-xs text-slate-500 italic py-2">Aucun client trouvé. Créez d'abord un restaurant.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Type de document</label>
+                <select
+                  value={newDocTypeVal}
+                  onChange={(e) => setNewDocTypeVal(e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-500"
+                >
+                  {ALL_DOC_TYPES.map((g) => (
+                    <optgroup key={g.group} label={g.group}>
+                      {g.options.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowNewModal(false)}
+                className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-xl text-sm transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleCreateDoc}
+                disabled={!newRestaurantId}
+                className="flex-1 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition-colors"
+              >
+                Créer →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Vue Dossiers : un dossier par client */}
       {view === "folders" && !hideRestaurantColumn && (
