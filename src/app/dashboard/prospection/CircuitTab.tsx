@@ -480,11 +480,105 @@ export default function CircuitTab() {
         // affiche un warning soft sans bloquer
         console.warn("[circuit]", json.warning, json.attempts);
       }
+
+      // ─── Sauvegarde auto silencieuse ─────────────────────────────────────
+      // Aussitot les resultats recus, on les save en DB. Le dedoublonnage est gere
+      // cote API (WHERE LOWER(name) AND city). On ne bloque pas l'UI et on n'affiche
+      // pas de message — sauf si setSaveResult est utilise pour stats.
+      if (newRestaurants.length > 0) {
+        void autoSaveBatch(newRestaurants, isNewSearch ? searchCity : savedCity);
+      }
     } catch (e: any) {
       setError(e.message ?? "Erreur inconnue");
     } finally {
       setLoading(false);
       setLoadingMore(false);
+    }
+  }
+
+  // ─── Sauvegarde auto silencieuse (ne pas confondre avec saveSearch() manuel) ───
+  async function autoSaveBatch(batch: CircuitRestaurant[], searchCity: string) {
+    try {
+      const res = await fetch("/api/prospection/circuit/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ restaurants: batch, searchCity }),
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      // On update les saved prospects locaux pour que les boutons "Activer" / "Ignorer" apparaissent
+      void loadSavedProspects();
+      // Stats discretes (pas d'alert ni de bloc invasif)
+      setSaveResult({ saved: json.saved ?? 0, skipped: json.skipped ?? 0 });
+    } catch {
+      // silencieux
+    }
+  }
+
+  // ─── Recherche "dans cette zone" depuis la carte ─────────────────────────
+  // Reverse-geocode du centre GPS via Nominatim → nom de ville/quartier exploitable
+  // par Perplexity. Puis on lance une recherche neuve.
+  async function searchInZone(center: [number, number]) {
+    const [lat, lng] = center;
+    setLoading(true);
+    setError(null);
+    try {
+      const r = await fetch(`/api/prospection/reverse-geocode?lat=${lat}&lng=${lng}`);
+      const j = await r.json();
+      if (!r.ok || !j.searchQuery) {
+        setError("Impossible de déterminer la ville depuis la zone. Zoomez plus précisément.");
+        setLoading(false);
+        return;
+      }
+      setCity(j.searchQuery);
+      setSavedCity(j.searchQuery);
+      // Lance une recherche neuve via le flow existant (newSearch=true)
+      await doSearchFromZone(j.searchQuery);
+    } catch (e: any) {
+      setError(e.message ?? "Erreur reverse-geocode");
+      setLoading(false);
+    }
+  }
+
+  async function doSearchFromZone(searchCity: string) {
+    setRestaurants([]);
+    setSelected(null);
+    setExpanded(null);
+    setSaveResult(null);
+    setSavedProspects({});
+    setPage(0);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/prospection/circuit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city: searchCity, mode, page: 0, excludeNames: [] }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.message ?? json.error ?? "Erreur serveur");
+        return;
+      }
+      const newRestaurants: CircuitRestaurant[] = json.restaurants ?? [];
+      setRestaurants(newRestaurants);
+      setSearched(true);
+      setPage(json.nextPage ?? 1);
+      setHasMore(json.hasMore ?? false);
+      setNextSector(json.nextSector ?? null);
+      setIsLargeCity(json.isLargeCity ?? false);
+      setCurrentSector(json.sector ?? null);
+      setTotalSectors(json.totalSectors ?? 1);
+
+      if (json.warning && newRestaurants.length === 0) {
+        setError(`⚠️ ${json.warning}`);
+      }
+
+      if (newRestaurants.length > 0) {
+        void autoSaveBatch(newRestaurants, searchCity);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -712,15 +806,20 @@ export default function CircuitTab() {
                   <button onClick={() => setView("map")} disabled={mapProspects.length === 0} className={`px-2.5 py-1.5 rounded text-xs font-bold transition-all ${view === "map" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-white"}`}>🗺️</button>
                 </div>
 
-                {/* Save */}
-                {!saveResult ? (
-                  <button onClick={saveSearch} disabled={saving}
-                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold transition-colors flex items-center gap-1">
-                    {saving ? <><span className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />…</> : "💾 Sauvegarder"}
-                  </button>
-                ) : (
+                {/* Sauvegarde automatique — l'utilisateur n'a plus a cliquer.
+                    Affiche juste le statut courant. */}
+                {saveResult ? (
                   <span className="text-xs text-emerald-400 font-bold px-2.5 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    ✅ {saveResult.saved} new · {saveResult.skipped} déjà connus
+                    💾 Auto-sauvé · {saveResult.saved} nouveaux · {saveResult.skipped} déjà connus
+                  </span>
+                ) : saving ? (
+                  <span className="text-xs text-blue-400 font-bold px-2.5 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-1.5">
+                    <span className="w-3 h-3 border border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+                    Sauvegarde...
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-500 font-bold px-2.5 py-1.5 bg-slate-800/40 border border-slate-700/50 rounded-xl">
+                    💾 Auto-sauvegarde activée
                   </span>
                 )}
 
@@ -738,10 +837,15 @@ export default function CircuitTab() {
             {/* Map */}
             {view === "map" && (
               <div className="flex-1 p-4">
-                <LeafletMap prospects={mapProspects} onSelect={(p) => {
-                  const idx = restaurants.findIndex(r => r.name === p.name);
-                  if (idx >= 0) { setSelected(idx); setView("list"); }
-                }} />
+                <LeafletMap
+                  prospects={mapProspects}
+                  onSelect={(p) => {
+                    const idx = restaurants.findIndex(r => r.name === p.name);
+                    if (idx >= 0) { setSelected(idx); setView("list"); }
+                  }}
+                  onSearchHere={(center) => void searchInZone(center)}
+                  searching={loading}
+                />
               </div>
             )}
 
