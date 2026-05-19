@@ -31,7 +31,7 @@ const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 pl
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
-  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco">("contrat");
+  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia">("contrat");
   const [engagement, setEngagement] = useState<DurationKey>("12m");
   // Modules sélectionnés — "avis" est requis donc toujours inclus
   const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
@@ -222,6 +222,11 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     "tuto-avis": "Plaquette Tuto Avis",
     "tuto-commande": "Fiche Tuto Menu QR",
     "tuto-avis-eco": "Fiche Tuto Avis (Éco encre)",
+    "plaquette-avis-focus": "Plaquette Avis Google",
+    "plaquette-menu-focus": "Plaquette Menu QR",
+    "tuto-reservations": "Fiche Tuto Réservations",
+    "tuto-reservations-eco": "Fiche Tuto Réservations (Éco)",
+    "tuto-nova-ia": "Fiche Tuto Nova IA",
   };
 
   const saveToClasseur = async () => {
@@ -312,10 +317,15 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
                 <option value="plaquette-chaine">Plaquette — Chaîne / Groupe (sur devis)</option>
                 <option value="flyer">Flyer démo (A4, 2 par page, générique)</option>
                 <option value="tuto-avis">Plaquette Tuto Avis (guide A à Z — premiers avis Google)</option>
+                <option value="plaquette-avis-focus">Plaquette Avis Google (1 page, focus avis, N&B ok)</option>
+                <option value="plaquette-menu-focus">Plaquette Menu QR (1 page, focus commande, N&B ok)</option>
                 <option value="tuto-avis-eco">Fiche Tuto Avis — Éco encre (N&B, 1 page, à dupliquer)</option>
               </optgroup>
               <optgroup label="📘 Fiches tuto opérationnelles">
                 <option value="tuto-commande">Fiche Tuto Menu QR (guide commandes — N&B éco)</option>
+                <option value="tuto-reservations">Fiche Tuto Réservations (guide complet 2 pages couleur)</option>
+                <option value="tuto-reservations-eco">Fiche Tuto Réservations — Éco encre (1 page N&B)</option>
+                <option value="tuto-nova-ia">Fiche Tuto Nova IA (toutes les fonctions IA — 1 page éco)</option>
               </optgroup>
             </select>
           </div>

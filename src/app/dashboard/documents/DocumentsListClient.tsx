@@ -35,6 +35,11 @@ const TYPE_LABELS: Record<string, string> = {
   "tuto-avis": "Tuto Avis",
   "tuto-commande": "Tuto Menu QR",
   "tuto-avis-eco": "Tuto Avis Éco",
+  "plaquette-avis-focus": "Plaq. Avis",
+  "plaquette-menu-focus": "Plaq. Menu QR",
+  "tuto-reservations": "Tuto Réservations",
+  "tuto-reservations-eco": "Tuto Résa Éco",
+  "tuto-nova-ia": "Tuto Nova IA",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -55,6 +60,11 @@ const TYPE_COLORS: Record<string, string> = {
   "tuto-avis": "bg-teal-500/10 text-teal-400 border-teal-500/30",
   "tuto-commande": "bg-sky-500/10 text-sky-400 border-sky-500/30",
   "tuto-avis-eco": "bg-slate-500/10 text-slate-400 border-slate-500/30",
+  "plaquette-avis-focus": "bg-orange-500/10 text-orange-400 border-orange-500/30",
+  "plaquette-menu-focus": "bg-blue-500/10 text-blue-400 border-blue-500/30",
+  "tuto-reservations": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  "tuto-reservations-eco": "bg-gray-500/10 text-gray-400 border-gray-500/30",
+  "tuto-nova-ia": "bg-purple-500/10 text-purple-400 border-purple-500/30",
 };
 
 function euros(cents: number) {
@@ -76,17 +86,22 @@ const ALL_DOC_TYPES: { group: string; options: { value: string; label: string }[
     { value: "tarification", label: "Fiche Tarification & Suivi" },
   ]},
   { group: "Commercial", options: [
-    { value: "plaquette", label: "Plaquette Standard" },
+    { value: "plaquette", label: "Plaquette Standard A4" },
     { value: "plaquette-eco", label: "Plaquette Éco encre" },
     { value: "plaquette-premium", label: "Plaquette Premium" },
     { value: "plaquette-compact", label: "Plaquette Compacte A5" },
     { value: "plaquette-chaine", label: "Plaquette Chaîne" },
+    { value: "plaquette-avis-focus", label: "Plaquette Avis Google (1p)" },
+    { value: "plaquette-menu-focus", label: "Plaquette Menu QR (1p)" },
     { value: "flyer", label: "Flyer démo" },
-    { value: "tuto-avis", label: "Tuto Avis Google (complet)" },
-    { value: "tuto-avis-eco", label: "Tuto Avis Éco encre (1 page)" },
+    { value: "tuto-avis", label: "Tuto Avis Google (3 pages)" },
+    { value: "tuto-avis-eco", label: "Tuto Avis — Éco encre (1p)" },
   ]},
   { group: "Fiches tuto opérationnelles", options: [
-    { value: "tuto-commande", label: "Fiche Tuto Menu QR" },
+    { value: "tuto-commande", label: "Tuto Menu QR (2p N&B)" },
+    { value: "tuto-reservations", label: "Tuto Réservations (2p couleur)" },
+    { value: "tuto-reservations-eco", label: "Tuto Réservations — Éco encre (1p)" },
+    { value: "tuto-nova-ia", label: "Tuto Nova IA (1p éco)" },
   ]},
 ];
 

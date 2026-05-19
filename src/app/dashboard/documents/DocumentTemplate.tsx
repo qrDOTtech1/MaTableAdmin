@@ -289,7 +289,7 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco";
+export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia";
 
 // Ligne d'établissement pour les devis chaîne
 export type ChainEstablishment = {
@@ -366,7 +366,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       </div>
 
       {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
-      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && docType !== "tuto-commande" && docType !== "tuto-avis-eco" && (
+      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && docType !== "tuto-commande" && docType !== "tuto-avis-eco" && docType !== "plaquette-avis-focus" && docType !== "plaquette-menu-focus" && docType !== "tuto-reservations" && docType !== "tuto-reservations-eco" && docType !== "tuto-nova-ia" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
           {docType === "contrat" && "Contrat d'Abonnement — Plateforme MaTable.Pro"}
           {docType === "prestation" && "Contrat de Prestation — MaTable.Pro"}
@@ -1868,6 +1868,31 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         <TutoAvisSheet vendor={vendor} client={clientData} qrCodeDataUrl={tutoQrCode} />
       )}
 
+      {/* ===== PLAQUETTE AVIS FOCUS — 1 page axée Avis Google, N&B compatible ===== */}
+      {docType === "plaquette-avis-focus" && (
+        <PlaquetteAvisFocus vendor={vendor} client={clientData} docMeta={docMeta} />
+      )}
+
+      {/* ===== PLAQUETTE MENU FOCUS — 1 page axée Menu QR, N&B compatible ===== */}
+      {docType === "plaquette-menu-focus" && (
+        <PlaquetteMenuFocus vendor={vendor} client={clientData} docMeta={docMeta} />
+      )}
+
+      {/* ===== TUTO RÉSERVATIONS — Guide 2 pages couleur ===== */}
+      {docType === "tuto-reservations" && (
+        <TutoReservationsSheet vendor={vendor} client={clientData} />
+      )}
+
+      {/* ===== TUTO RÉSERVATIONS ÉCO — 1 page N&B ===== */}
+      {docType === "tuto-reservations-eco" && (
+        <TutoReservationsEcoSheet vendor={vendor} client={clientData} />
+      )}
+
+      {/* ===== TUTO NOVA IA — 1 page éco encre ===== */}
+      {docType === "tuto-nova-ia" && (
+        <TutoNovaIaSheet vendor={vendor} client={clientData} />
+      )}
+
       {/* ===== TUTO COMMANDE QR — Guide menu & commandes, N&B éco encre ===== */}
       {docType === "tuto-commande" && (
         <TutoCommandeSheet vendor={vendor} client={clientData} />
@@ -2409,6 +2434,468 @@ function TutoAvisSheet({ vendor, client, qrCodeDataUrl }: { vendor: Vendor; clie
 
   return <div style={{ fontFamily: "Arial, sans-serif" }}>{cover}{page2}{page3}</div>;
 
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLAQUETTE AVIS FOCUS — 1 page A4, pitch Avis Google uniquement, N&B friendly
+// ─────────────────────────────────────────────────────────────────────────────
+function PlaquetteAvisFocus({ vendor, client, docMeta }: { vendor: Vendor; client: ClientData; docMeta: DocMeta }) {
+  const bdr = "1px solid #e5e7eb";
+  return (
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
+      <A4Page first>
+        {/* Hero */}
+        <div style={{ borderBottom: "3px solid #000", paddingBottom: 14, marginBottom: 20 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 2, marginBottom: 4 }}>
+            {client.name ? `Préparé pour ${client.name}` : "MaTable.Pro · Module Avis Google"}
+          </div>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 900, color: "#0f172a", lineHeight: 1.05 }}>
+            Plus d'avis Google.<br /><span style={{ fontSize: 22, fontWeight: 700, color: "#374151" }}>Sans rien demander à votre équipe.</span>
+          </h1>
+          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#6b7280", lineHeight: 1.6, maxWidth: 460 }}>
+            Le module <strong>Avis Google</strong> de MaTable.Pro automatise 100 % du processus : QR code sur table → avis publié directement sur Google. Vos clients le font en 30 secondes entre le dessert et le café.
+          </p>
+        </div>
+
+        {/* 3 chiffres clés */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+          {[["70%", "des clients satisfaits ne laissent jamais d'avis (oubli)"], ["+9%", "de CA par étoile supplémentaire sur votre fiche Google"], ["30s", "suffisent à votre client pour laisser un avis complet"]].map(([v, l]) => (
+            <div key={v} style={{ border: "2px solid #0f172a", borderRadius: 8, padding: "12px", textAlign: "center" }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>{v}</div>
+              <div style={{ fontSize: 8.5, color: "#6b7280", marginTop: 5, lineHeight: 1.5 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Comment ça marche */}
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10, paddingBottom: 6, borderBottom: bdr }}>Comment ça marche — 3 étapes</div>
+          <div style={{ display: "flex", gap: 12 }}>
+            {[
+              { n: "1", t: "QR code sur chaque table", d: "Un autocollant ou support avec votre QR MaTable. Ou une carte NFC : le client pose son téléphone." },
+              { n: "2", t: "Le client laisse son avis", d: "Interface guidée en 30 secondes. Nova IA l'aide à formuler son avis — directement publié sur Google." },
+              { n: "3", t: "Il reçoit un bon de réduction", d: "Automatiquement après ★★★★★. Il revient. Vous fidélisez et récoltez des avis en continu." },
+            ].map(({ n, t, d }) => (
+              <div key={n} style={{ flex: 1, border: bdr, borderTop: "3px solid #000", borderRadius: 8, padding: "12px" }}>
+                <div style={{ fontSize: 22, fontWeight: 900, color: "#0f172a", marginBottom: 6 }}>{n}.</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 5 }}>{t}</div>
+                <div style={{ fontSize: 9, color: "#6b7280", lineHeight: 1.6 }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Ce qui est inclus */}
+        <div style={{ border: bdr, borderRadius: 8, padding: "14px 16px", marginBottom: 18 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>Ce qui est inclus dans le module Avis</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px" }}>
+            {[
+              "QR codes uniques par table et par serveur", "Publication directe sur Google Business",
+              "Bon de réduction automatique post-avis ★★★★★", "Réponses aux avis rédigées par Nova IA",
+              "Dashboard statistiques en temps réel", "Cartes NFC encodables depuis votre smartphone",
+              "Avis attribués par serveur (mode pro)", "Notifications instantanées à chaque nouvel avis",
+            ].map((f, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
+                <span style={{ fontWeight: 900, fontSize: 10, flexShrink: 0, marginTop: 1 }}>✓</span>
+                <span style={{ fontSize: 9, color: "#374151", lineHeight: 1.5 }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Témoignage fictif + tarif + CTA */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div style={{ border: bdr, borderRadius: 8, padding: "12px 14px", background: "#f9fafb" }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", marginBottom: 6 }}>"</div>
+            <div style={{ fontSize: 10, color: "#0f172a", lineHeight: 1.7, fontStyle: "italic" }}>
+              "On est passés de 47 à 180 avis Google en 3 mois, sans jamais avoir à demander quoi que ce soit à nos clients. Notre note est montée de 4,1 à 4,6. On reçoit plus de réservations depuis."
+            </div>
+            <div style={{ fontSize: 9, color: "#6b7280", marginTop: 8, fontWeight: 700 }}>— Gérant, restaurant 80 couverts</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ border: "2px solid #0f172a", borderRadius: 8, padding: "12px 14px", textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 4 }}>Module Avis Google</div>
+              <div style={{ fontSize: 26, fontWeight: 900, color: "#0f172a" }}>29 €<span style={{ fontSize: 12, fontWeight: 400 }}>/mois</span></div>
+              <div style={{ fontSize: 8, color: "#6b7280" }}>HT · Engagement 3 mois minimum</div>
+              <div style={{ fontSize: 8, color: "#6b7280", marginTop: 2 }}>Réductions jusqu'à −12 % sur 12 mois</div>
+            </div>
+            <div style={{ border: "2px dashed #374151", borderRadius: 8, padding: "10px 14px" }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 5 }}>Démo gratuite — 15 min</div>
+              <div style={{ fontSize: 9, color: "#374151", lineHeight: 1.8 }}>
+                {vendor.phone && <div>📞 {vendor.phone}</div>}
+                <div>✉ {vendor.email}</div>
+                <div>🌐 matable.pro</div>
+              </div>
+              {vendor.representant && <div style={{ fontSize: 8, color: "#6b7280", marginTop: 4 }}>Demandez {vendor.representant} · Réf. {docMeta.numero}</div>}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 12, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+          <span>{vendor.raisonSociale} · matable.pro · {vendor.email}</span>
+          <span>Module Avis Google · Fiche produit</span>
+        </div>
+      </A4Page>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLAQUETTE MENU FOCUS — 1 page A4, pitch Menu QR uniquement, N&B friendly
+// ─────────────────────────────────────────────────────────────────────────────
+function PlaquetteMenuFocus({ vendor, client, docMeta }: { vendor: Vendor; client: ClientData; docMeta: DocMeta }) {
+  const bdr = "1px solid #e5e7eb";
+  return (
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
+      <A4Page first>
+        {/* Hero */}
+        <div style={{ borderBottom: "3px solid #000", paddingBottom: 14, marginBottom: 20 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 2, marginBottom: 4 }}>
+            {client.name ? `Préparé pour ${client.name}` : "MaTable.Pro · Menu QR & Commande à table"}
+          </div>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 900, color: "#0f172a", lineHeight: 1.05 }}>
+            Vos clients commandent<br /><span style={{ fontSize: 22, fontWeight: 700, color: "#374151" }}>depuis leur téléphone. Sans appli.</span>
+          </h1>
+          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#6b7280", lineHeight: 1.6, maxWidth: 460 }}>
+            Le menu QR MaTable.Pro transforme votre carte en menu digital interactif. Scan → commande → paiement, le tout en moins de 2 minutes. Vos serveurs se concentrent sur l'accueil, pas sur la prise de commande.
+          </p>
+        </div>
+
+        {/* 3 chiffres */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+          {[["+22%", "de panier moyen avec un menu digital vs carte papier"], ["0", "application à télécharger — fonctionne via le navigateur"], ["2min", "de mise à jour de votre carte : modifiez les prix en direct"]].map(([v, l]) => (
+            <div key={v} style={{ border: "2px solid #0f172a", borderRadius: 8, padding: "12px", textAlign: "center" }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>{v}</div>
+              <div style={{ fontSize: 8.5, color: "#6b7280", marginTop: 5, lineHeight: 1.5 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Avantages */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 18 }}>
+          {[
+            { t: "Pour votre salle", items: ["Commandes directes sans attendre le serveur", "Paiement à table depuis le téléphone", "Gestion de l'affluence sans stress", "Allongement naturel de l'addition (suggestions IA)"] },
+            { t: "Pour votre cuisine", items: ["Commandes affichées sur écran cuisine en temps réel", "Zéro erreur de transmission", "Suivi du statut : En préparation → Prête → Servie", "Historique complet par service"] },
+          ].map(({ t, items }) => (
+            <div key={t} style={{ border: bdr, borderTop: "3px solid #000", borderRadius: 8, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>{t}</div>
+              {items.map((item, i) => (
+                <div key={i} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+                  <span style={{ fontWeight: 900, flexShrink: 0, fontSize: 10 }}>✓</span>
+                  <span style={{ fontSize: 9, color: "#374151", lineHeight: 1.5 }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Ce qui est inclus */}
+        <div style={{ border: bdr, borderRadius: 8, padding: "12px 16px", marginBottom: 18 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 8, textTransform: "uppercase", letterSpacing: 1 }}>Tout inclus dans le module Menu QR</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "4px 16px" }}>
+            {["Carte illimitée (plats, photos, catégories)", "QR unique par table", "Écran cuisine temps réel", "Mise à jour instantanée de la carte", "Statistiques de commandes", "Cartes NFC optionnelles", "Suggestions IA en fin de commande", "Compatible iPhone & Android", "Paiement intégré (option)"].map((f, i) => (
+              <div key={i} style={{ display: "flex", gap: 5, alignItems: "flex-start" }}>
+                <span style={{ fontWeight: 900, fontSize: 9, flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 8.5, color: "#374151", lineHeight: 1.5 }}>{f}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tarif + CTA */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div style={{ border: "2px solid #0f172a", borderRadius: 8, padding: "14px", textAlign: "center" }}>
+            <div style={{ fontSize: 9, color: "#6b7280", marginBottom: 4 }}>Module QR & Commande</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: "#0f172a" }}>49 €<span style={{ fontSize: 12, fontWeight: 400 }}>/mois</span></div>
+            <div style={{ fontSize: 8, color: "#6b7280" }}>HT · Tables illimitées</div>
+            <div style={{ fontSize: 8, color: "#6b7280", marginTop: 3, lineHeight: 1.5 }}>Réductions jusqu'à −12 % sur 12 mois<br />Cumulable avec le module Avis (−10 %)</div>
+          </div>
+          <div style={{ border: "2px dashed #374151", borderRadius: 8, padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>Démo en direct — sur votre téléphone</div>
+            <div style={{ fontSize: 9, color: "#374151", lineHeight: 1.9 }}>
+              {vendor.phone && <div>📞 {vendor.phone}</div>}
+              <div>✉ {vendor.email}</div>
+              <div>🌐 matable.pro</div>
+            </div>
+            {vendor.representant && <div style={{ fontSize: 8, color: "#6b7280", marginTop: 4 }}>Demandez {vendor.representant} · Réf. {docMeta.numero}</div>}
+          </div>
+        </div>
+
+        <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 12, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+          <span>{vendor.raisonSociale} · matable.pro · {vendor.email}</span>
+          <span>Module Menu QR · Fiche produit</span>
+        </div>
+      </A4Page>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TUTO RÉSERVATIONS — Guide 2 pages couleur
+// ─────────────────────────────────────────────────────────────────────────────
+function TutoReservationsSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  const accent = "#6366f1"; // indigo
+  const bdr = "1px solid #e5e7eb";
+
+  const SR = ({ num, title, items }: { num: string; title: string; items: string[] }) => (
+    <div style={{ display: "flex", gap: 12, padding: "12px 14px", border: bdr, borderLeft: `4px solid ${accent}`, borderRadius: 8, marginBottom: 10, pageBreakInside: "avoid" }}>
+      <div style={{ width: 32, height: 32, borderRadius: "50%", background: accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{num}</div>
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "#0f172a", marginBottom: 5 }}>{title}</div>
+        <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+          {items.map((t, i) => <li key={i} style={{ fontSize: 9.5, color: "#374151", lineHeight: 1.6, paddingLeft: 10, position: "relative" }}>
+            <span style={{ position: "absolute", left: 0, color: accent, fontWeight: 700 }}>›</span>{t}
+          </li>)}
+        </ul>
+      </div>
+    </div>
+  );
+
+  const page1 = (
+    <A4Page first>
+      <div style={{ background: `linear-gradient(135deg, #eef2ff 0%, #fff 100%)`, border: `2px solid ${accent}`, borderRadius: 12, padding: "18px 20px", marginBottom: 20 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: accent, textTransform: "uppercase", letterSpacing: 2, marginBottom: 5 }}>Guide Réservations · MaTable.Pro</div>
+        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>Gérez vos réservations en ligne<br /><span style={{ color: accent }}>sans décrocher le téléphone.</span></h1>
+        <p style={{ margin: "10px 0 0", fontSize: 10, color: "#475569", lineHeight: 1.7, maxWidth: 440 }}>Le module Réservations de MaTable.Pro ouvre un calendrier en ligne 24h/24. Vos clients réservent directement, avec acompte Stripe et confirmation automatique. Fini les no-shows.</p>
+        {client.name && <div style={{ marginTop: 8, fontSize: 9, color: "#6b7280" }}>Préparé pour <strong>{client.name}</strong></div>}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 18 }}>
+        {[["−80%", "de no-shows avec acompte Stripe obligatoire"], ["24h/24", "votre calendrier accepte des réservations même la nuit"], ["0 appel", "pour les réservations simples — tout en ligne"]].map(([v, l]) => (
+          <div key={v} style={{ border: `1px solid ${accent}30`, borderTop: `3px solid ${accent}`, borderRadius: 8, padding: "10px", textAlign: "center", background: "#f5f3ff" }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: accent, lineHeight: 1 }}>{v}</div>
+            <div style={{ fontSize: 8.5, color: "#6b7280", marginTop: 5, lineHeight: 1.5 }}>{l}</div>
+          </div>
+        ))}
+      </div>
+
+      <SR num="1" title="Activer le module et paramétrer votre agenda"
+        items={["Depuis le dashboard MaTable.Pro → Réservations → Paramètres.", "Définissez vos créneaux horaires (ex : 12h–14h30 / 19h–22h) et la durée moyenne d'un repas.", "Indiquez votre capacité (nombre de couverts max par service) et le nombre de couverts minimum par réservation.", "Activez ou désactivez les réservations pour des jours spécifiques (jours fériés, fermeture exceptionnelle)."]}
+      />
+      <SR num="2" title="Configurer l'acompte anti no-show (Stripe)"
+        items={["Dans Réservations → Paiement, connectez votre compte Stripe (5 min — guidé pas à pas).", "Définissez le montant de l'acompte (ex : 10 € par personne ou 20 % du panier estimé).", "L'acompte est prélevé automatiquement à la confirmation. En cas de no-show, vous le conservez.", "Politique d'annulation personnalisable : ex. annulation gratuite jusqu'à 24h avant la réservation."]}
+      />
+      <SR num="3" title="Partager le lien de réservation"
+        items={["Copiez votre lien de réservation personnalisé depuis le dashboard (bouton Copier le lien).", "Ajoutez-le sur votre fiche Google, votre page Instagram, Facebook, votre site web, et vos stories.", "Vous pouvez aussi imprimer un QR code de réservation et le placer en devanture ou en terrasse.", "Astuce : ajoutez le lien en bio Instagram — ça représente 30 % des réservations en ligne."]}
+      />
+
+      <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 4, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+        <span>{vendor.raisonSociale} · matable.pro</span><span>Page 1 / 2</span>
+      </div>
+    </A4Page>
+  );
+
+  const page2 = (
+    <A4Page>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: `2px solid ${accent}` }}>
+        <div style={{ fontSize: 14, fontWeight: 900, color: "#0f172a" }}>Gérer les réservations au quotidien</div>
+        <div style={{ marginLeft: "auto", fontSize: 9, color: "#6b7280" }}>Réservations · MaTable.Pro</div>
+      </div>
+
+      <SR num="4" title="Valider, modifier ou refuser une réservation"
+        items={["Toutes les réservations arrivent dans Réservations → À venir, avec heure, couverts, nom et téléphone.", "Validez ou refusez en 1 clic — le client reçoit un email automatique de confirmation ou d'annulation.", "Modifiez l'heure ou le nombre de couverts directement depuis la fiche de réservation.", "En cas de surbooking, MaTable.Pro vous alerte avant que le problème n'arrive."]}
+      />
+      <SR num="5" title="Gérer les no-shows et les annulations"
+        items={["Si un client ne se présente pas, marquez-le comme no-show — l'acompte reste acquis automatiquement.", "Pour les annulations respectant votre délai : remboursement déclenché en 1 clic depuis la fiche.", "Vous pouvez bloquer un client récidiviste depuis Réservations → Clients → Ajouter à la liste noire.", "Statistiques no-shows disponibles dans Réservations → Rapport mensuel."]}
+      />
+      <SR num="6" title="Analyser vos données et optimiser vos créneaux"
+        items={["Dans Réservations → Statistiques : taux de remplissage, créneaux les plus demandés, recettes acomptes.", "Identifiez vos heures creuses et proposez des offres spéciales sur ces créneaux depuis le module Nova IA.", "Exportez le récapitulatif mensuel en PDF pour votre comptable."]}
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 6 }}>
+        <div style={{ border: bdr, borderRadius: 8, padding: "12px 14px" }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Checklist de mise en service</div>
+          {["Module activé + créneaux configurés", "Stripe connecté + acompte défini", "Lien de réservation partagé (Google, Instagram)", "QR réservation imprimé et posé en devanture", "Test complet : réserver + annuler + acompte"].map((t, i) => (
+            <div key={i} style={{ display: "flex", gap: 6, marginBottom: 5 }}>
+              <div style={{ width: 13, height: 13, border: `1.5px solid ${accent}`, borderRadius: 3, flexShrink: 0, marginTop: 1 }} />
+              <div style={{ fontSize: 9, color: "#374151" }}>{t}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ background: "#f5f3ff", border: `1px solid ${accent}30`, borderRadius: 8, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: accent, marginBottom: 6 }}>Bon à savoir</div>
+            {["Aucune commission sur les réservations — vous gardez 100 % de l'acompte.", "Compatible Google Reserve (si votre fiche GMB l'autorise).", "Les réservations sont synchronisées en temps réel sur tous vos appareils."].map((t, i) => (
+              <div key={i} style={{ fontSize: 9, color: "#374151", lineHeight: 1.6, marginBottom: 3 }}>· {t}</div>
+            ))}
+          </div>
+          <div style={{ border: bdr, borderRadius: 8, padding: "10px 14px" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 5 }}>Support</div>
+            <div style={{ fontSize: 9, color: "#374151", lineHeight: 1.8 }}>
+              ✉ support@matable.pro<br />
+              🌐 matable.pro{vendor.phone ? `\n📱 ${vendor.phone}` : ""}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+        <span>{vendor.raisonSociale} · matable.pro · {vendor.email}</span><span>Page 2 / 2</span>
+      </div>
+    </A4Page>
+  );
+
+  return <div style={{ fontFamily: "Arial, sans-serif" }}>{page1}{page2}</div>;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TUTO RÉSERVATIONS ÉCO — 1 page A4 N&B ultra léger
+// ─────────────────────────────────────────────────────────────────────────────
+function TutoReservationsEcoSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  const bdr = "1px solid #d1d5db";
+  return (
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
+      <A4Page first>
+        <div style={{ borderBottom: "2px solid #000", paddingBottom: 10, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 2, marginBottom: 3 }}>Guide Réservations · Éco encre</div>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#0f172a" }}>Module Réservations — Prise en main</h1>
+          </div>
+          <div style={{ textAlign: "right", fontSize: 9, color: "#6b7280" }}>
+            <div style={{ fontSize: 13, fontWeight: 900, color: "#0f172a" }}>MaTable.Pro</div>
+            {client.name && <div>{client.name}</div>}
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {[
+            { n: "1", t: "Activer + configurer l'agenda", items: ["Dashboard → Réservations → Paramètres.", "Définissez vos créneaux horaires et durée moyenne d'un repas.", "Indiquez le nombre de couverts max par service."] },
+            { n: "2", t: "Connecter Stripe (acompte)", items: ["Réservations → Paiement → Connecter Stripe (5 min).", "Définissez le montant de l'acompte par personne.", "Politique d'annulation : délai de remboursement gratuit."] },
+            { n: "3", t: "Partager le lien de réservation", items: ["Copiez le lien depuis le dashboard et partagez-le sur Google, Instagram, Facebook.", "Imprimez un QR code réservation pour votre devanture.", "Ajoutez-le en bio Instagram pour capter les réservations directes."] },
+            { n: "4", t: "Gérer les réservations au quotidien", items: ["Réservations → À venir : validez, modifiez, refusez.", "No-show : marquez le client → l'acompte reste automatiquement.", "Annulation dans les délais : remboursement en 1 clic."] },
+            { n: "5", t: "Analyser et optimiser", items: ["Réservations → Statistiques : taux de remplissage, créneaux populaires.", "Identifiez les heures creuses → lancez des offres spéciales.", "Export PDF mensuel disponible pour la comptabilité."] },
+          ].map(({ n, t, items }) => (
+            <div key={n} style={{ border: bdr, borderLeft: "3px solid #000", borderRadius: 6, padding: "10px 12px" }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", border: "2px solid #000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, flexShrink: 0 }}>{n}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a" }}>{t}</div>
+              </div>
+              {items.map((item, i) => <div key={i} style={{ fontSize: 9, color: "#374151", lineHeight: 1.6, paddingLeft: 8, position: "relative" }}>
+                <span style={{ position: "absolute", left: 0, color: "#6b7280" }}>›</span>{item}
+              </div>)}
+            </div>
+          ))}
+          {/* Checklist 6ème cellule */}
+          <div style={{ border: bdr, borderRadius: 6, padding: "10px 12px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Checklist mise en service</div>
+            {["Module activé + créneaux configurés", "Stripe connecté + acompte défini", "Lien partagé (Google, Instagram, site)", "QR réservation posé en devanture", "Test complet réservation → annulation"].map((t, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                <div style={{ width: 13, height: 13, border: "1px solid #374151", borderRadius: 2, flexShrink: 0, marginTop: 1 }} />
+                <div style={{ fontSize: 9, color: "#374151" }}>{t}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ flex: 1, border: bdr, borderRadius: 6, padding: "10px 14px" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>Bons à savoir</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px" }}>
+              {["0 % de commission sur les réservations", "Compatible Google Reserve", "Synchronisation temps réel multi-appareils", "Blocage des no-shows récidivistes"].map((t, i) => (
+                <div key={i} style={{ fontSize: 8.5, color: "#374151", lineHeight: 1.5 }}>✓ {t}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{ border: bdr, borderRadius: 6, padding: "10px 14px", minWidth: 150 }}>
+            <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 4 }}>Contact</div>
+            <div style={{ fontSize: 9, color: "#374151", lineHeight: 1.8 }}>✉ support@matable.pro<br />🌐 matable.pro{vendor.phone ? `\n📱 ${vendor.phone}` : ""}</div>
+          </div>
+        </div>
+
+        <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+          <span>{vendor.raisonSociale} · matable.pro — Éco encre</span><span>1 / 1</span>
+        </div>
+      </A4Page>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TUTO NOVA IA — 1 page A4 éco encre, guide complet de l'assistant IA
+// ─────────────────────────────────────────────────────────────────────────────
+function TutoNovaIaSheet({ vendor, client }: { vendor: Vendor; client: ClientData }) {
+  const bdr = "1px solid #d1d5db";
+  return (
+    <div style={{ fontFamily: "Arial, sans-serif" }}>
+      <A4Page first>
+        <div style={{ borderBottom: "2px solid #000", paddingBottom: 10, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 2, marginBottom: 3 }}>Guide Nova IA · Éco encre</div>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#0f172a" }}>Votre assistant IA MaTable — Nova</h1>
+            <div style={{ fontSize: 10, color: "#6b7280", marginTop: 3 }}>Tout ce que Nova peut faire pour vous, en un coup d'œil</div>
+          </div>
+          <div style={{ textAlign: "right", fontSize: 9, color: "#6b7280" }}>
+            <div style={{ fontSize: 13, fontWeight: 900, color: "#0f172a" }}>MaTable.Pro</div>
+            {client.name && <div>{client.name}</div>}
+          </div>
+        </div>
+
+        {/* 3 colonnes de fonctionnalités */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {[
+            { t: "Avis & réputation", items: ["Réponses aux avis Google personnalisées — relisez et publiez en 1 clic.", "Détection des avis négatifs : alerte immédiate + suggestion de réponse de crise.", "Analyse de sentiment sur vos avis (positifs, neutres, négatifs) avec tendances."] },
+            { t: "Menu & descriptions", items: ["Magic Scan : photographiez une carte papier → Nova la transcrit automatiquement.", "Génération de descriptions attrayantes pour chaque plat à partir du nom seul.", "Traduction de la carte en anglais, espagnol, ou autre langue en 1 clic."] },
+            { t: "Planning & opérations", items: ["Génération automatique des plannings du personnel selon la charge prévisionnelle.", "Prédiction des heures de pointe à partir de l'historique des commandes.", "Résumé quotidien envoyé par e-mail chaque soir (CA, couverts, incidents)."] },
+          ].map(({ t, items }) => (
+            <div key={t} style={{ border: bdr, borderLeft: "3px solid #000", borderRadius: 6, padding: "10px 12px" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 7 }}>{t}</div>
+              {items.map((item, i) => <div key={i} style={{ fontSize: 9, color: "#374151", lineHeight: 1.6, paddingLeft: 8, position: "relative", marginBottom: 3 }}>
+                <span style={{ position: "absolute", left: 0, color: "#6b7280" }}>›</span>{item}
+              </div>)}
+            </div>
+          ))}
+        </div>
+
+        {/* 2e rangée */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+          {[
+            { t: "Finance & comptabilité", items: ["Tableau de bord financier : CA, charges, marges, seuil de rentabilité.", "Alertes automatiques si une dépense est anormalement haute.", "Rapport mensuel exportable en PDF ou CSV pour votre comptable."] },
+            { t: "Stock & approvisionnement", items: ["Alerte rupture de stock basée sur la consommation réelle des 30 derniers jours.", "Commandes automatiques suggérées aux fournisseurs (devis pré-remplis).", "Inventaire assisté : scan des codes-barres ou saisie vocale."] },
+            { t: "Prospection & NovaAgent", items: ["NovaAgent appelle vos prospects restaurants en voix naturelle.", "Simulation d'appel pour s'entraîner avant un vrai appel.", "Résumé post-appel : intérêt détecté, objections, prochaine action suggérée."] },
+          ].map(({ t, items }) => (
+            <div key={t} style={{ border: bdr, borderLeft: "3px solid #000", borderRadius: 6, padding: "10px 12px" }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#0f172a", marginBottom: 7 }}>{t}</div>
+              {items.map((item, i) => <div key={i} style={{ fontSize: 9, color: "#374151", lineHeight: 1.6, paddingLeft: 8, position: "relative", marginBottom: 3 }}>
+                <span style={{ position: "absolute", left: 0, color: "#6b7280" }}>›</span>{item}
+              </div>)}
+            </div>
+          ))}
+        </div>
+
+        {/* Comment y accéder + raccourcis */}
+        <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ flex: 2, border: bdr, borderRadius: 6, padding: "10px 14px" }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: "#0f172a", marginBottom: 8 }}>Accéder à Nova depuis le dashboard</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 20px" }}>
+              {[
+                ["Avis → Nova IA", "Répondre aux avis Google"], ["Menu → Magic Scan", "Importer une carte papier"],
+                ["Planning → Générer", "Planning IA de la semaine"], ["Finance → Rapport", "Rapport mensuel auto"],
+                ["Stock → Alertes", "Ruptures et commandes IA"], ["Prospection → NovaAgent", "Appels IA automatisés"],
+              ].map(([path, label], i) => (
+                <div key={i} style={{ fontSize: 8.5, color: "#374151", lineHeight: 1.5 }}>
+                  <strong style={{ color: "#0f172a" }}>{path}</strong> — {label}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ border: bdr, borderRadius: 6, padding: "10px 12px", flex: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 4 }}>Conseil d'usage</div>
+              <div style={{ fontSize: 8.5, color: "#374151", lineHeight: 1.6 }}>Nova apprend de votre établissement. Plus vous l'utilisez, plus ses suggestions sont précises. Commencez par la réponse aux avis — c'est immédiat et visible.</div>
+            </div>
+            <div style={{ border: bdr, borderRadius: 6, padding: "10px 12px" }}>
+              <div style={{ fontSize: 9, fontWeight: 800, marginBottom: 3 }}>Support</div>
+              <div style={{ fontSize: 8.5, color: "#374151", lineHeight: 1.7 }}>✉ support@matable.pro<br />🌐 matable.pro</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 10, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
+          <span>{vendor.raisonSociale} · matable.pro — Guide Nova IA éco encre</span><span>1 / 1</span>
+        </div>
+      </A4Page>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
