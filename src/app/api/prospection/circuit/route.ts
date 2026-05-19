@@ -233,10 +233,48 @@ const CITY_SECTORS: Record<string, string[]> = {
   ],
 };
 
+// Normalise une chaîne : minuscules + suppression des accents (NFD + drop combining marks U+0300..U+036F)
+// IMPORTANT : on utilise le code Unicode explicite \u0300-\u036F au lieu d'une plage litterale
+// (qui ne marche pas selon l'encodage du fichier source).
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")  // combining diacriticals (accents)
+    .replace(/[''`]/g, "'")
+    .replace(/[^a-z0-9\s'-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Découpe en "mots" (alphanumériques) pour éviter les faux matches sur substrings
+function tokenize(s: string): string[] {
+  return norm(s).split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+// Match strict : la clé de CITY_SECTORS doit etre composee de mots ENTIERS presents
+// dans le nom de ville. Empeche "paris" de matcher "Cormeilles-en-Parisis".
+// Bonus : exige aussi qu'il n'y ait pas de tokens "decalants" comme "saint", "sur",
+// "en" entre les mots de la cle (sinon "Saint-Paul" matche "paul" qui n'est pas une cle).
 function getCitySectors(city: string): string[] | null {
-  const norm = city.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const tokens = tokenize(city);
+  if (tokens.length === 0) return null;
+
   for (const [key, sectors] of Object.entries(CITY_SECTORS)) {
-    if (norm.includes(key)) return sectors;
+    const keyTokens = tokenize(key);
+    if (keyTokens.length === 0) continue;
+
+    // Tous les tokens de la cle doivent etre exactement presents et CONSECUTIFS
+    // pour eviter les faux matches type "paris" dans "Cormeilles-en-Parisis".
+    let matched = false;
+    for (let i = 0; i <= tokens.length - keyTokens.length; i++) {
+      let ok = true;
+      for (let j = 0; j < keyTokens.length; j++) {
+        if (tokens[i + j] !== keyTokens[j]) { ok = false; break; }
+      }
+      if (ok) { matched = true; break; }
+    }
+    if (matched) return sectors;
   }
   return null;
 }
@@ -324,11 +362,33 @@ export async function POST(req: Request) {
     const isLargeCity = !!sectors;
     const hasMoreSectors = sectors ? page + 1 < sectors.length : false;
 
-    // Detect if city is likely French (for phone format hints)
-    const frenchCityHints = ["paris","lyon","marseille","toulouse","nice","nantes","strasbourg","montpellier","bordeaux","rennes","reims","le havre","saint-etienne","toulon","grenoble","dijon","angers","nîmes","villeurbanne","le mans","aix-en-provence","clermont","brest","limoges","amiens","perpignan","metz","besançon","orléans","rouen","mulhouse","caen","nancy","argenteuil","montreuil","roubaix","tourcoing","dunkerque","avignon","poitiers","pau","calais","mérignac","versailles","saint-denis","saint-paul","aubervilliers","aulnay","champigny"];
-    const cityLower = city.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-    const isFrench = frenchCityHints.some(h => cityLower.includes(h))
-      || /\b(0[1-9])(\s?\d{2}){4}\b/.test(city);
+    // Détection "ville française" élargie :
+    //  - liste de ~80 chefs-lieux + grandes communes (tokens entiers, pas substring)
+    //  - regex code postal FR 5 chiffres ou département présent dans le champ
+    //  - regex téléphone FR
+    const frenchCityHints = [
+      "paris","lyon","marseille","toulouse","nice","nantes","strasbourg","montpellier","bordeaux",
+      "rennes","reims","le havre","saint etienne","saint-etienne","toulon","grenoble","dijon",
+      "angers","nimes","villeurbanne","le mans","aix en provence","aix-en-provence","clermont",
+      "clermont ferrand","clermont-ferrand","brest","limoges","amiens","perpignan","metz",
+      "besancon","orleans","rouen","mulhouse","caen","nancy","argenteuil","montreuil","roubaix",
+      "tourcoing","dunkerque","avignon","poitiers","pau","calais","merignac","versailles",
+      "saint denis","saint-denis","saint paul","saint-paul","aubervilliers","aulnay","champigny",
+      "evreux","la rochelle","cherbourg","quimper","lorient","valence","colmar","beauvais",
+      "annecy","chambery","angouleme","saint nazaire","saint-nazaire","creteil","nanterre",
+      "boulogne","courbevoie","colombes","asnieres","rueil","levallois","issy","vincennes",
+      "neuilly","antibes","cannes","ajaccio","bastia","tarbes","bayonne","biarritz","arras",
+      "lille","tours","villepinte","sarcelles","tremblay","drancy","noisy","sevran"
+    ];
+    const cityTokens = tokenize(city);
+    const isFrench =
+      frenchCityHints.some(h => {
+        const ht = tokenize(h);
+        return ht.every(t => cityTokens.includes(t));
+      }) ||
+      /\b\d{5}\b/.test(city) ||                          // code postal FR 5 chiffres
+      /\b(fr|france)\b/i.test(city) ||
+      /\b(0[1-9])(\s?\d{2}){4}\b/.test(city);            // téléphone FR
 
     // Load already-saved prospects for this city from DB (avoid duplicates)
     const dbNames: string[] = [];
@@ -357,13 +417,20 @@ export async function POST(req: Request) {
       ? `\n\nDO NOT include these restaurants already in our database:\n${allExcluded.slice(0, 60).map(n => `- ${n}`).join("\n")}`
       : "";
 
-    const prompt = `You are a commercial prospecting expert for the restaurant industry. Search in real time on Google Maps, Yelp, TripAdvisor, and local directories to find exactly 15 independent restaurants ${zone}.
+    // Demande FLEXIBLE : "jusqu'a 15", "au moins 5" → Perplexity n'echoue plus sur les
+    // petites villes ou il n'y a pas 15 restaurants. Cle anti-zero-results.
+    const targetCount = currentSector ? 15 : 12;
+    const minCount = currentSector ? 8 : 5;
+
+    const prompt = `You are a commercial prospecting expert for the restaurant industry. Search in real time on Google Maps, Yelp, TripAdvisor, and local directories to find independent restaurants ${zone}.
 
 ABSOLUTE RULES:
 1. INDEPENDENT restaurants only — no chains (McDonald's, KFC, Pizza Hut, Starbucks, Subway, etc.)
 2. Restaurants ACTUALLY OPEN right now
 3. For EACH restaurant you MUST find and provide the phone number — check Google Maps, Yelp, TripAdvisor, the restaurant's website. Phone is CRITICAL.
 4. Prioritize restaurants without a professional website (better sales potential for our software)${excludeBlock}
+
+QUANTITY: aim for ${targetCount} restaurants; if the city/area is small, return at LEAST ${minCount} — but NEVER return an empty array. If you cannot find ${minCount}, return what you find (even 3 or 4). DO NOT invent fake restaurants.
 
 REQUIRED FIELDS for each restaurant — strict JSON:
 - "name": exact name as shown on Google Maps
@@ -382,55 +449,110 @@ REQUIRED FIELDS for each restaurant — strict JSON:
 IMPORTANT: Reply ONLY with the JSON array. Zero text before or after. Zero markdown. Zero backticks.
 Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","city":"${city}","phone":"+1 310 000 0000","website":null,"google_rating":4.2,"reviews_count":187,"category":"French bistro","description":"Cozy French bistro with homemade specials.","lat":34.0522,"lng":-118.2437,"google_maps_url":"https://maps.google.com/?cid=..."}]`;
 
-    const pRes = await fetch("https://api.perplexity.ai/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "sonar",
-        messages: [
-          {
-            role: "system",
-            content: "You are a commercial prospecting expert for the restaurant industry worldwide. You perform real-time web searches (Google Maps, Yelp, TripAdvisor, local directories) to find accurate, up-to-date data on independent restaurants anywhere in the world. You reply ONLY with valid JSON arrays, no text around it.",
-          },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.1,
-        max_tokens: 8000,
-      }),
-    });
+    // ─── Appel Perplexity avec retry + fallback de modele ─────────────────────
+    // Strategie :
+    //   1. Tentative 1 : sonar-pro (recherche plus profonde, meilleur recall sur petites villes)
+    //   2. Si <minCount resultats OU erreur reseau OU JSON vide : retry sur sonar-pro avec temp legerement plus haute
+    //   3. Si toujours pauvre : fallback sur sonar standard
+    async function callPerplexity(model: string, temperature: number, timeoutMs: number): Promise<{ content: string; citations: any[] } | null> {
+      const ctl = AbortSignal.timeout(timeoutMs);
+      try {
+        const res = await fetch("https://api.perplexity.ai/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: "system",
+                content: "You are a commercial prospecting expert for the restaurant industry worldwide. You perform real-time web searches (Google Maps, Yelp, TripAdvisor, local directories) to find accurate, up-to-date data on independent restaurants anywhere in the world. You reply ONLY with valid JSON arrays, no text around it. If the area is small, return fewer restaurants — never an empty array.",
+              },
+              { role: "user", content: prompt },
+            ],
+            temperature,
+            max_tokens: 8000,
+          }),
+          signal: ctl,
+        });
 
-    if (!pRes.ok) {
-      const errText = await pRes.text();
-      return NextResponse.json({ error: "perplexity_error", message: errText }, { status: 502 });
+        if (!res.ok) {
+          const errText = await res.text();
+          console.error(`[circuit] ${model} HTTP ${res.status}:`, errText.slice(0, 300));
+          return null;
+        }
+        const data = await res.json();
+        const content: string = data.choices?.[0]?.message?.content ?? "[]";
+        return { content, citations: data.citations ?? [] };
+      } catch (err: any) {
+        console.error(`[circuit] ${model} error:`, err?.message ?? err);
+        return null;
+      }
     }
 
-    const pData = await pRes.json();
-    const content: string = pData.choices?.[0]?.message?.content ?? "[]";
-    console.log("[circuit] raw content length:", content.length, "| first 300:", content.slice(0, 300));
+    // Parser robuste reutilisable
+    function tryParse(content: string): CircuitRestaurant[] {
+      const attempts = [
+        () => JSON.parse(content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim()),
+        () => { const m = content.match(/\[[\s\S]*\]/); if (!m) throw new Error("no array"); return JSON.parse(m[0]); },
+        () => { const all = [...content.matchAll(/\[[\s\S]*?\]/g)]; if (!all.length) throw new Error("no array"); return JSON.parse(all[all.length - 1][0]); },
+        () => { const s = content.indexOf("["); const e = content.lastIndexOf("]"); if (s === -1 || e === -1) throw new Error("no brackets"); return JSON.parse(content.slice(s, e + 1)); },
+      ];
+      for (const attempt of attempts) {
+        try {
+          const parsed = attempt();
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch {}
+      }
+      return [];
+    }
 
+    // Tentative 1 : sonar-pro
+    let attemptLogs: string[] = [];
+    let citations: any[] = [];
     let restaurants: CircuitRestaurant[] = [];
 
-    // Ultra-robust JSON extraction
-    const parseAttempts = [
-      // 1. Direct after stripping markdown fences
-      () => JSON.parse(content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim()),
-      // 2. First [...] block (greedy)
-      () => { const m = content.match(/\[[\s\S]*\]/); if (!m) throw new Error("no array"); return JSON.parse(m[0]); },
-      // 3. Last [...] block (sometimes there's text before)
-      () => { const all = [...content.matchAll(/\[[\s\S]*?\]/g)]; if (!all.length) throw new Error("no array"); return JSON.parse(all[all.length - 1][0]); },
-      // 4. Find first [ and last ] and extract
-      () => { const s = content.indexOf("["); const e = content.lastIndexOf("]"); if (s === -1 || e === -1) throw new Error("no brackets"); return JSON.parse(content.slice(s, e + 1)); },
-    ];
+    const r1 = await callPerplexity("sonar-pro", 0.15, 60000);
+    if (r1) {
+      restaurants = tryParse(r1.content);
+      citations = r1.citations;
+      attemptLogs.push(`sonar-pro(0.15) → ${restaurants.length}`);
+      console.log("[circuit] sonar-pro raw len:", r1.content.length, "parsed:", restaurants.length);
+    } else {
+      attemptLogs.push("sonar-pro(0.15) → network_error");
+    }
 
-    for (const attempt of parseAttempts) {
-      try {
-        const parsed = attempt();
-        if (Array.isArray(parsed) && parsed.length > 0) { restaurants = parsed; break; }
-      } catch {}
+    // Tentative 2 : retry sonar-pro avec temp plus haute si trop peu de resultats
+    if (restaurants.length < minCount) {
+      const r2 = await callPerplexity("sonar-pro", 0.35, 60000);
+      if (r2) {
+        const arr = tryParse(r2.content);
+        if (arr.length > restaurants.length) {
+          restaurants = arr;
+          citations = r2.citations;
+        }
+        attemptLogs.push(`sonar-pro(0.35) → ${arr.length}`);
+      } else {
+        attemptLogs.push("sonar-pro(0.35) → network_error");
+      }
+    }
+
+    // Tentative 3 : fallback sonar standard
+    if (restaurants.length < Math.max(3, Math.floor(minCount / 2))) {
+      const r3 = await callPerplexity("sonar", 0.2, 45000);
+      if (r3) {
+        const arr = tryParse(r3.content);
+        if (arr.length > restaurants.length) {
+          restaurants = arr;
+          citations = r3.citations;
+        }
+        attemptLogs.push(`sonar(0.2) → ${arr.length}`);
+      } else {
+        attemptLogs.push("sonar(0.2) → network_error");
+      }
     }
 
     if (!Array.isArray(restaurants)) restaurants = [];
-    console.log("[circuit] parsed restaurants:", restaurants.length);
+    console.log("[circuit] FINAL after retries:", restaurants.length, "| attempts:", attemptLogs.join(" | "));
 
     // Normalize phone numbers — support French + international formats
     restaurants = restaurants.map(r => {
@@ -490,7 +612,13 @@ Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","c
       nextPage: page + 1,
       nextSector: sectors ? sectors[(page + 1) % sectors.length] : null,
       totalSectors: sectors?.length ?? 1,
-      citations: pData.citations ?? [],
+      citations,
+      attempts: attemptLogs,
+      warning: restaurants.length === 0
+        ? `Aucun restaurant trouvé après ${attemptLogs.length} tentatives. Causes possibles : ville mal orthographiée, zone très petite, ou indisponibilité Perplexity.`
+        : restaurants.length < minCount
+          ? `Seulement ${restaurants.length} restaurants trouvés (minimum visé : ${minCount}). La ville/zone est peut-être petite.`
+          : null,
     });
   } catch (err: any) {
     console.error("[circuit]", err);

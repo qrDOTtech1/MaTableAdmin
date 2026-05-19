@@ -472,6 +472,14 @@ export default function CircuitTab() {
       setIsLargeCity(json.isLargeCity ?? false);
       setCurrentSector(json.sector ?? null);
       setTotalSectors(json.totalSectors ?? 1);
+
+      // Warning si Perplexity a renvoyé peu ou aucun résultat
+      if (json.warning && newRestaurants.length === 0) {
+        setError(`⚠️ ${json.warning}${json.attempts ? ` (tentatives: ${json.attempts.join(", ")})` : ""}`);
+      } else if (json.warning) {
+        // affiche un warning soft sans bloquer
+        console.warn("[circuit]", json.warning, json.attempts);
+      }
     } catch (e: any) {
       setError(e.message ?? "Erreur inconnue");
     } finally {
