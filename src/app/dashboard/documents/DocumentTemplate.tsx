@@ -289,7 +289,28 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia";
+export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable";
+
+export type CollabData = {
+  nom: string;
+  prenom: string;
+  adresse: string;
+  dateNaissance: string;
+  siret: string;
+  email: string;
+  phone: string;
+  representantLegal: string;
+  commissionRate: string;
+  hourlyRate: string;
+  hoursPerWeek: string;
+  territoire: string;
+  startDate: string;
+  endDate: string;
+  poste: string;
+  missionDescription: string;
+  honorairesMensuelsHT?: string;
+  prestationsIncluses?: string;
+};
 
 // Ligne d'établissement pour les devis chaîne
 export type ChainEstablishment = {
@@ -319,10 +340,11 @@ type Props = {
   priceInfo: PriceInfo;
   chainQuote?: ChainQuote;
   tutoQrCode?: string; // data URL du vrai QR code restaurant (tuto-avis)
+  collab?: CollabData;
 };
 
 const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemplate(
-  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote, tutoQrCode },
+  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote, tutoQrCode, collab },
   ref
 ) {
   return (
@@ -376,6 +398,13 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           {docType === "onboarding" && "Fiche d'Activation — MaTable.Pro"}
           {docType === "tarification" && "Fiche Tarification & Suivi Client"}
           {docType === "devis-chaine" && "Devis Groupe / Chaîne — MaTable.Pro"}
+          {docType === "collab-commission" && "Contrat de Collaboration — Rémunération à la Commission"}
+          {docType === "collab-horaire" && "Contrat de Collaboration — Rémunération Horaire"}
+          {docType === "collab-mixte" && "Contrat de Collaboration — Rémunération Mixte"}
+          {docType === "collab-commission-junior" && "Contrat de Collaboration — Commission (Collaborateur Mineur 16+)"}
+          {docType === "collab-horaire-junior" && "Contrat de Collaboration — Horaire (Collaborateur Mineur 16+)"}
+          {docType === "collab-mixte-junior" && "Contrat de Collaboration — Mixte (Collaborateur Mineur 16+)"}
+          {docType === "collab-comptable" && "Contrat de Prestation — Services Comptables"}
         </h1>
       )}
 
@@ -1904,6 +1933,176 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       {docType === "flyer" && (
         <FlyerSheet vendor={vendor} />
       )}
+
+      {/* ===== CONTRATS COLLABORATEURS ===== */}
+      {(docType === "collab-commission" || docType === "collab-horaire" || docType === "collab-mixte" || docType === "collab-commission-junior" || docType === "collab-horaire-junior" || docType === "collab-mixte-junior" || docType === "collab-comptable") && collab && (() => {
+        const isJunior = docType.endsWith("-junior");
+        const isCommission = docType.includes("commission");
+        const isHoraire = docType.includes("horaire");
+        const isMixte = docType.includes("mixte");
+        const isComptable = docType === "collab-comptable";
+        const collaborateurNom = `${collab.prenom} ${collab.nom}`.trim() || "[Prénom Nom]";
+        const dureeContrat = collab.endDate
+          ? `du ${collab.startDate} au ${collab.endDate}`
+          : `à compter du ${collab.startDate}, sans durée déterminée (résiliable par l'une ou l'autre des parties avec un préavis de 15 jours)`;
+
+        return (
+          <div className="text-sm leading-relaxed">
+            {/* En-tête deux colonnes */}
+            <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="bg-gray-50 p-4 rounded-xl border">
+                <h3 className="text-xs uppercase tracking-widest text-orange-500 font-black mb-3">MATABLEPRO — Le Mandant</h3>
+                <div className="text-sm space-y-1">
+                  <p className="text-gray-500">Raison sociale : <span className="text-black font-bold">{vendor.raisonSociale}</span></p>
+                  <p className="text-gray-500">Forme juridique : <span className="text-black font-bold">{vendor.formeJuridique}</span></p>
+                  <p className="text-gray-500">SIRET : <span className="text-black font-bold">{vendor.siret}</span></p>
+                  <p className="text-gray-500">RCS : <span className="text-black font-bold">{vendor.rcs}</span></p>
+                  <p className="text-gray-500">Adresse : <span className="text-black font-bold">{vendor.address}</span></p>
+                  <p className="text-gray-500">Email : <span className="text-black font-bold">{vendor.email}</span></p>
+                  <p className="text-gray-500">Téléphone : <span className="text-black font-bold">{vendor.phone}</span></p>
+                  <p className="text-gray-500">Représenté par : <span className="text-black font-bold">{vendor.representant}</span></p>
+                </div>
+              </div>
+              <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                <h3 className="text-xs uppercase tracking-widest text-indigo-600 font-black mb-3">Le Collaborateur {isJunior ? "(Mineur 16+)" : ""}</h3>
+                <div className="text-sm space-y-1">
+                  <p className="text-indigo-900">Nom : <span className="font-bold">{collab.nom || "..."}</span></p>
+                  <p className="text-indigo-900">Prénom : <span className="font-bold">{collab.prenom || "..."}</span></p>
+                  <p className="text-indigo-900">Adresse : <span className="font-bold">{collab.adresse || "..."}</span></p>
+                  {collab.dateNaissance && <p className="text-indigo-900">Date de naissance : <span className="font-bold">{collab.dateNaissance}</span></p>}
+                  {!isJunior && collab.siret && <p className="text-indigo-900">SIRET / Auto-entrepreneur : <span className="font-bold">{collab.siret}</span></p>}
+                  <p className="text-indigo-900">Email : <span className="font-bold">{collab.email || "..."}</span></p>
+                  <p className="text-indigo-900">Téléphone : <span className="font-bold">{collab.phone || "..."}</span></p>
+                  {isJunior && collab.representantLegal && <p className="text-indigo-900">Représentant légal : <span className="font-bold">{collab.representantLegal}</span></p>}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 mb-6 italic">Ci-après désignés ensemble « les Parties ». Il a été convenu ce qui suit :</p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 1 — Parties</h2>
+            <p className="mb-3">Le présent contrat est conclu entre <b>{vendor.raisonSociale}</b> ({vendor.formeJuridique}), SIRET {vendor.siret}, dont le siège est situé au {vendor.address}, représentée par {vendor.representant} (ci-après « <b>MATABLEPRO</b> »), et <b>{collaborateurNom}</b>, demeurant au {collab.adresse || "[adresse]"} (ci-après « <b>le Collaborateur</b> »).</p>
+            {isJunior && collab.representantLegal && (
+              <p className="mb-3">Le Collaborateur étant mineur, le présent contrat est cosigné par son représentant légal : <b>{collab.representantLegal}</b>, qui en garantit l'exécution dans le respect des dispositions légales applicables aux mineurs.</p>
+            )}
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 2 — Objet du contrat</h2>
+            {isComptable ? (
+              <p className="mb-3">Le présent contrat a pour objet de définir les conditions dans lesquelles le Collaborateur fournit à MATABLEPRO des services de comptabilité, incluant la tenue des livres comptables, l'établissement des déclarations fiscales et sociales, et tout conseil afférent, en qualité de prestataire indépendant.</p>
+            ) : (
+              <p className="mb-3">Le présent contrat a pour objet de définir les conditions dans lesquelles le Collaborateur agit en qualité de mandataire commercial indépendant pour le compte de MATABLEPRO, en vue de promouvoir et commercialiser les solutions logicielles MaTable.Pro auprès de restaurants indépendants. <b>Le présent contrat ne saurait être requalifié en contrat de travail, les Parties déclarant explicitement agir de manière indépendante.</b></p>
+            )}
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 3 — Durée</h2>
+            <p className="mb-3">Le présent contrat prend effet {dureeContrat}. {collab.endDate ? "À l'échéance, il prendra fin de plein droit sauf renouvellement exprès des Parties." : "Chaque Partie peut y mettre fin à tout moment moyennant un préavis de quinze (15) jours calendaires notifié par écrit (email avec accusé de réception)."}</p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 4 — Missions</h2>
+            <p className="mb-2">Poste / Fonction : <b>{collab.poste || "Prospecteur(trice) téléphonique"}</b></p>
+            {!isComptable && collab.territoire && <p className="mb-2">Territoire : <b>{collab.territoire}</b></p>}
+            <p className="mb-3">{collab.missionDescription}</p>
+
+            {isJunior && (
+              <>
+                <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 4 bis — Dispositions particulières pour les collaborateurs mineurs</h2>
+                <p className="mb-2">Le Collaborateur étant âgé de 16 ans révolus mais n'ayant pas atteint l'âge de 18 ans, les dispositions suivantes s'appliquent conformément aux articles L.4153-1 et suivants du Code du Travail :</p>
+                <ul className="list-disc list-inside space-y-1 mb-3 text-sm">
+                  <li>Durée de travail limitée à 35 heures par semaine et 7 heures par jour pendant les périodes de vacances scolaires.</li>
+                  <li>Pendant les périodes scolaires : maximum 3 heures par jour, uniquement les mercredis et week-ends.</li>
+                  <li>Le travail s'effectue exclusivement par téléphone depuis le domicile du Collaborateur, dans le respect de ses obligations scolaires.</li>
+                  <li>Autorisation écrite du représentant légal obligatoire (annexée au présent contrat).</li>
+                  <li>Visite médicale préalable obligatoire auprès du médecin du travail ou médecin traitant.</li>
+                  <li>Le Collaborateur ne peut être sollicité avant 9h ni après 19h.</li>
+                </ul>
+              </>
+            )}
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 5 — Rémunération</h2>
+            {isComptable ? (
+              <>
+                <p className="mb-2">En contrepartie des services rendus, MATABLEPRO verse au Collaborateur des honoraires de <b>{collab.honorairesMensuelsHT || "[montant]"} € HT</b> par mois.</p>
+                {collab.prestationsIncluses && <p className="mb-2">Prestations incluses : {collab.prestationsIncluses}</p>}
+                <p className="mb-3">Les honoraires sont versés le 15 du mois suivant la réception de la facture émise par le Collaborateur. TVA non applicable, art. 293B CGI (sous réserve des seuils de franchise).</p>
+              </>
+            ) : (
+              <>
+                {(isCommission || isMixte) && (
+                  <p className="mb-2">
+                    <b>Commission :</b> Le Collaborateur perçoit une commission de <b>{collab.commissionRate || "10"} %</b> du montant HT des contrats d'abonnement MaTable.Pro signés grâce à son action commerciale. Les commissions sont versées le 15 du mois suivant l'encaissement effectif par MATABLEPRO. En cas d'annulation d'un contrat dans les 30 jours, la commission afférente est déduite du versement suivant.
+                  </p>
+                )}
+                {(isHoraire || isMixte) && (
+                  <p className="mb-2">
+                    <b>Rémunération horaire :</b> Le Collaborateur perçoit <b>{collab.hourlyRate || "12"} € HT</b> par heure de travail effectif{collab.hoursPerWeek ? `, pour un volume indicatif de ${collab.hoursPerWeek} heures par semaine` : ""}. Un compte-rendu d'heures hebdomadaire doit être soumis chaque lundi matin. Le paiement intervient le 15 du mois suivant.
+                  </p>
+                )}
+                <p className="mb-3 text-xs text-gray-600 italic">TVA non applicable, art. 293B CGI. Le Collaborateur agit en qualité de mandataire indépendant ou auto-entrepreneur et est seul responsable de ses obligations fiscales et sociales.</p>
+              </>
+            )}
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 6 — Obligations du Collaborateur</h2>
+            <ul className="list-disc list-inside space-y-1 mb-3 text-sm">
+              <li>Exercer sa mission avec diligence, professionnalisme et loyauté envers MATABLEPRO.</li>
+              <li>Ne pas représenter simultanément de produits ou services directement concurrents de MaTable.Pro sans accord préalable écrit.</li>
+              <li>Respecter la charte commerciale et les tarifs communiqués par MATABLEPRO.</li>
+              <li>Rendre compte régulièrement de son activité (comptes-rendus hebdomadaires par email).</li>
+              <li>Ne pas s'engager contractuellement au nom de MATABLEPRO sans mandat écrit exprès.</li>
+              {isComptable && <li>Respecter le secret professionnel et la confidentialité des données comptables et fiscales de MATABLEPRO.</li>}
+            </ul>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 7 — Obligations de MATABLEPRO</h2>
+            <ul className="list-disc list-inside space-y-1 mb-3 text-sm">
+              <li>Fournir au Collaborateur les outils, supports commerciaux et informations nécessaires à l'exercice de sa mission.</li>
+              <li>Payer les rémunérations dues dans les délais convenus.</li>
+              <li>Informer le Collaborateur de toute modification tarifaire ou de produit dans un délai raisonnable.</li>
+            </ul>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 8 — Confidentialité</h2>
+            <p className="mb-3">Le Collaborateur s'engage à maintenir strictement confidentielle toute information commerciale, technique, financière ou stratégique concernant MATABLEPRO, ses clients et ses partenaires, dont il aurait connaissance dans le cadre du présent contrat. Cette obligation subsiste pendant 3 ans après la fin du contrat.</p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 9 — Propriété intellectuelle</h2>
+            <p className="mb-3">Tous les contenus, supports, outils et données fournis par MATABLEPRO au Collaborateur restent la propriété exclusive de MATABLEPRO. Le Collaborateur ne peut les reproduire, diffuser ou utiliser à d'autres fins que l'exécution du présent contrat.</p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 10 — Résiliation</h2>
+            <p className="mb-2">Chaque Partie peut résilier le présent contrat :</p>
+            <ul className="list-disc list-inside space-y-1 mb-3 text-sm">
+              <li><b>À tout moment</b> avec un préavis de 15 jours calendaires par écrit (email avec accusé de réception).</li>
+              <li><b>Sans préavis</b> en cas de manquement grave non réparé dans les 48 heures suivant mise en demeure.</li>
+            </ul>
+            <p className="mb-3">La résiliation ne donne lieu à aucune indemnité, sauf commissions acquises sur contrats effectivement encaissés avant la date de résiliation.</p>
+
+            <h2 className="text-xs font-black uppercase tracking-widest text-indigo-600 border-t pt-4 mb-2">Article 11 — Droit applicable et juridiction compétente</h2>
+            <p className="mb-3">Le présent contrat est soumis au droit français. En cas de litige, les Parties s'engagent à rechercher une solution amiable dans un délai de 30 jours. À défaut d'accord, le litige sera soumis au <b>Tribunal de Commerce de Créteil</b>, auquel les Parties attribuent expressément compétence.</p>
+
+            <p className="text-xs text-gray-500 mb-8 italic">Fait en deux exemplaires originaux, dont un remis à chaque Partie.</p>
+
+            {/* Bloc signatures */}
+            <div className="grid grid-cols-2 gap-8 mt-8 pt-6 border-t">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-gray-500 mb-1">Pour MATABLEPRO</p>
+                <p className="text-sm mb-1">{vendor.representant}</p>
+                <p className="text-xs text-gray-500 mb-6">Lu et approuvé — Signature précédée de la mention</p>
+                <div className="border-b border-gray-300 mt-10" />
+                <p className="text-xs text-gray-400 mt-1">Lieu et date : ________________ / {docMeta.date}</p>
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-gray-500 mb-1">Le Collaborateur</p>
+                <p className="text-sm mb-1">{collaborateurNom}</p>
+                <p className="text-xs text-gray-500 mb-6">Lu et approuvé — Signature précédée de la mention</p>
+                <div className="border-b border-gray-300 mt-10" />
+                <p className="text-xs text-gray-400 mt-1">Lieu et date : ________________ / {docMeta.date}</p>
+                {isJunior && collab.representantLegal && (
+                  <>
+                    <p className="text-xs font-black uppercase tracking-wider text-gray-500 mt-4 mb-1">Représentant légal</p>
+                    <p className="text-sm mb-1">{collab.representantLegal}</p>
+                    <div className="border-b border-gray-300 mt-10" />
+                    <p className="text-xs text-gray-400 mt-1">Lu et approuvé :</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       </div>{/* /contenu zIndex 1 */}
     </div>

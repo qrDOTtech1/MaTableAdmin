@@ -40,6 +40,13 @@ const TYPE_LABELS: Record<string, string> = {
   "tuto-reservations": "Tuto Réservations",
   "tuto-reservations-eco": "Tuto Résa Éco",
   "tuto-nova-ia": "Tuto Nova IA",
+  "collab-commission": "Collab. Commissionné",
+  "collab-horaire": "Collab. Horaire",
+  "collab-mixte": "Collab. Mixte",
+  "collab-commission-junior": "Collab. Commission Junior",
+  "collab-horaire-junior": "Collab. Horaire Junior",
+  "collab-mixte-junior": "Collab. Mixte Junior",
+  "collab-comptable": "Prestation Comptable",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -65,6 +72,13 @@ const TYPE_COLORS: Record<string, string> = {
   "tuto-reservations": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
   "tuto-reservations-eco": "bg-gray-500/10 text-gray-400 border-gray-500/30",
   "tuto-nova-ia": "bg-purple-500/10 text-purple-400 border-purple-500/30",
+  "collab-commission": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  "collab-horaire": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  "collab-mixte": "bg-indigo-500/10 text-indigo-400 border-indigo-500/30",
+  "collab-commission-junior": "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  "collab-horaire-junior": "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  "collab-mixte-junior": "bg-violet-500/10 text-violet-400 border-violet-500/30",
+  "collab-comptable": "bg-slate-500/10 text-slate-300 border-slate-500/30",
 };
 
 function euros(cents: number) {
@@ -102,6 +116,15 @@ const ALL_DOC_TYPES: { group: string; options: { value: string; label: string }[
     { value: "tuto-reservations", label: "Tuto Réservations (2p couleur)" },
     { value: "tuto-reservations-eco", label: "Tuto Réservations — Éco encre (1p)" },
     { value: "tuto-nova-ia", label: "Tuto Nova IA (1p éco)" },
+  ]},
+  { group: "Contrats Collaborateurs", options: [
+    { value: "collab-commission", label: "Collaborateur — Commissionné (adulte)" },
+    { value: "collab-horaire", label: "Collaborateur — Horaire (adulte)" },
+    { value: "collab-mixte", label: "Collaborateur — Mixte commission + horaire (adulte)" },
+    { value: "collab-commission-junior", label: "Collaborateur — Commissionné Mineur 16+" },
+    { value: "collab-horaire-junior", label: "Collaborateur — Horaire Mineur 16+" },
+    { value: "collab-mixte-junior", label: "Collaborateur — Mixte Mineur 16+" },
+    { value: "collab-comptable", label: "Contrat Prestation Comptable" },
   ]},
 ];
 

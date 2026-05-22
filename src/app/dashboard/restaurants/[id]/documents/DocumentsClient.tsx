@@ -31,7 +31,7 @@ const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 pl
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
-  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia">("contrat");
+  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable">("contrat");
   const [engagement, setEngagement] = useState<DurationKey>("12m");
   // Modules sélectionnés — "avis" est requis donc toujours inclus
   const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
@@ -201,6 +201,27 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     delaiLivraison: "Mise en service sous 7 jours après signature et premier paiement.",
   });
 
+  const [collab, setCollab] = useState({
+    nom: "",
+    prenom: "",
+    adresse: "",
+    dateNaissance: "",
+    siret: "",
+    email: "",
+    phone: "",
+    representantLegal: "",
+    commissionRate: "10",
+    hourlyRate: "12",
+    hoursPerWeek: "20",
+    territoire: "France entière",
+    startDate: new Date().toLocaleDateString("fr-FR"),
+    endDate: "",
+    poste: "Prospecteur(trice) téléphonique",
+    missionDescription: "Prospection téléphonique de restaurants indépendants pour le compte de MATABLEPRO. Présentation des solutions logicielles, qualification des prospects, prise de rendez-vous et suivi commercial.",
+    honorairesMensuelsHT: "",
+    prestationsIncluses: "",
+  });
+
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -227,6 +248,13 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     "tuto-reservations": "Fiche Tuto Réservations",
     "tuto-reservations-eco": "Fiche Tuto Réservations (Éco)",
     "tuto-nova-ia": "Fiche Tuto Nova IA",
+    "collab-commission": "Contrat Collaborateur — Commissionné",
+    "collab-horaire": "Contrat Collaborateur — Horaire",
+    "collab-mixte": "Contrat Collaborateur — Mixte (Commission + Horaire)",
+    "collab-commission-junior": "Contrat Collaborateur — Commissionné (Mineur 16+)",
+    "collab-horaire-junior": "Contrat Collaborateur — Horaire (Mineur 16+)",
+    "collab-mixte-junior": "Contrat Collaborateur — Mixte (Mineur 16+)",
+    "collab-comptable": "Contrat Prestation Comptable",
   };
 
   const saveToClasseur = async () => {
@@ -326,6 +354,15 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
                 <option value="tuto-reservations">Fiche Tuto Réservations (guide complet 2 pages couleur)</option>
                 <option value="tuto-reservations-eco">Fiche Tuto Réservations — Éco encre (1 page N&B)</option>
                 <option value="tuto-nova-ia">Fiche Tuto Nova IA (toutes les fonctions IA — 1 page éco)</option>
+              </optgroup>
+              <optgroup label="👥 Contrats Collaborateurs">
+                <option value="collab-commission">Collaborateur — Commissionné (adulte)</option>
+                <option value="collab-horaire">Collaborateur — Horaire (adulte)</option>
+                <option value="collab-mixte">Collaborateur — Mixte commission + horaire (adulte)</option>
+                <option value="collab-commission-junior">Collaborateur — Commissionné Mineur 16+ (prospection)</option>
+                <option value="collab-horaire-junior">Collaborateur — Horaire Mineur 16+</option>
+                <option value="collab-mixte-junior">Collaborateur — Mixte Mineur 16+</option>
+                <option value="collab-comptable">Contrat Prestation Comptable</option>
               </optgroup>
             </select>
           </div>
@@ -593,6 +630,84 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
             </div>
           )}
 
+          {/* ─── Collaborateurs ──────────────────────────────────────────── */}
+          {docType.startsWith("collab-") && (() => {
+            const isJunior = docType.endsWith("-junior");
+            const isCommission = docType.includes("commission");
+            const isHoraire = docType.includes("horaire");
+            const isMixte = docType.includes("mixte");
+            const isComptable = docType === "collab-comptable";
+            return (
+              <div className="pt-4 border-t border-slate-800 space-y-2">
+                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Identité du Collaborateur</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="text" value={collab.nom} placeholder="Nom" onChange={(e) => setCollab({...collab, nom: e.target.value})} className={INPUT_CLS} />
+                  <input type="text" value={collab.prenom} placeholder="Prénom" onChange={(e) => setCollab({...collab, prenom: e.target.value})} className={INPUT_CLS} />
+                </div>
+                <input type="text" value={collab.adresse} placeholder="Adresse complète" onChange={(e) => setCollab({...collab, adresse: e.target.value})} className={INPUT_CLS} />
+                <input type="text" value={collab.dateNaissance} placeholder="Date de naissance (ex : 15/03/2008)" onChange={(e) => setCollab({...collab, dateNaissance: e.target.value})} className={INPUT_CLS} />
+                {!isJunior && (
+                  <input type="text" value={collab.siret} placeholder="SIRET / N° auto-entrepreneur (si applicable)" onChange={(e) => setCollab({...collab, siret: e.target.value})} className={INPUT_CLS} />
+                )}
+                <input type="email" value={collab.email} placeholder="Email" onChange={(e) => setCollab({...collab, email: e.target.value})} className={INPUT_CLS} />
+                <input type="text" value={collab.phone} placeholder="Téléphone" onChange={(e) => setCollab({...collab, phone: e.target.value})} className={INPUT_CLS} />
+                {isJunior && (
+                  <input type="text" value={collab.representantLegal} placeholder="Représentant légal (parent/tuteur)" onChange={(e) => setCollab({...collab, representantLegal: e.target.value})} className={INPUT_CLS} />
+                )}
+                <label className="block text-xs font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider">Rémunération</label>
+                {(isCommission || isMixte) && (
+                  <div className="flex items-center gap-2">
+                    <input type="number" value={collab.commissionRate} min="1" max="100" onChange={(e) => setCollab({...collab, commissionRate: e.target.value})} className={INPUT_CLS + " w-24"} />
+                    <span className="text-slate-400 text-xs">% commission HT sur contrats signés</span>
+                  </div>
+                )}
+                {(isHoraire || isMixte) && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <input type="number" value={collab.hourlyRate} min="11.88" step="0.01" onChange={(e) => setCollab({...collab, hourlyRate: e.target.value})} className={INPUT_CLS + " w-24"} />
+                      <span className="text-slate-400 text-xs">€ HT / heure (min SMIC 11,88 €)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input type="number" value={collab.hoursPerWeek} min="1" onChange={(e) => setCollab({...collab, hoursPerWeek: e.target.value})} className={INPUT_CLS + " w-24"} />
+                      <span className="text-slate-400 text-xs">heures / semaine (indicatif)</span>
+                    </div>
+                  </>
+                )}
+                {isComptable && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <input type="text" value={collab.honorairesMensuelsHT || ""} placeholder="Honoraires mensuels HT (€)" onChange={(e) => setCollab({...collab, honorairesMensuelsHT: e.target.value})} className={INPUT_CLS} />
+                    </div>
+                    <textarea
+                      value={collab.prestationsIncluses || ""}
+                      placeholder="Prestations incluses (tenue des livres, déclarations fiscales...)"
+                      onChange={(e) => setCollab({...collab, prestationsIncluses: e.target.value})}
+                      rows={3}
+                      className={INPUT_CLS}
+                    />
+                  </>
+                )}
+                {!isComptable && (
+                  <input type="text" value={collab.territoire} placeholder="Territoire (ex : France entière)" onChange={(e) => setCollab({...collab, territoire: e.target.value})} className={INPUT_CLS} />
+                )}
+                <label className="block text-xs font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider">Durée</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="text" value={collab.startDate} placeholder="Date début (JJ/MM/AAAA)" onChange={(e) => setCollab({...collab, startDate: e.target.value})} className={INPUT_CLS} />
+                  <input type="text" value={collab.endDate} placeholder="Date fin (vide = sans terme)" onChange={(e) => setCollab({...collab, endDate: e.target.value})} className={INPUT_CLS} />
+                </div>
+                <label className="block text-xs font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider">Mission</label>
+                <input type="text" value={collab.poste} placeholder="Poste / Fonction" onChange={(e) => setCollab({...collab, poste: e.target.value})} className={INPUT_CLS} />
+                <textarea
+                  value={collab.missionDescription}
+                  placeholder="Description de la mission"
+                  onChange={(e) => setCollab({...collab, missionDescription: e.target.value})}
+                  rows={4}
+                  className={INPUT_CLS}
+                />
+              </div>
+            );
+          })()}
+
           {/* ── Section NFC/QR — Tuto Avis seulement ── */}
           {docType === "tuto-avis" && reviewUrl && (
             <div className="pt-4 border-t border-slate-800 space-y-3">
@@ -700,6 +815,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           priceInfo={priceInfo}
           chainQuote={chainQuote}
           tutoQrCode={nfcQrCode ?? undefined}
+          collab={collab}
         />
       </div>
     </div>
