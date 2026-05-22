@@ -20,7 +20,7 @@ export default async function StatsPage() {
     <div className="p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-white">Statistiques Plateforme</h1>
-        <p className="text-slate-400">Vue d'ensemble de l'activité de MaTable</p>
+        <p className="text-slate-400">Vue d'ensemble de l'activité de MaTable.Pro</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

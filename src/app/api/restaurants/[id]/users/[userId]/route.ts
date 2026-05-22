@@ -57,12 +57,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           await resend.emails.send({
             from: "admin@matable.pro",
             to: user.email,
-            subject: "🔑 Vos nouveaux identifiants MaTable",
+            subject: "🔑 Vos nouveaux identifiants MaTable.Pro",
             html: `
               <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0f172a;color:#e2e8f0;padding:32px;border-radius:12px">
-                <h2 style="color:#f97316;margin-bottom:8px">🍽️ MaTable</h2>
+                <h2 style="color:#f97316;margin-bottom:8px">🍽️ MaTable.Pro</h2>
                 <h3 style="color:#fff;margin-bottom:24px">Vos nouveaux identifiants de connexion</h3>
-                <p style="color:#94a3b8;margin-bottom:24px">Bonjour,<br>Voici vos nouveaux identifiants pour accéder à votre tableau de bord MaTable.</p>
+                <p style="color:#94a3b8;margin-bottom:24px">Bonjour,<br>Voici vos nouveaux identifiants pour accéder à votre tableau de bord MaTable.Pro.</p>
                 <div style="background:#1e293b;border:1px solid #334155;border-radius:8px;padding:20px;margin-bottom:24px">
                   <p style="margin:0 0 8px;color:#94a3b8;font-size:13px">Email</p>
                   <p style="margin:0 0 16px;color:#fff;font-family:monospace;font-size:15px">${user.email}</p>
