@@ -139,13 +139,13 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
   // États éditables — Prestataire (le vendeur / signataire MaTable)
   // NB : les champs vides afficheront un placeholder "[… — à compléter]" dans les docs
   const [vendor, setVendor] = useState({
-    raisonSociale: "MaTable.Pro",
-    formeJuridique: "Auto-entrepreneur",
-    siret: "",                  // sera affiché "[N° SIRET — IMAT en cours]" si vide
-    rcs: "",                    // facultatif pour auto-entrepreneur
-    codeAPE: "6201Z — Programmation informatique",
-    tvaIntracom: "",            // affichera "Non assujetti (art. 293B CGI)" si vide
-    address: "France",
+    raisonSociale: "MATABLEPRO",
+    formeJuridique: "Société créée de fait entre personnes physiques",
+    siret: "10511115700019",
+    rcs: "RCS Créteil — SIREN 105111157",
+    codeAPE: "5829C — Édition de logiciels applicatifs",
+    tvaIntracom: "FR63105111157",
+    address: "40 Rue du Bois des Joncs Marins, 94170 Le Perreux-sur-Marne",
     email: "contact@matable.pro",
     phone: "+33 7 57 83 57 77",
     representant: "Steven Franco",
@@ -195,7 +195,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
 
   // Contrat de prestation transitoire (avant IMAT société) — mensuel sans engagement
   const [prestation, setPrestation] = useState({
-    description: "Mise à disposition mensuelle de la plateforme MaTable.Pro (tous modules) et accompagnement à l'usage. Prestation transitoire conclue en attendant l'immatriculation de la société du Prestataire.",
+    description: "Mise à disposition mensuelle de la plateforme MaTable.Pro (modules selon sélection) et accompagnement à l'usage. Accès à l'ensemble des fonctionnalités activées sur la période.",
     montantHT: 79,
     modalites: "Paiement mensuel à terme à échoir par virement bancaire ou espèces, le 1er de chaque mois.",
     delaiLivraison: "Mise en service sous 7 jours après signature et premier paiement.",

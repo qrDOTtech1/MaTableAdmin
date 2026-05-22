@@ -388,7 +388,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               <div className="text-sm space-y-1">
                 <p className="text-gray-500">Raison sociale : <span className="text-black font-bold">{vendor.raisonSociale}</span></p>
                 <p className="text-gray-500">Forme juridique : <span className="text-black font-bold">{PH(vendor.formeJuridique, "Forme juridique")}</span></p>
-                <p className="text-gray-500">SIRET : <span className="text-black font-bold">{PH(vendor.siret, "N° SIRET — IMAT en cours")}</span></p>
+                <p className="text-gray-500">SIRET : <span className="text-black font-bold">{PH(vendor.siret, "10511115700019")}</span></p>
                 {vendor.rcs && <p className="text-gray-500">RCS : <span className="text-black font-bold">{vendor.rcs}</span></p>}
                 <p className="text-gray-500">Adresse : <span className="text-black font-bold">{vendor.address}</span></p>
                 <p className="text-gray-500">Email : <span className="text-black font-bold">{vendor.email}</span></p>
@@ -455,7 +455,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </tbody>
           </table>
           <p className="text-xs text-gray-500 italic mb-4">
-            TVA non applicable, art. 293B du CGI. Hébergement, mises à jour et support inclus.
+            Hébergement, mises à jour et support inclus. {vendor.tvaIntracom ? `TVA intracommunautaire : ${vendor.tvaIntracom}. Prix exprimés HT.` : "TVA non applicable, art. 293B du CGI."}
             {priceInfo.durationKey && priceInfo.durationKey !== "3m" && (
               <> Tarifs unitaires affichés avec la réduction engagement {priceInfo.durationLabel} ({priceInfo.mult}) appliquée par rapport au prix de base (3 mois).</>
             )}
@@ -509,7 +509,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="text-sm mb-3 leading-relaxed">Aucune des Parties ne pourra être tenue responsable d'un manquement résultant d'un cas de force majeure au sens de l'art. 1218 du Code civil. La Partie empêchée informera l'autre dans les meilleurs délais ; les obligations seront suspendues le temps de l'événement.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 11 — Loi applicable & juridiction</h2>
-          <p className="text-sm mb-6 leading-relaxed">Le Contrat est soumis au droit français. Tout différend non résolu à l'amiable dans un délai de 30 jours sera porté devant les tribunaux compétents du ressort du siège social du Prestataire.</p>
+          <p className="text-sm mb-6 leading-relaxed">Le Contrat est soumis au droit français. Tout différend non résolu à l'amiable dans un délai de 30 jours sera porté devant le Tribunal de Commerce de Créteil, compétent au titre du siège social du Prestataire (RCS Créteil — SIRET {vendor.siret || "10511115700019"}).</p>
 
           <div className="grid grid-cols-2 gap-8 mt-12">
             <div className="border rounded-xl p-4">
@@ -538,7 +538,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               <p className="text-sm text-gray-500 leading-relaxed">
                 {vendor.formeJuridique && <>{vendor.formeJuridique}<br/></>}
                 {vendor.address}<br/>
-                SIRET : {PH(vendor.siret, "N° SIRET — IMAT en cours")}<br/>
+                SIRET : {PH(vendor.siret, "10511115700019")}<br/>
                 {vendor.rcs && <>RCS : {vendor.rcs}<br/></>}
                 {vendor.codeAPE && <>Code APE : {vendor.codeAPE}<br/></>}
                 TVA intracom. : {vendor.tvaIntracom || "Non assujetti (art. 293B CGI)"}<br/>
@@ -598,12 +598,12 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                 <td className="p-3 text-right font-bold">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
               <tr className="border-b">
-                <td colSpan={4} className="p-3 text-right text-xs text-gray-600">TVA non applicable — art. 293B du CGI</td>
-                <td className="p-3 text-right text-xs text-gray-600">— €</td>
+                <td colSpan={4} className="p-3 text-right text-xs text-gray-600">{vendor.tvaIntracom ? `TVA 20 % (N° ${vendor.tvaIntracom})` : "TVA non applicable — art. 293B du CGI"}</td>
+                <td className="p-3 text-right text-xs text-gray-600">{vendor.tvaIntracom ? `${(priceInfo.monthly * 0.2).toFixed(2)} €` : "— €"}</td>
               </tr>
               <tr className="bg-gray-50 font-black">
                 <td colSpan={4} className="p-3 text-right">Total TTC</td>
-                <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
+                <td className="p-3 text-right text-orange-500">{vendor.tvaIntracom ? (priceInfo.monthly * 1.2).toFixed(2) : priceInfo.monthly.toFixed(2)} €</td>
               </tr>
             </tbody>
           </table>
@@ -648,7 +648,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               <p className="text-sm font-bold mb-1">{vendor.raisonSociale}</p>
               <p className="text-xs text-gray-500 leading-relaxed">
                 {vendor.address}<br/>
-                SIRET : {PH(vendor.siret, "IMAT en cours")}<br/>
+                SIRET : {PH(vendor.siret, "10511115700019")}<br/>
                 {vendor.email} · {vendor.phone}
               </p>
             </div>
@@ -713,12 +713,12 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               )}
             </tbody>
           </table>
-          <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI.</p>
+          <p className="text-xs text-gray-500 italic mb-4">{vendor.tvaIntracom ? `TVA 20 % applicable — N° ${vendor.tvaIntracom}. Montant TTC = HT × 1,20.` : "TVA non applicable, art. 293B du CGI."}</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Conditions</h2>
           <ul className="text-sm mb-4 ml-6 list-disc space-y-1">
             <li>Devis valable jusqu'au <b>{docMeta.validite}</b>.</li>
-            <li>Tarifs exprimés en euros, hors taxes (TVA non applicable, art. 293B du CGI).</li>
+            <li>Tarifs exprimés en euros hors taxes. {vendor.tvaIntracom ? `TVA 20 % en sus (N° ${vendor.tvaIntracom}).` : "TVA non applicable, art. 293B du CGI."}</li>
             <li><b>Prix de base = engagement 3 mois.</b> Réductions appliquées sur engagement plus long : <b className="text-emerald-700">6 m (−2 %) · 9 m (−4 %) · 12 m (−7 %) · 12 m annuel (−12 %)</b>.</li>
             <li>Paiement par virement bancaire ou prélèvement SEPA mensuel à terme à échoir.</li>
             <li>Mise en service immédiate dès retour du contrat signé et du premier paiement.</li>
@@ -760,7 +760,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                 <p className="text-sm font-bold mb-1">{vendor.raisonSociale}</p>
                 <p className="text-xs text-gray-500 leading-relaxed">
                   {vendor.address}<br/>
-                  SIRET : {PH(vendor.siret, "IMAT en cours")}<br/>
+                  SIRET : {PH(vendor.siret, "10511115700019")}<br/>
                   {vendor.email} · {vendor.phone}
                 </p>
               </div>
@@ -840,7 +840,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               </div>
             )}
 
-            <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI.</p>
+            <p className="text-xs text-gray-500 italic mb-4">{vendor.tvaIntracom ? `TVA 20 % applicable — N° ${vendor.tvaIntracom}.` : "TVA non applicable, art. 293B du CGI."}</p>
 
             <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Conditions</h2>
             <ul className="text-sm mb-4 ml-6 list-disc space-y-1">
@@ -879,10 +879,11 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <ul className="ml-6 mb-3 list-disc">
             <li><b>{vendor.raisonSociale}</b> {vendor.formeJuridique && <>— {vendor.formeJuridique}</>}</li>
             <li>Siège social : {vendor.address}</li>
-            <li>SIRET : {PH(vendor.siret, "N° SIRET — IMAT en cours")}</li>
+            <li>SIRET : {PH(vendor.siret, "10511115700019")}</li>
             {vendor.rcs && <li>RCS : {vendor.rcs}</li>}
             {vendor.codeAPE && <li>Code APE : {vendor.codeAPE}</li>}
-            <li>TVA intracom. : {vendor.tvaIntracom || "Non assujetti (art. 293B du CGI)"}</li>
+            <li>TVA intracommunautaire : {vendor.tvaIntracom || "Non assujetti (art. 293B du CGI)"}</li>
+            {vendor.rcs && <li>Greffe : {vendor.rcs}</li>}
             <li>Email : {vendor.email} · Téléphone : {vendor.phone}</li>
             <li>Directeur de la publication : {vendor.representant}</li>
             <li>Hébergeur : Railway Corp., 251 Little Falls Drive, Wilmington, DE 19808, États-Unis — infrastructure et base de données déployées sur la région européenne (Frankfurt, Allemagne)</li>
@@ -911,7 +912,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="mb-3 text-xs italic text-gray-600">Le Prestataire se réserve le droit de faire évoluer la composition des modules et leurs fonctionnalités, sans que cela puisse être considéré comme une modification substantielle du contrat.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 5 — Tarifs & engagement</h2>
-          <p className="mb-2">Tarifs en vigueur, hors taxes (TVA non applicable, art. 293B du CGI). <b>Le prix de base s'entend pour un engagement de 3 mois</b>, et une réduction est appliquée pour tout engagement plus long :</p>
+          <p className="mb-2">Tarifs en vigueur, hors taxes. {vendor.tvaIntracom ? `TVA 20 % en sus (N° ${vendor.tvaIntracom}).` : "TVA non applicable, art. 293B du CGI."} <b>Le prix de base s'entend pour un engagement de 3 mois</b>, et une réduction est appliquée pour tout engagement plus long :</p>
           <table className="w-full text-xs mb-3 border-collapse">
             <thead>
               <tr className="bg-gray-100 text-left">
@@ -991,7 +992,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="mb-3">Le Prestataire se réserve le droit de modifier les présentes CGV/CGU. Toute modification substantielle sera notifiée au Client par email au moins 30 jours avant son entrée en vigueur. Le Client pourra résilier sans frais si la modification lui est défavorable.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 16 — Médiation & litiges</h2>
-          <p className="mb-3">Tout différend fera l'objet d'une tentative de résolution amiable préalable par échange écrit. À défaut d'accord dans un délai de 30 jours, le litige sera soumis aux <b>tribunaux compétents du ressort du siège social du Prestataire</b>. Le présent contrat est soumis au droit français.</p>
+          <p className="mb-3">Tout différend fera l'objet d'une tentative de résolution amiable préalable par échange écrit. À défaut d'accord dans un délai de 30 jours, le litige sera soumis au <b>Tribunal de Commerce de Créteil</b> (RCS Créteil — SIRET {vendor.siret || "10511115700019"}). Le présent contrat est soumis au droit français.</p>
 
           <div className="mt-8 pt-4 border-t text-xs text-gray-500 italic">
             <p>CGV/CGU générées le {docMeta.date} — version {docMeta.numero}. Pour toute question : {vendor.email}.</p>
@@ -1104,7 +1105,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                 <p className="text-gray-500">Nom et prénom : <span className="text-black font-bold">{vendor.representant}</span></p>
                 <p className="text-gray-500">Agissant en qualité de : <span className="text-black font-bold">personne physique, en attente d'immatriculation de la société <i>{vendor.raisonSociale}</i></span></p>
                 <p className="text-gray-500">Adresse : <span className="text-black font-bold">{vendor.address}</span></p>
-                <p className="text-gray-500">N° SIRET : <span className="text-black font-bold">{PH(vendor.siret, "Non encore immatriculé — IMAT en cours")}</span></p>
+                <p className="text-gray-500">N° SIRET : <span className="text-black font-bold">{PH(vendor.siret, "10511115700019")}</span></p>
                 <p className="text-gray-500">Email : <span className="text-black font-bold">{vendor.email}</span></p>
                 <p className="text-gray-500">Téléphone : <span className="text-black font-bold">{vendor.phone}</span></p>
               </div>
@@ -1155,7 +1156,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </tbody>
           </table>
           <p className="text-xs text-gray-500 italic mb-2"><b>Modalités :</b> {prestation.modalites}</p>
-          <p className="text-xs text-gray-500 italic mb-3">TVA non applicable — le Prestataire agissant en qualité de personne physique non assujettie à la TVA dans le cadre de cette prestation transitoire (art. 293B du CGI applicable à l'immatriculation future).</p>
+          <p className="text-xs text-gray-500 italic mb-3">{vendor.tvaIntracom ? `TVA 20 % applicable — N° TVA intracommunautaire : ${vendor.tvaIntracom}. Montant TTC = HT × 1,20.` : "TVA non applicable, art. 293B du CGI."}</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 — Limite raisonnable d'utilisation de l'IA</h2>
           <p className="text-sm mb-3 leading-relaxed">
@@ -1180,18 +1181,13 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 9 — Résiliation</h2>
           <p className="text-sm mb-3 leading-relaxed">Outre la résiliation pour convenance (art. 2 — préavis 15 jours), chaque Partie peut résilier à effet immédiat en cas de manquement grave de l'autre, 15 jours après mise en demeure restée infructueuse. Les sommes déjà versées restent acquises au Prestataire à concurrence des prestations effectivement réalisées.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 10 — Transition vers un Contrat d'Abonnement</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 10 — Évolution vers un Contrat d'Abonnement</h2>
           <p className="text-sm mb-3 leading-relaxed">
-            Dès l'<b>immatriculation effective</b> de la société du Prestataire (obtention du numéro SIRET),
-            les Parties conviennent de signer un <b>Contrat d'Abonnement</b> standard au nom de ladite société,
-            qui remplacera et complétera le présent contrat. Les sommes déjà versées au titre des présentes
-            seront, le cas échéant, imputées sur la première mensualité du nouvel abonnement.
-            Le Bénéficiaire reste libre, à ce moment, de ne pas souscrire au Contrat d'Abonnement
-            (sans pénalité), auquel cas la prestation prend fin à la fin de la période mensuelle en cours.
+            Les Parties peuvent à tout moment convenir de formaliser leur relation dans le cadre d'un <b>Contrat d'Abonnement</b> standard MaTable.Pro, qui remplacera et complétera le présent contrat de prestation. Les sommes déjà versées pourront, le cas échéant, être imputées sur la première mensualité du nouvel abonnement. Le Bénéficiaire reste libre de ne pas souscrire (sans pénalité), auquel cas la prestation prend fin à la fin de la période mensuelle en cours.
           </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 11 — Loi applicable & juridiction</h2>
-          <p className="text-sm mb-6 leading-relaxed">Le présent Contrat est soumis au droit français. Tout différend non résolu à l'amiable dans un délai de 30 jours sera porté devant les tribunaux compétents du domicile du Prestataire (personne physique).</p>
+          <p className="text-sm mb-6 leading-relaxed">Le présent Contrat est soumis au droit français. Tout différend non résolu à l'amiable dans un délai de 30 jours sera porté devant le Tribunal de Commerce de Créteil, compétent au titre du siège social du Prestataire (RCS Créteil — {vendor.siret || "SIRET 10511115700019"}).</p>
 
           <div className="grid grid-cols-2 gap-8 mt-12">
             <div className="border rounded-xl p-4">
