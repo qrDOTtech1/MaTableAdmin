@@ -455,7 +455,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </tbody>
           </table>
           <p className="text-xs text-gray-500 italic mb-4">
-            Hébergement, mises à jour et support inclus. {vendor.tvaIntracom ? `TVA intracommunautaire : ${vendor.tvaIntracom}. Prix exprimés HT.` : "TVA non applicable, art. 293B du CGI."}
+            Hébergement, mises à jour et support inclus. TVA non applicable, art. 293B du CGI.
             {priceInfo.durationKey && priceInfo.durationKey !== "3m" && (
               <> Tarifs unitaires affichés avec la réduction engagement {priceInfo.durationLabel} ({priceInfo.mult}) appliquée par rapport au prix de base (3 mois).</>
             )}
@@ -598,12 +598,12 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                 <td className="p-3 text-right font-bold">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
               <tr className="border-b">
-                <td colSpan={4} className="p-3 text-right text-xs text-gray-600">{vendor.tvaIntracom ? `TVA 20 % (N° ${vendor.tvaIntracom})` : "TVA non applicable — art. 293B du CGI"}</td>
-                <td className="p-3 text-right text-xs text-gray-600">{vendor.tvaIntracom ? `${(priceInfo.monthly * 0.2).toFixed(2)} €` : "— €"}</td>
+                <td colSpan={4} className="p-3 text-right text-xs text-gray-600">TVA non applicable — art. 293B du CGI</td>
+                <td className="p-3 text-right text-xs text-gray-600">— €</td>
               </tr>
               <tr className="bg-gray-50 font-black">
                 <td colSpan={4} className="p-3 text-right">Total TTC</td>
-                <td className="p-3 text-right text-orange-500">{vendor.tvaIntracom ? (priceInfo.monthly * 1.2).toFixed(2) : priceInfo.monthly.toFixed(2)} €</td>
+                <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
             </tbody>
           </table>
@@ -713,12 +713,12 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               )}
             </tbody>
           </table>
-          <p className="text-xs text-gray-500 italic mb-4">{vendor.tvaIntracom ? `TVA 20 % applicable — N° ${vendor.tvaIntracom}. Montant TTC = HT × 1,20.` : "TVA non applicable, art. 293B du CGI."}</p>
+          <p className="text-xs text-gray-500 italic mb-4">TVA non applicable, art. 293B du CGI.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Conditions</h2>
           <ul className="text-sm mb-4 ml-6 list-disc space-y-1">
             <li>Devis valable jusqu'au <b>{docMeta.validite}</b>.</li>
-            <li>Tarifs exprimés en euros hors taxes. {vendor.tvaIntracom ? `TVA 20 % en sus (N° ${vendor.tvaIntracom}).` : "TVA non applicable, art. 293B du CGI."}</li>
+            <li>Tarifs exprimés en euros hors taxes. TVA non applicable, art. 293B du CGI.</li>
             <li><b>Prix de base = engagement 3 mois.</b> Réductions appliquées sur engagement plus long : <b className="text-emerald-700">6 m (−2 %) · 9 m (−4 %) · 12 m (−7 %) · 12 m annuel (−12 %)</b>.</li>
             <li>Paiement par virement bancaire ou prélèvement SEPA mensuel à terme à échoir.</li>
             <li>Mise en service immédiate dès retour du contrat signé et du premier paiement.</li>
@@ -882,7 +882,8 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <li>SIRET : {PH(vendor.siret, "10511115700019")}</li>
             {vendor.rcs && <li>RCS : {vendor.rcs}</li>}
             {vendor.codeAPE && <li>Code APE : {vendor.codeAPE}</li>}
-            <li>TVA intracommunautaire : {vendor.tvaIntracom || "Non assujetti (art. 293B du CGI)"}</li>
+            <li>TVA : Non applicable — art. 293B du CGI (franchise en base)</li>
+            {vendor.tvaIntracom && <li>N° TVA intracom. : {vendor.tvaIntracom} (achats UE uniquement)</li>}
             {vendor.rcs && <li>Greffe : {vendor.rcs}</li>}
             <li>Email : {vendor.email} · Téléphone : {vendor.phone}</li>
             <li>Directeur de la publication : {vendor.representant}</li>
@@ -912,7 +913,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <p className="mb-3 text-xs italic text-gray-600">Le Prestataire se réserve le droit de faire évoluer la composition des modules et leurs fonctionnalités, sans que cela puisse être considéré comme une modification substantielle du contrat.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 5 — Tarifs & engagement</h2>
-          <p className="mb-2">Tarifs en vigueur, hors taxes. {vendor.tvaIntracom ? `TVA 20 % en sus (N° ${vendor.tvaIntracom}).` : "TVA non applicable, art. 293B du CGI."} <b>Le prix de base s'entend pour un engagement de 3 mois</b>, et une réduction est appliquée pour tout engagement plus long :</p>
+          <p className="mb-2">Tarifs en vigueur, hors taxes (TVA non applicable, art. 293B du CGI). <b>Le prix de base s'entend pour un engagement de 3 mois</b>, et une réduction est appliquée pour tout engagement plus long :</p>
           <table className="w-full text-xs mb-3 border-collapse">
             <thead>
               <tr className="bg-gray-100 text-left">
@@ -1156,7 +1157,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </tbody>
           </table>
           <p className="text-xs text-gray-500 italic mb-2"><b>Modalités :</b> {prestation.modalites}</p>
-          <p className="text-xs text-gray-500 italic mb-3">{vendor.tvaIntracom ? `TVA 20 % applicable — N° TVA intracommunautaire : ${vendor.tvaIntracom}. Montant TTC = HT × 1,20.` : "TVA non applicable, art. 293B du CGI."}</p>
+          <p className="text-xs text-gray-500 italic mb-3">TVA non applicable, art. 293B du CGI (franchise en base). Le montant HT est le montant final dû.</p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 — Limite raisonnable d'utilisation de l'IA</h2>
           <p className="text-sm mb-3 leading-relaxed">

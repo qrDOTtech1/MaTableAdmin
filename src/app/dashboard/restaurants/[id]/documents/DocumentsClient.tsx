@@ -144,7 +144,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     siret: "10511115700019",
     rcs: "RCS Créteil — SIREN 105111157",
     codeAPE: "5829C — Édition de logiciels applicatifs",
-    tvaIntracom: "FR63105111157",
+    tvaIntracom: "",            // franchise en base — TVA non applicable art. 293B CGI
     address: "40 Rue du Bois des Joncs Marins, 94170 Le Perreux-sur-Marne",
     email: "contact@matable.pro",
     phone: "+33 7 57 83 57 77",
