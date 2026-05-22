@@ -32,8 +32,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ ok: true, email: body.email.trim() });
   }
 
+  // Set custom password
+  if (body.password) {
+    if (typeof body.password !== "string" || body.password.length < 6) {
+      return NextResponse.json({ error: "password_too_short" }, { status: 400 });
+    }
+    const passwordHash = await bcrypt.hash(body.password, 12);
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+    return NextResponse.json({ ok: true });
+  }
+
   // Reset password
-  if (body.resetPassword) {
     const password = generatePassword();
     const passwordHash = await bcrypt.hash(password, 12);
     await prisma.user.update({ where: { id: userId }, data: { passwordHash } });

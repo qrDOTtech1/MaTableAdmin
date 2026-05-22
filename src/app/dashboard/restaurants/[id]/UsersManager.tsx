@@ -37,6 +37,14 @@ export default function UsersManager({ restaurantId, restaurantSlug }: { restaur
 
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Per-user custom password
+  const [customPwdId, setCustomPwdId] = useState<string | null>(null);
+  const [customPwd, setCustomPwd] = useState("");
+  const [showCustomPwd, setShowCustomPwd] = useState(false);
+  const [customPwdSaving, setCustomPwdSaving] = useState(false);
+  const [customPwdError, setCustomPwdError] = useState<string | null>(null);
+  const [customPwdResult, setCustomPwdResult] = useState<string | null>(null);
+
   function copy(text: string, key: string) {
     navigator.clipboard.writeText(text);
     setCopied(key);
@@ -114,6 +122,31 @@ export default function UsersManager({ restaurantId, restaurantSlug }: { restaur
       }
     } catch {}
     setResetting(null);
+  }
+
+  async function setCustomPassword(userId: string) {
+    if (!customPwd.trim() || customPwd.length < 6) {
+      setCustomPwdError("Le mot de passe doit faire au moins 6 caractères.");
+      return;
+    }
+    setCustomPwdSaving(true);
+    setCustomPwdError(null);
+    try {
+      const res = await fetch(`/api/restaurants/${restaurantId}/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: customPwd }),
+      });
+      if (res.ok) {
+        setCustomPwdResult(customPwd);
+        setCustomPwd("");
+        setCustomPwdId(null);
+      } else {
+        const json = await res.json();
+        setCustomPwdError(json.error === "password_too_short" ? "Minimum 6 caractères." : json.error ?? "Erreur");
+      }
+    } catch (e: any) { setCustomPwdError(e.message); }
+    setCustomPwdSaving(false);
   }
 
   async function deleteUser(userId: string) {
@@ -204,7 +237,7 @@ export default function UsersManager({ restaurantId, restaurantSlug }: { restaur
                 </div>
               )}
 
-              {/* Reset password */}
+              {/* Reset / set password */}
               <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={() => resetPassword(u.id, false)}
@@ -218,7 +251,55 @@ export default function UsersManager({ restaurantId, restaurantSlug }: { restaur
                   className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg text-xs font-semibold hover:bg-blue-500/20 transition-colors disabled:opacity-50">
                   📧 Envoyer par email
                 </button>
+                <button
+                  onClick={() => { setCustomPwdId(customPwdId === u.id ? null : u.id); setCustomPwd(""); setCustomPwdError(null); setCustomPwdResult(null); }}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-violet-500/10 border border-violet-500/20 text-violet-400 rounded-lg text-xs font-semibold hover:bg-violet-500/20 transition-colors">
+                  ✏️ Définir un mot de passe
+                </button>
               </div>
+
+              {/* Custom password panel */}
+              {customPwdId === u.id && (
+                <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 space-y-2">
+                  <p className="text-violet-400 text-xs font-bold">Définir un mot de passe personnalisé</p>
+                  <div className="flex gap-2 items-center">
+                    <div className="relative flex-1">
+                      <input
+                        type={showCustomPwd ? "text" : "password"}
+                        value={customPwd}
+                        onChange={(e) => setCustomPwd(e.target.value)}
+                        placeholder="Nouveau mot de passe (min. 6 car.)"
+                        className="w-full bg-black/40 border border-slate-600 focus:border-violet-500 rounded-lg px-3 py-2 text-white text-sm font-mono focus:outline-none pr-10"
+                        onKeyDown={(e) => e.key === "Enter" && setCustomPassword(u.id)}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomPwd(p => !p)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">
+                        {showCustomPwd ? "🙈" : "👁"}
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setCustomPassword(u.id)}
+                      disabled={customPwdSaving || !customPwd.trim()}
+                      className="px-3 py-2 bg-violet-500 hover:bg-violet-400 text-white rounded-lg text-xs font-bold disabled:opacity-50 flex-shrink-0">
+                      {customPwdSaving ? "…" : "✓ Valider"}
+                    </button>
+                    <button onClick={() => { setCustomPwdId(null); setCustomPwdError(null); }}
+                      className="px-2 py-2 bg-slate-700 text-slate-400 rounded-lg text-xs flex-shrink-0">✕</button>
+                  </div>
+                  {customPwdError && <p className="text-red-400 text-xs">{customPwdError}</p>}
+                </div>
+              )}
+
+              {/* Custom pwd success */}
+              {customPwdResult && customPwdId !== u.id && (
+                <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-3 flex items-center gap-3 flex-wrap">
+                  <p className="text-violet-400 text-xs font-bold flex-1">✅ Mot de passe défini avec succès</p>
+                  <button onClick={() => setCustomPwdResult(null)} className="text-slate-500 hover:text-white text-xs">✕</button>
+                </div>
+              )}
 
               {/* Reset result */}
               {resetResult[u.id] && (
