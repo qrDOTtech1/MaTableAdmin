@@ -43,6 +43,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   // Reset password
+  if (body.resetPassword) {
     const password = generatePassword();
     const passwordHash = await bcrypt.hash(password, 12);
     await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
@@ -51,7 +52,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (body.sendEmail) {
       try {
         const resendKey = process.env.RESEND_API_KEY;
-        if (resendKey) {
+        if (resendKey && user.email) {
           const resend = new Resend(resendKey);
           const restaurant = await prisma.restaurant.findUnique({ where: { id }, select: { name: true, slug: true } });
           await resend.emails.send({
