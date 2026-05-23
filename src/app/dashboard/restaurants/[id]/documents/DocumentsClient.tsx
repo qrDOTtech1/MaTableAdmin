@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import QRCode from "qrcode";
-import DocumentTemplate, { type DocType } from "../../../documents/DocumentTemplate";
+import DocumentTemplate, { type DocType, type MsgData } from "../../../documents/DocumentTemplate";
 import { printDocumentNode } from "../../../documents/printUtil";
 import { computeQuote, MODULES, DURATIONS, type DurationKey } from "../../../documents/pricing";
 
@@ -31,7 +31,7 @@ const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 pl
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
-  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable">("contrat");
+  const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable" | "msg-rdv" | "msg-essai" | "msg-merci">("contrat");
   const [engagement, setEngagement] = useState<DurationKey>("12m");
   // Modules sélectionnés — "avis" est requis donc toujours inclus
   const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
@@ -222,6 +222,17 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     prestationsIncluses: "",
   });
 
+  const [msgData, setMsgData] = useState({
+    destinataire: "",
+    rdvDate: "",
+    rdvHeure: "",
+    rdvModalite: "Téléphonique",
+    rdvAdresse: "",
+    essaiDuree: "14 jours",
+    commercial: vendor.representant,
+    messageLibre: "",
+  });
+
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -255,6 +266,9 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     "collab-horaire-junior": "Contrat Collaborateur — Horaire (Mineur 16+)",
     "collab-mixte-junior": "Contrat Collaborateur — Mixte (Mineur 16+)",
     "collab-comptable": "Contrat Prestation Comptable",
+    "msg-rdv": "Confirmation de rendez-vous",
+    "msg-essai": "Confirmation offre d'essai",
+    "msg-merci": "Lettre de remerciement",
   };
 
   const saveToClasseur = async () => {
@@ -363,6 +377,11 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
                 <option value="collab-horaire-junior">Collaborateur — Horaire Mineur 16+</option>
                 <option value="collab-mixte-junior">Collaborateur — Mixte Mineur 16+</option>
                 <option value="collab-comptable">Contrat Prestation Comptable</option>
+              </optgroup>
+              <optgroup label="✉️ Messages & Courriers">
+                <option value="msg-rdv">Confirmation de rendez-vous</option>
+                <option value="msg-essai">Confirmation offre d'essai gratuit</option>
+                <option value="msg-merci">Lettre de remerciement (startup)</option>
               </optgroup>
             </select>
           </div>
@@ -708,6 +727,47 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
             );
           })()}
 
+          {/* ─── Messages & Courriers ────────────────────────────────────── */}
+          {docType.startsWith("msg-") && (
+            <div className="pt-4 border-t border-slate-800 space-y-2">
+              <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">✉️ Destinataire</label>
+              <input type="text" value={msgData.destinataire} placeholder="Nom du contact / gérant" onChange={(e) => setMsgData({...msgData, destinataire: e.target.value})} className={INPUT_CLS} />
+              <input type="text" value={msgData.commercial} placeholder="Votre nom (commercial MaTable)" onChange={(e) => setMsgData({...msgData, commercial: e.target.value})} className={INPUT_CLS} />
+
+              {docType === "msg-rdv" && (
+                <>
+                  <label className="block text-xs font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider">📅 Rendez-vous</label>
+                  <input type="text" value={msgData.rdvDate} placeholder="Date (ex. lundi 26 mai 2026)" onChange={(e) => setMsgData({...msgData, rdvDate: e.target.value})} className={INPUT_CLS} />
+                  <input type="text" value={msgData.rdvHeure} placeholder="Heure (ex. 14h30)" onChange={(e) => setMsgData({...msgData, rdvHeure: e.target.value})} className={INPUT_CLS} />
+                  <select value={msgData.rdvModalite} onChange={(e) => setMsgData({...msgData, rdvModalite: e.target.value})} className={INPUT_CLS}>
+                    <option>Téléphonique</option>
+                    <option>Visioconférence</option>
+                    <option>En personne</option>
+                  </select>
+                  {msgData.rdvModalite === "En personne" && (
+                    <input type="text" value={msgData.rdvAdresse} placeholder="Adresse du rendez-vous" onChange={(e) => setMsgData({...msgData, rdvAdresse: e.target.value})} className={INPUT_CLS} />
+                  )}
+                </>
+              )}
+
+              {docType === "msg-essai" && (
+                <>
+                  <label className="block text-xs font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider">🎁 Essai gratuit</label>
+                  <input type="text" value={msgData.essaiDuree} placeholder="Durée de l'essai (ex. 14 jours)" onChange={(e) => setMsgData({...msgData, essaiDuree: e.target.value})} className={INPUT_CLS} />
+                </>
+              )}
+
+              <label className="block text-xs font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider">💬 Note personnalisée (optionnel)</label>
+              <textarea
+                value={msgData.messageLibre}
+                placeholder="Ajoutez un message personnel…"
+                onChange={(e) => setMsgData({...msgData, messageLibre: e.target.value})}
+                rows={3}
+                className={INPUT_CLS}
+              />
+            </div>
+          )}
+
           {/* ── Section NFC/QR — Tuto Avis seulement ── */}
           {docType === "tuto-avis" && reviewUrl && (
             <div className="pt-4 border-t border-slate-800 space-y-3">
@@ -816,6 +876,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           chainQuote={chainQuote}
           tutoQrCode={nfcQrCode ?? undefined}
           collab={collab}
+          msgData={msgData}
         />
       </div>
     </div>

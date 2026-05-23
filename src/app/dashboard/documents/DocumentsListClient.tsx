@@ -47,6 +47,9 @@ const TYPE_LABELS: Record<string, string> = {
   "collab-horaire-junior": "Collab. Horaire Junior",
   "collab-mixte-junior": "Collab. Mixte Junior",
   "collab-comptable": "Prestation Comptable",
+  "msg-rdv": "Confirmation RDV",
+  "msg-essai": "Offre d'essai",
+  "msg-merci": "Lettre remerciement",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -79,6 +82,9 @@ const TYPE_COLORS: Record<string, string> = {
   "collab-horaire-junior": "bg-violet-500/10 text-violet-400 border-violet-500/30",
   "collab-mixte-junior": "bg-violet-500/10 text-violet-400 border-violet-500/30",
   "collab-comptable": "bg-slate-500/10 text-slate-300 border-slate-500/30",
+  "msg-rdv": "bg-blue-500/10 text-blue-300 border-blue-500/30",
+  "msg-essai": "bg-emerald-500/10 text-emerald-300 border-emerald-500/30",
+  "msg-merci": "bg-purple-500/10 text-purple-300 border-purple-500/30",
 };
 
 function euros(cents: number) {
@@ -125,6 +131,11 @@ const ALL_DOC_TYPES: { group: string; options: { value: string; label: string }[
     { value: "collab-horaire-junior", label: "Collaborateur — Horaire Mineur 16+" },
     { value: "collab-mixte-junior", label: "Collaborateur — Mixte Mineur 16+" },
     { value: "collab-comptable", label: "Contrat Prestation Comptable" },
+  ]},
+  { group: "Messages & Courriers", options: [
+    { value: "msg-rdv", label: "Confirmation de rendez-vous" },
+    { value: "msg-essai", label: "Confirmation offre d'essai gratuit" },
+    { value: "msg-merci", label: "Lettre de remerciement (startup)" },
   ]},
 ];
 

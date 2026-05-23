@@ -289,7 +289,7 @@ export type PriceInfo = {
   annualPayTotal?: number;
 };
 
-export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable";
+export type DocType = "contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable" | "msg-rdv" | "msg-essai" | "msg-merci";
 
 export type CollabData = {
   nom: string;
@@ -330,6 +330,17 @@ export type ChainQuote = {
   notes?: string;
 };
 
+export type MsgData = {
+  destinataire: string;       // nom du contact / gérant
+  rdvDate: string;            // pour msg-rdv
+  rdvHeure: string;
+  rdvModalite: string;        // "Téléphonique" | "Visioconférence" | "En personne"
+  rdvAdresse: string;         // si en personne
+  essaiDuree: string;         // pour msg-essai, ex. "14 jours"
+  commercial: string;         // nom du commercial MaTable
+  messageLibre: string;       // note personnalisée optionnelle
+};
+
 type Props = {
   docType: DocType;
   vendor: Vendor;
@@ -341,10 +352,11 @@ type Props = {
   chainQuote?: ChainQuote;
   tutoQrCode?: string; // data URL du vrai QR code restaurant (tuto-avis)
   collab?: CollabData;
+  msgData?: MsgData;
 };
 
 const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemplate(
-  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote, tutoQrCode, collab },
+  { docType, vendor, clientData, docMeta, engagement, prestation, priceInfo, chainQuote, tutoQrCode, collab, msgData },
   ref
 ) {
   return (
@@ -388,7 +400,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       </div>
 
       {/* Pour les plaquettes et le flyer : pas de titre rigide, le template gère son propre hero */}
-      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && docType !== "tuto-commande" && docType !== "tuto-avis-eco" && docType !== "plaquette-avis-focus" && docType !== "plaquette-menu-focus" && docType !== "tuto-reservations" && docType !== "tuto-reservations-eco" && docType !== "tuto-nova-ia" && (
+      {docType !== "plaquette" && docType !== "plaquette-eco" && docType !== "plaquette-premium" && docType !== "plaquette-compact" && docType !== "plaquette-chaine" && docType !== "flyer" && docType !== "tuto-avis" && docType !== "tuto-commande" && docType !== "tuto-avis-eco" && docType !== "plaquette-avis-focus" && docType !== "plaquette-menu-focus" && docType !== "tuto-reservations" && docType !== "tuto-reservations-eco" && docType !== "tuto-nova-ia" && docType !== "msg-rdv" && docType !== "msg-essai" && docType !== "msg-merci" && (
         <h1 className="text-xl font-black uppercase tracking-widest text-center mb-8 pb-4 border-b">
           {docType === "contrat" && "Contrat d'Abonnement — Plateforme MaTable.Pro"}
           {docType === "prestation" && "Contrat de Prestation — MaTable.Pro"}
@@ -2099,6 +2111,202 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                   </>
                 )}
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ===== CONFIRMATION RENDEZ-VOUS ===== */}
+      {docType === "msg-rdv" && msgData && (() => {
+        const dest = msgData.destinataire || clientData.name || "[Nom du contact]";
+        const resto = clientData.name || "[Nom du restaurant]";
+        const comm = msgData.commercial || vendor.representant;
+        return (
+          <div style={{ fontFamily: "Arial, sans-serif", maxWidth: "160mm", margin: "0 auto" }}>
+            {/* Pastille date */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 8, padding: "6px 14px", fontSize: 11, color: "#c2410c", fontWeight: 700 }}>
+                {docMeta.date}
+              </div>
+            </div>
+            {/* Destinataire */}
+            <p style={{ fontSize: 13, color: "#374151", marginBottom: 28 }}>
+              À l'attention de <strong>{dest}</strong><br />
+              <span style={{ fontSize: 11, color: "#6b7280" }}>{resto}</span>
+            </p>
+            {/* Objet */}
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", borderLeft: "3px solid #f97316", paddingLeft: 10, marginBottom: 28 }}>
+              Objet : Confirmation de votre rendez-vous avec MaTable.Pro
+            </p>
+            {/* Corps */}
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 20 }}>
+              Bonjour <strong>{dest}</strong>,
+            </p>
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 20 }}>
+              Je vous confirme notre rendez-vous prévu comme suit :
+            </p>
+            {/* Bloc RDV mis en valeur */}
+            <div style={{ background: "linear-gradient(135deg, #fff7ed, #ffedd5)", border: "2px solid #f97316", borderRadius: 12, padding: "20px 24px", marginBottom: 28 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 20px", fontSize: 13 }}>
+                <span style={{ color: "#9a3412", fontWeight: 700 }}>📅 Date</span>
+                <span style={{ color: "#0f172a", fontWeight: 700 }}>{msgData.rdvDate || "[Date à préciser]"}</span>
+                <span style={{ color: "#9a3412", fontWeight: 700 }}>🕐 Heure</span>
+                <span style={{ color: "#0f172a", fontWeight: 700 }}>{msgData.rdvHeure || "[Heure à préciser]"}</span>
+                <span style={{ color: "#9a3412", fontWeight: 700 }}>📍 Format</span>
+                <span style={{ color: "#0f172a", fontWeight: 700 }}>{msgData.rdvModalite || "Téléphonique"}{msgData.rdvAdresse ? ` — ${msgData.rdvAdresse}` : ""}</span>
+                <span style={{ color: "#9a3412", fontWeight: 700 }}>👤 Votre interlocuteur</span>
+                <span style={{ color: "#0f172a", fontWeight: 700 }}>{comm} — MaTable.Pro</span>
+              </div>
+            </div>
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 12 }}>
+              Lors de ce rendez-vous, je vous présenterai nos solutions adaptées à votre établissement : gestion des avis Google, commande QR, portail serveur, réservations en ligne et bien plus — le tout dans une seule plateforme simple à prendre en main.
+            </p>
+            {msgData.messageLibre && (
+              <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 12 }}>
+                {msgData.messageLibre}
+              </p>
+            )}
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 28 }}>
+              Si vous devez modifier ce rendez-vous, n'hésitez pas à me contacter directement. Je reste à votre disposition pour toute question en amont.
+            </p>
+            {/* Signature */}
+            <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20, marginTop: 20 }}>
+              <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, margin: "0 0 12px" }}>
+                Cordialement,
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a", margin: "0 0 2px" }}>{comm}</p>
+              <p style={{ fontSize: 11, color: "#f97316", fontWeight: 700, margin: "0 0 2px" }}>MaTable.Pro</p>
+              <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>{vendor.phone} · {vendor.email} · matable.pro</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ===== CONFIRMATION OFFRE D'ESSAI ===== */}
+      {docType === "msg-essai" && msgData && (() => {
+        const dest = msgData.destinataire || clientData.name || "[Nom du contact]";
+        const resto = clientData.name || "[Nom du restaurant]";
+        const comm = msgData.commercial || vendor.representant;
+        const duree = msgData.essaiDuree || "14 jours";
+        return (
+          <div style={{ fontFamily: "Arial, sans-serif", maxWidth: "160mm", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 8, padding: "6px 14px", fontSize: 11, color: "#15803d", fontWeight: 700 }}>
+                {docMeta.date}
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: "#374151", marginBottom: 28 }}>
+              À l'attention de <strong>{dest}</strong><br />
+              <span style={{ fontSize: 11, color: "#6b7280" }}>{resto}</span>
+            </p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", borderLeft: "3px solid #22c55e", paddingLeft: 10, marginBottom: 28 }}>
+              Objet : Votre offre d'essai gratuit MaTable.Pro — {duree} sans engagement
+            </p>
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 16 }}>
+              Bonjour <strong>{dest}</strong>,
+            </p>
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 20 }}>
+              Merci pour votre confiance ! Nous avons le plaisir de vous confirmer l'activation de votre accès d'essai gratuit à la plateforme MaTable.Pro.
+            </p>
+            {/* Bloc essai */}
+            <div style={{ background: "linear-gradient(135deg, #f0fdf4, #dcfce7)", border: "2px solid #22c55e", borderRadius: 12, padding: "20px 24px", marginBottom: 24 }}>
+              <div style={{ fontSize: 14, fontWeight: 900, color: "#15803d", marginBottom: 14 }}>✅ Ce que vous pouvez tester pendant {duree}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {[
+                  ["⭐ Avis Google IA", "Collecte automatique + réponses Nova IA"],
+                  ["📱 Menu QR", "Carte digitale multilingue sur vos tables"],
+                  ["🍳 Portail cuisine", "Commandes en temps réel côté cuisine"],
+                  ["📊 Analytics", "CA, tendances, plats les plus commandés"],
+                  ["📅 Réservations", "Réservations en ligne intégrées"],
+                  ["🤖 Nova IA", "Assistant IA pour tout votre établissement"],
+                ].map(([t, d]) => (
+                  <div key={t} style={{ background: "#fff", borderRadius: 8, padding: "10px 12px", borderLeft: "3px solid #22c55e" }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", marginBottom: 3 }}>{t}</div>
+                    <div style={{ fontSize: 9.5, color: "#6b7280" }}>{d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: 10, padding: "14px 18px", marginBottom: 24 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#9a3412", margin: "0 0 8px" }}>🔗 Comment accéder à votre espace ?</p>
+              <p style={{ fontSize: 12, color: "#374151", margin: "0 0 6px", lineHeight: 1.7 }}>
+                Rendez-vous sur <strong style={{ color: "#f97316" }}>matable.pro/login</strong> et connectez-vous avec les identifiants envoyés séparément.
+              </p>
+              <p style={{ fontSize: 11, color: "#9a3412", margin: 0 }}>💡 Votre interlocuteur {comm} reste disponible pour vous accompagner à chaque étape.</p>
+            </div>
+            {msgData.messageLibre && (
+              <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 20 }}>
+                {msgData.messageLibre}
+              </p>
+            )}
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 28 }}>
+              À l'issue des {duree}, si MaTable.Pro vous convient, nous vous proposerons une offre d'abonnement sans surprise. Si vous décidez de ne pas continuer — aucun prélèvement, aucune relance abusive, aucune condition cachée.
+            </p>
+            <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20 }}>
+              <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, margin: "0 0 12px" }}>Bonne découverte !</p>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a", margin: "0 0 2px" }}>{comm}</p>
+              <p style={{ fontSize: 11, color: "#f97316", fontWeight: 700, margin: "0 0 2px" }}>MaTable.Pro</p>
+              <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>{vendor.phone} · {vendor.email} · matable.pro</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ===== LETTRE REMERCIEMENT STARTUP ===== */}
+      {docType === "msg-merci" && msgData && (() => {
+        const dest = msgData.destinataire || clientData.name || "[Nom du contact]";
+        const resto = clientData.name || "[Nom du restaurant]";
+        const comm = msgData.commercial || vendor.representant;
+        return (
+          <div style={{ fontFamily: "Arial, sans-serif", maxWidth: "160mm", margin: "0 auto" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
+              <div style={{ background: "#faf5ff", border: "1px solid #d8b4fe", borderRadius: 8, padding: "6px 14px", fontSize: 11, color: "#7c3aed", fontWeight: 700 }}>
+                {docMeta.date}
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: "#374151", marginBottom: 28 }}>
+              À <strong>{dest}</strong><br />
+              <span style={{ fontSize: 11, color: "#6b7280" }}>{resto}</span>
+            </p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", borderLeft: "3px solid #8b5cf6", paddingLeft: 10, marginBottom: 28 }}>
+              Objet : Merci de votre confiance
+            </p>
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 20 }}>
+              Bonjour <strong>{dest}</strong>,
+            </p>
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, marginBottom: 20 }}>
+              Je voulais prendre un moment pour vous remercier personnellement. Choisir MaTable.Pro alors que nous sommes encore une jeune startup qui construit son chemin, c'est une marque de confiance qui compte beaucoup pour nous — et je n'exagère pas.
+            </p>
+            {/* Bloc startup */}
+            <div style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)", borderRadius: 14, padding: "22px 26px", marginBottom: 24, color: "#fff" }}>
+              <div style={{ fontSize: 13, fontWeight: 900, color: "#a5b4fc", marginBottom: 14, letterSpacing: 0.5 }}>🚀 Ce que ça signifie concrètement pour vous</div>
+              {[
+                ["Vous façonnez le produit", "Chacun de vos retours, chaque bug signalé, chaque fonctionnalité souhaitée devient une priorité dans notre feuille de route. Vous n'êtes pas un utilisateur parmi des milliers — votre voix compte vraiment."],
+                ["Un accès direct à l'équipe", "Chez nous, pas de chatbot, pas de ticket perdu dans un CRM. Vous avez notre contact direct. Si quelque chose ne va pas, vous nous le dites et on règle ça."],
+                ["Vous grandissez avec nous", "Les clients qui nous font confiance maintenant bénéficient d'un accompagnement sur-mesure. Nous n'oublions pas ceux qui ont cru en nous avant tout le monde."],
+              ].map(([t, d]) => (
+                <div key={t} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#c7d2fe", marginBottom: 5 }}>✓ {t}</div>
+                  <div style={{ fontSize: 10.5, color: "#a5b4fc", lineHeight: 1.7 }}>{d}</div>
+                </div>
+              ))}
+              <div style={{ fontSize: 10.5, color: "#818cf8", lineHeight: 1.7, borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 12, marginTop: 0 }}>
+                En clair : si quelque chose vous manque, si vous avez une idée, si un aspect de la plateforme vous freine — dites-le. Votre suggestion sera lue, étudiée, et souvent transformée en fonctionnalité dans les semaines qui suivent.
+              </div>
+            </div>
+            {msgData.messageLibre && (
+              <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, marginBottom: 20 }}>
+                {msgData.messageLibre}
+              </p>
+            )}
+            <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.9, marginBottom: 28 }}>
+              Merci encore pour votre confiance. Nous allons faire tout notre possible pour que vous ne le regrettiez pas.
+            </p>
+            <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 20 }}>
+              <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.8, margin: "0 0 12px" }}>Avec toute notre gratitude,</p>
+              <p style={{ fontSize: 13, fontWeight: 800, color: "#0f172a", margin: "0 0 2px" }}>{comm}</p>
+              <p style={{ fontSize: 11, color: "#f97316", fontWeight: 700, margin: "0 0 2px" }}>Co-fondateur · MaTable.Pro</p>
+              <p style={{ fontSize: 11, color: "#6b7280", margin: 0 }}>{vendor.phone} · {vendor.email} · matable.pro</p>
             </div>
           </div>
         );
