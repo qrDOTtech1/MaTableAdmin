@@ -1,0 +1,8 @@
+-- Backup quotidien : champs AdminConfig
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "backupRecipient" TEXT;
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "backupEnabled" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "backupHourUtc" INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "lastBackupAt" TIMESTAMP(3);
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "lastBackupSize" INTEGER;
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "lastBackupTables" INTEGER;
+ALTER TABLE "AdminConfig" ADD COLUMN IF NOT EXISTS "lastBackupRows" INTEGER;

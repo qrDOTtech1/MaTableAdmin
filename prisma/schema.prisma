@@ -519,5 +519,13 @@ model AdminConfig {
   archiveEnabled    Boolean   @default(false)
   archiveDayOfMonth Int       @default(1) // jour du mois pour l'envoi
   lastArchiveSentAt DateTime?
+  // Backup DB quotidien
+  backupRecipient   String?   // email où envoyer les backups
+  backupEnabled     Boolean   @default(false)
+  backupHourUtc     Int       @default(3)  // heure UTC du backup quotidien (0-23)
+  lastBackupAt      DateTime?
+  lastBackupSize    Int?      // taille du dernier dump en bytes
+  lastBackupTables  Int?      // nb de tables sauvegardées
+  lastBackupRows    Int?      // nb total de lignes sauvegardées
   updatedAt         DateTime  @updatedAt
 }

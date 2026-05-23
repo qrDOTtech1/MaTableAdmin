@@ -15,6 +15,7 @@ const NAV = [
       { href: "/dashboard/prospection", label: "🎯 Prospection" },
       { href: "/dashboard/demandes", label: "📩 Demandes / tarifs" },
       { href: "/dashboard/documents", label: "📂 Classeur virtuel" },
+      { href: "/dashboard/database", label: "🗄 Base de données" },
     ],
   },
   {
