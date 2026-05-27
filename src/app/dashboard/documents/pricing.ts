@@ -45,11 +45,13 @@ export const PLANS = [
     features: [
       "Tout le forfait Starter",
       "Réservations Intelligentes (créneaux dynamiques, arrhes Stripe, anti no-show)",
+      "Programme Fidélité inclus (clients, points, offres et récompenses)",
     ],
-    featuresShort: ["Tout Starter inclus", "Réservations Intelligentes & anti no-show"],
+    featuresShort: ["Tout Starter inclus", "Réservations Intelligentes & anti no-show", "Programme Fidélité inclus"],
     featuresDetailed: [
       { name: "Tout le forfait Starter", desc: "Inclut la totalité des fonctionnalités Avis Google, Commande QR, Portail Serveur / Cuisine / Caisse." },
       { name: "Réservations Intelligentes", desc: "Créneaux dynamiques calculés selon votre capacité réelle ; arrhes encaissées automatiquement via Stripe ; SMS/email de rappel anti no-show envoyés 24 h avant." },
+      { name: "Programme Fidélité", desc: "Base clients, points cumulés, niveaux VIP, offres personnalisées et récompenses configurables inclus dans le forfait Pro, sans abonnement fidélité séparé." },
     ],
   },
   {
@@ -67,7 +69,7 @@ export const PLANS = [
     ],
     featuresShort: ["Tout Pro inclus", "Nova Stock IA", "Nova Finance IA", "Nova Contab IA"],
     featuresDetailed: [
-      { name: "Tout le forfait Pro", desc: "Inclut la totalité des fonctionnalités Starter + Réservations Intelligentes." },
+      { name: "Tout le forfait Pro", desc: "Inclut la totalité des fonctionnalités Starter + Réservations Intelligentes + Programme Fidélité." },
       { name: "Nova Stock IA", desc: "L'IA analyse vos ventes, génère automatiquement la liste de courses, anticipe les ruptures et calcule le food cost en temps réel." },
       { name: "Nova Finance IA", desc: "Tableau de bord financier : chiffre d'affaires, marges par plat, prévisions de revenus et recommandations concrètes pour améliorer la rentabilité." },
       { name: "Nova Contab IA", desc: "Export des données comptables formaté pour votre expert-comptable, déclarations TVA pré-remplies et rapports de clôture mensuelle en un clic." },

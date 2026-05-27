@@ -75,6 +75,7 @@ const PLANS = [
     features: [
       "Tout le forfait Starter",
       "Nova IA — chatbot, Magic Scan, génération menu, accords",
+      "Programme Fidélité inclus — clients, points, offres, récompenses",
     ],
   },
   {
@@ -88,6 +89,7 @@ const PLANS = [
     dot: "bg-purple-400",
     features: [
       "Tout le forfait Pro",
+      "Programme Fidélité inclus dans Pro",
       "Nova Stock IA — gestion stocks, alertes, courses",
       "Nova Finance IA — conseils, promotions anti-gaspillage",
       "Nova Contab IA — comptabilité, URSSAF/TVA, export",
