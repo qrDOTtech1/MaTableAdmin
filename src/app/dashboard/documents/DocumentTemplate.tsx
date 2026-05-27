@@ -1,8 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { computeQuote, MODULES, DURATIONS, eur } from "./pricing";
-import type { DurationKey, ModuleId, QuoteLine, Quote } from "./pricing";
+import { PLANS, eur } from "./pricing";
 
 // ───────────────────────────────────────────────────────────────────────────
 // Bannière latérale décorative — signature visuelle MaTable (6 mm)
@@ -273,18 +272,16 @@ export type Prestation = {
 };
 
 export type PriceInfo = {
-  // Champs historiques (rétro-compat)
+  // Forfait sélectionné
+  planId?: string;
+  planName?: string;
+  planFeatures?: readonly string[];
+  billing?: "monthly" | "annual";
+  // Champs calculés
   monthly: number;
   total: number;
   mult: string;
-  // Champs détaillés (nouveaux — voir pricing.ts)
-  modules?: Array<{ id: string; name: string; desc: string; basePrice: number; unitPrice: number; required: boolean }>;
-  subtotal?: number;
-  volumePercent?: number;
-  volumeAmount?: number;
-  durationKey?: string;
   durationLabel?: string;
-  realMult?: number;
   isAnnualPay?: boolean;
   annualPayTotal?: number;
 };
@@ -454,33 +451,31 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 1 — Objet du contrat</h2>
           <p className="text-sm mb-3 leading-relaxed">Le présent contrat (« <b>le Contrat</b> ») a pour objet de définir les conditions dans lesquelles le Prestataire met à disposition du Client, sous forme de service en ligne (SaaS), l'accès à la plateforme <b>MaTable.Pro</b> ainsi qu'aux modules choisis. Le Prestataire conserve la pleine propriété de la plateforme, de son code et de ses contenus.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Modules souscrits & Tarifs</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 2 — Forfait souscrit & Tarif</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
-                <th className="p-3">Module souscrit</th>
+                <th className="p-3">Forfait souscrit</th>
                 <th className="p-3 text-right">Prix HT / mois</th>
               </tr>
             </thead>
             <tbody>
-              {(priceInfo.modules ?? []).map((m) => (
-                <tr key={m.id} className="border-b">
-                  <td className="p-3">
-                    <b>{m.name}</b>{m.required && <span className="text-xs text-orange-600 italic"> · requis</span>}
-                    {m.id === "finance" || m.id === "stock" || m.id === "contab" ? <span className="text-xs text-gray-500"> (NovaTech IA — voir art. 4 bis)</span> : null}
-                    <br/><span className="text-xs text-gray-500">{m.desc}</span>
-                  </td>
-                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
-                </tr>
-              ))}
-              <tr className="border-b text-xs">
-                <td className="p-3 text-gray-500 text-right">Sous-total HT mensuel ({priceInfo.modules?.length ?? 0} module{(priceInfo.modules?.length ?? 0) > 1 ? "s" : ""}) — engagement {priceInfo.durationLabel ?? "12 mois"}</td>
-                <td className="p-3 text-right">{(priceInfo.subtotal ?? priceInfo.monthly).toFixed(2)} €</td>
+              <tr className="border-b">
+                <td className="p-3">
+                  <b>Forfait {priceInfo.planName ?? "Starter"}</b>
+                  <br/>
+                  <ul className="text-xs text-gray-500 mt-1 space-y-0.5 list-disc ml-4">
+                    {(priceInfo.planFeatures ?? PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.features ?? []).map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                </td>
+                <td className="p-3 text-right align-top font-bold">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
-              {(priceInfo.volumePercent ?? 0) > 0 && (
-                <tr className="border-b text-xs text-emerald-700">
-                  <td className="p-3 text-right">Remise volume ({priceInfo.volumePercent} %)</td>
-                  <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
+              {priceInfo.isAnnualPay && (
+                <tr className="border-b text-xs text-orange-700 bg-orange-50/40">
+                  <td className="p-3 text-right">Engagement annuel — réduction −12 % appliquée</td>
+                  <td className="p-3 text-right font-black">Incluse</td>
                 </tr>
               )}
               <tr className="bg-gray-50 font-black">
@@ -497,17 +492,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </table>
           <p className="text-xs text-gray-500 italic mb-4">
             Hébergement, mises à jour et support inclus. TVA non applicable, art. 293B du CGI.
-            {priceInfo.durationKey && priceInfo.durationKey !== "3m" && (
-              <> Tarifs unitaires affichés avec la réduction engagement {priceInfo.durationLabel} ({priceInfo.mult}) appliquée par rapport au prix de base (3 mois).</>
-            )}
           </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 3 — Durée & Engagement</h2>
-          <p className="text-sm mb-3 leading-relaxed">Le Contrat est conclu pour une durée ferme minimale de <b className="text-orange-700 bg-orange-50 px-1">{engagement.replace('m', ' mois').replace('a', ' mois (paiement annuel)')}</b> à compter de sa date de signature, période durant laquelle aucune résiliation anticipée n'est possible sauf cas prévus à l'article 9. À l'issue de cette période, le Contrat se renouvelle <b>tacitement par périodes successives d'un mois</b>, sauf résiliation notifiée par l'une des Parties au moins 30 jours avant l'échéance, par email avec accusé de réception.</p>
-          <p className="text-sm mb-3 leading-relaxed text-gray-600 italic">
-            Le prix de base s'entend pour un engagement de 3 mois. Plus l'engagement choisi est long, plus la réduction est forte :
-            6 mois (<b>−2 %</b>) · 9 mois (<b>−4 %</b>) · 12 mois (<b>−7 %</b>) · 12 mois en paiement annuel (<b>−12 %</b>).
-          </p>
+          {priceInfo.isAnnualPay ? (
+            <p className="text-sm mb-3 leading-relaxed">Le Contrat est conclu pour une durée d'<b className="text-orange-700 bg-orange-50 px-1">un an</b> à compter de sa date de signature, avec <b>paiement annuel</b> à la signature (ou mensuel selon accord). À l'issue, le Contrat se renouvelle <b>tacitement par périodes successives d'un an</b>, sauf résiliation notifiée au moins 30 jours avant l'échéance, par email avec accusé de réception. La réduction annuelle de 12 % est acquise pour toute la période d'engagement.</p>
+          ) : (
+            <p className="text-sm mb-3 leading-relaxed">Le Contrat est conclu <b className="text-orange-700 bg-orange-50 px-1">sans engagement de durée minimum</b>. Il est résiliable à tout moment avec un préavis de <b>30 jours</b> notifié par email avec accusé de réception. Le Contrat se renouvelle tacitement de mois en mois jusqu'à résiliation.</p>
+          )}
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-2">Article 4 — Modalités de paiement</h2>
           <p className="text-sm mb-2 leading-relaxed">Le Client règle le Prestataire par <b>virement bancaire</b> ou <b>prélèvement SEPA</b>, à terme à échoir, le 1er de chaque mois. Toute mise en service est conditionnée à la réception du premier paiement.</p>
@@ -610,30 +602,18 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               </tr>
             </thead>
             <tbody>
-              {(priceInfo.modules ?? []).map((m) => (
-                <tr key={m.id} className="border-b">
-                  <td className="p-3">
-                    <b>{m.name}</b><br/>
-                    <span className="text-xs text-gray-500">{m.desc}</span>
-                  </td>
-                  <td className="p-3">{docMeta.periode}</td>
-                  <td className="p-3 text-center">1</td>
-                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
-                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
-                </tr>
-              ))}
-              {(priceInfo.volumePercent ?? 0) > 0 && (
-                <>
-                  <tr className="border-b text-xs">
-                    <td colSpan={4} className="p-3 text-right text-gray-600">Sous-total HT</td>
-                    <td className="p-3 text-right">{(priceInfo.subtotal ?? priceInfo.monthly).toFixed(2)} €</td>
-                  </tr>
-                  <tr className="border-b text-xs text-emerald-700">
-                    <td colSpan={4} className="p-3 text-right">Remise volume — {priceInfo.modules?.length} modules ({priceInfo.volumePercent} %)</td>
-                    <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
-                  </tr>
-                </>
-              )}
+              <tr className="border-b">
+                <td className="p-3">
+                  <b>Abonnement MaTable.Pro — Forfait {priceInfo.planName ?? "Starter"}</b>
+                  {priceInfo.isAnnualPay && <span className="text-xs text-orange-600 italic"> · engagement annuel −12 %</span>}
+                  <br/>
+                  <span className="text-xs text-gray-500">Accès plateforme, hébergement, mises à jour et support inclus.</span>
+                </td>
+                <td className="p-3">{docMeta.periode}</td>
+                <td className="p-3 text-center">1</td>
+                <td className="p-3 text-right">{priceInfo.monthly.toFixed(2)} €</td>
+                <td className="p-3 text-right">{priceInfo.monthly.toFixed(2)} €</td>
+              </tr>
               <tr className="border-b">
                 <td colSpan={4} className="p-3 text-right font-bold">Total HT</td>
                 <td className="p-3 text-right font-bold">{priceInfo.monthly.toFixed(2)} €</td>
@@ -707,48 +687,35 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Objet</h2>
           <p className="text-sm mb-4 leading-relaxed">Mise à disposition de la plateforme SaaS <b>MaTable.Pro</b> sur les modules sélectionnés ci-dessous. Hébergement, mises à jour et support inclus.</p>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Détail tarifaire — engagement <span className="text-orange-700">{priceInfo.durationLabel ?? engagement}</span></h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Détail tarifaire — <span className="text-orange-700">{priceInfo.durationLabel ?? "Mensuel"}</span></h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
-                <th className="p-3">Module</th>
+                <th className="p-3">Forfait</th>
                 <th className="p-3 text-right">Prix HT / mois</th>
               </tr>
             </thead>
             <tbody>
-              {(priceInfo.modules ?? []).map((m) => (
-                <tr key={m.id} className="border-b">
-                  <td className="p-3"><b>{m.name}</b>{m.required && <span className="text-xs italic text-orange-600"> · requis</span>}<br/><span className="text-xs text-gray-500">{m.desc}</span></td>
-                  <td className="p-3 text-right">{m.unitPrice.toFixed(2)} €</td>
-                </tr>
-              ))}
-              <tr className="border-b text-xs">
-                <td className="p-3 text-right text-gray-600">Sous-total HT mensuel ({priceInfo.modules?.length ?? 0} module{(priceInfo.modules?.length ?? 0) > 1 ? "s" : ""})</td>
-                <td className="p-3 text-right">{(priceInfo.subtotal ?? priceInfo.monthly).toFixed(2)} €</td>
+              <tr className="border-b">
+                <td className="p-3">
+                  <b>Forfait {priceInfo.planName ?? "Starter"}</b>
+                  {priceInfo.isAnnualPay && <span className="text-xs italic text-orange-600"> · −12 % engagement annuel</span>}
+                  <br/>
+                  <ul className="text-xs text-gray-500 mt-1 space-y-0.5 list-disc ml-4">
+                    {(priceInfo.planFeatures ?? PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.features ?? []).map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                </td>
+                <td className="p-3 text-right align-top">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
-              {(priceInfo.volumePercent ?? 0) > 0 && (
-                <tr className="border-b text-xs text-emerald-700">
-                  <td className="p-3 text-right">Remise volume ({priceInfo.volumePercent} %)</td>
-                  <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
-                </tr>
-              )}
-              {priceInfo.durationKey && priceInfo.durationKey !== "3m" && (
-                <tr className="border-b text-xs text-emerald-700 italic">
-                  <td className="p-3 text-right">Réduction engagement {priceInfo.durationLabel} (vs prix de base 3 mois)</td>
-                  <td className="p-3 text-right font-bold">{priceInfo.mult}</td>
-                </tr>
-              )}
               <tr className="bg-gray-50 font-black">
                 <td className="p-3 text-right">Mensualité HT à régler</td>
                 <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
-              <tr className="bg-orange-50/50 text-sm">
-                <td className="p-3 text-right text-orange-900">Total HT sur la période d'engagement</td>
-                <td className="p-3 text-right font-black text-orange-700">{priceInfo.total.toFixed(2)} €</td>
-              </tr>
               {priceInfo.isAnnualPay && (
                 <tr className="border-t-2 border-orange-500 text-sm">
-                  <td className="p-3 text-right text-orange-700">→ À régler en une fois à la signature (paiement annuel)</td>
+                  <td className="p-3 text-right text-orange-700">→ À régler en une fois à la signature (12 mois)</td>
                   <td className="p-3 text-right font-black text-orange-700">{(priceInfo.annualPayTotal ?? priceInfo.monthly * 12).toFixed(2)} €</td>
                 </tr>
               )}
@@ -760,10 +727,11 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           <ul className="text-sm mb-4 ml-6 list-disc space-y-1">
             <li>Devis valable jusqu'au <b>{docMeta.validite}</b>.</li>
             <li>Tarifs exprimés en euros hors taxes. TVA non applicable, art. 293B du CGI.</li>
-            <li><b>Prix de base = engagement 3 mois.</b> Réductions appliquées sur engagement plus long : <b className="text-emerald-700">6 m (−2 %) · 9 m (−4 %) · 12 m (−7 %) · 12 m annuel (−12 %)</b>.</li>
+            {priceInfo.isAnnualPay
+              ? <li><b>Engagement annuel :</b> réduction de <b className="text-emerald-700">−12 %</b> sur le prix mensuel standard, paiement mensuel ou en une fois à la signature.</li>
+              : <li><b>Mensuel sans engagement :</b> résiliable à tout moment avec 30 jours de préavis.</li>}
             <li>Paiement par virement bancaire ou prélèvement SEPA mensuel à terme à échoir.</li>
             <li>Mise en service immédiate dès retour du contrat signé et du premier paiement.</li>
-            <li>Engagement ferme sur la période choisie ; renouvellement tacite mensuel à l'issue.</li>
             <li>Préavis de résiliation : 30 jours par email avec accusé de réception.</li>
             <li>Conditions complètes : voir contrat d'abonnement et CGV/CGU joints.</li>
           </ul>
@@ -790,8 +758,8 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
         const subtotalMonthly = cq.establishments.reduce((s, e) => s + (e.monthlyHt || 0), 0);
         const groupDiscount = subtotalMonthly * (cq.groupDiscountPercent / 100);
         const totalMonthly = subtotalMonthly - groupDiscount;
-        const moduleNames: Record<string, string> = Object.fromEntries(MODULES.map((m) => [m.id, m.name]));
-        const engLabel: Record<string, string> = { "3m": "3 m", "6m": "6 m", "9m": "9 m", "12m": "12 m", "12a": "12 m an." };
+        const planNames: Record<string, string> = Object.fromEntries(PLANS.map((p) => [p.id, p.name]));
+        const engLabel: Record<string, string> = { monthly: "Mensuel", annual: "Annuel −12 %" };
         return (
           <div>
             {/* Émetteur / Bénéficiaire */}
@@ -845,7 +813,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                       {e.notes && <><br/><span className="text-[10px] text-gray-500 italic">{e.notes}</span></>}
                     </td>
                     <td className="p-2 text-xs">
-                      {e.modules.length === 0 ? <span className="text-gray-400">—</span> : e.modules.map((mid) => moduleNames[mid] ?? mid).join(" · ")}
+                      {e.modules.length === 0 ? <span className="text-gray-400">—</span> : e.modules.map((mid) => planNames[mid] ?? mid).join(" · ")}
                     </td>
                     <td className="p-2 text-center text-xs">{engLabel[e.engagement] ?? e.engagement}</td>
                     <td className="p-2 text-right font-bold">{(e.monthlyHt || 0).toFixed(2)} €</td>
@@ -1265,61 +1233,39 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
               <h3 className="text-xs uppercase tracking-widest text-orange-600 font-black mb-3">Tarification active</h3>
               <div className="text-sm space-y-1">
-                <p className="text-orange-900">Engagement : <b>{priceInfo.durationLabel ?? engagement}</b></p>
-                <p className="text-orange-900">Modules : <b>{priceInfo.modules?.length ?? 1}</b></p>
+                <p className="text-orange-900">Forfait : <b>MaTable.Pro {priceInfo.planName ?? "Starter"}</b></p>
+                <p className="text-orange-900">Facturation : <b>{priceInfo.durationLabel ?? "Mensuel"}</b></p>
                 <p className="text-orange-900">Mensualité HT : <b>{priceInfo.monthly.toFixed(2)} €</b></p>
-                <p className="text-orange-900">Total période : <b>{priceInfo.total.toFixed(2)} €</b></p>
-                {(priceInfo.volumePercent ?? 0) > 0 && (
-                  <p className="text-orange-900 text-xs">Remise volume : <b>{priceInfo.volumePercent} %</b></p>
+                {priceInfo.isAnnualPay && (
+                  <p className="text-orange-900 text-xs italic">Engagement annuel — total annuel : {(priceInfo.annualPayTotal ?? priceInfo.monthly * 12).toFixed(2)} €</p>
                 )}
-                <p className="text-orange-900 text-xs italic">Maj. engagement : {priceInfo.mult}</p>
               </div>
             </div>
           </div>
 
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Modules souscrits par ce client</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Forfait souscrit par ce client</h2>
           <table className="w-full text-sm mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 text-left text-xs uppercase tracking-wider border-y-2 border-orange-500">
-                <th className="p-3">Module</th>
-                <th className="p-3 text-center">Statut</th>
+                <th className="p-3">Contenu du forfait</th>
                 <th className="p-3 text-right">Prix HT/mois</th>
               </tr>
             </thead>
             <tbody>
-              {/* Affiche TOUS les modules de la grille pour montrer l'état complet du client */}
-              {MODULES.map((mod) => {
-                const subscribed = priceInfo.modules?.find((m) => m.id === mod.id);
-                return (
-                  <tr key={mod.id} className="border-b">
-                    <td className="p-3">
-                      <b>{mod.name}</b>{mod.required && <span className="text-xs italic text-orange-600"> · requis</span>}<br/>
-                      <span className="text-xs text-gray-500">{mod.desc}</span>
-                    </td>
-                    <td className={`p-3 text-center ${subscribed ? "text-emerald-600 font-bold" : "text-gray-400"}`}>
-                      {subscribed ? "✓ Actif" : "— Inactif"}
-                    </td>
-                    <td className="p-3 text-right">
-                      {subscribed ? `${subscribed.unitPrice.toFixed(2)} €` : <span className="text-gray-400">—</span>}
-                    </td>
-                  </tr>
-                );
-              })}
-              {(priceInfo.volumePercent ?? 0) > 0 && (
-                <tr className="border-b text-xs text-emerald-700">
-                  <td colSpan={2} className="p-3 text-right">Remise volume ({priceInfo.modules?.length} modules · {priceInfo.volumePercent} %)</td>
-                  <td className="p-3 text-right">− {(priceInfo.volumeAmount ?? 0).toFixed(2)} €</td>
+              {(priceInfo.planFeatures ?? PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.features ?? []).map((f, i) => (
+                <tr key={i} className="border-b">
+                  <td className="p-3 text-sm">✓ {f}</td>
+                  <td className="p-3 text-right text-gray-400 text-xs">inclus</td>
                 </tr>
-              )}
+              ))}
               <tr className="bg-orange-50 font-black">
-                <td colSpan={2} className="p-3 text-right">TOTAL HT MENSUEL</td>
+                <td className="p-3 text-right">TOTAL HT MENSUEL — Forfait {priceInfo.planName ?? "Starter"}</td>
                 <td className="p-3 text-right text-orange-500">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
             </tbody>
           </table>
           <p className="text-xs text-gray-500 italic mb-4">
-            Engagement actuel : <b>{priceInfo.durationLabel ?? engagement}</b> · Multiplicateur durée : ×{priceInfo.realMult?.toFixed(2) ?? "1.00"}.
-            Pour modifier les modules ou la durée d'engagement, contactez votre Account Manager.
+            Pour changer de forfait, contactez votre Account Manager. TVA non applicable, art. 293B du CGI.
           </p>
 
           <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 border-t pt-4 mb-3">Suivi des paiements</h2>

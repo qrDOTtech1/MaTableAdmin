@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import QRCode from "qrcode";
 import DocumentTemplate, { type DocType, type MsgData } from "../../../documents/DocumentTemplate";
 import { printDocumentNode } from "../../../documents/printUtil";
-import { computeQuote, MODULES, DURATIONS, type DurationKey } from "../../../documents/pricing";
+import { computeQuote, PLANS, type PlanId } from "../../../documents/pricing";
 
 type RestaurantData = {
   name: string;
@@ -16,25 +16,14 @@ type RestaurantData = {
   slug: string;
 };
 
-type Modules = {
-  avis: boolean;
-  qr: boolean;
-  server: boolean;
-  stock: boolean;
-  finance: boolean;
-  contab: boolean;
-  reservations: boolean;
-};
-
 // Style commun pour les inputs/textareas du sidebar (corrige le bug blanc-sur-blanc)
 const INPUT_CLS = "w-full border border-slate-700 bg-slate-800 text-slate-100 placeholder-slate-500 rounded-lg p-2 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500";
 const INPUT_CLIENT_CLS = INPUT_CLS + " border-orange-700/40 bg-orange-950/30";
 
 export default function DocumentsClient({ restaurantId, restaurant }: { restaurantId: string; restaurant: RestaurantData }) {
   const [docType, setDocType] = useState<"contrat" | "prestation" | "devis" | "devis-chaine" | "facture" | "cgvu" | "onboarding" | "tarification" | "plaquette" | "plaquette-eco" | "plaquette-premium" | "plaquette-compact" | "plaquette-chaine" | "flyer" | "tuto-avis" | "tuto-commande" | "tuto-avis-eco" | "plaquette-avis-focus" | "plaquette-menu-focus" | "tuto-reservations" | "tuto-reservations-eco" | "tuto-nova-ia" | "collab-commission" | "collab-horaire" | "collab-mixte" | "collab-commission-junior" | "collab-horaire-junior" | "collab-mixte-junior" | "collab-comptable" | "msg-rdv" | "msg-essai" | "msg-merci">("contrat");
-  const [engagement, setEngagement] = useState<DurationKey>("12m");
-  // Modules sélectionnés — "avis" est requis donc toujours inclus
-  const [selectedModules, setSelectedModules] = useState<string[]>(["avis"]);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("starter");
+  const [billing, setBilling] = useState<"monthly" | "annual">("monthly");
   const printRef = useRef<HTMLDivElement>(null);
 
   // ── NFC / QR pour tuto-avis ──────────────────────────────────────────────
@@ -124,13 +113,6 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     } finally {
       setNfcWriting(false);
     }
-  };
-
-  const toggleModule = (id: string) => {
-    if (id === "avis") return; // requis, ne se désélectionne pas
-    setSelectedModules((cur) =>
-      cur.includes(id) ? cur.filter((m) => m !== id) : [...cur, id]
-    );
   };
 
   // États éditables — Client (le restaurant / l'établissement)
@@ -302,7 +284,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           totalCents,
           vendor,
           client: clientData,
-          data: { engagement, selectedModules, docMeta, prestation, chainQuote },
+          data: { selectedPlan, billing, docMeta, prestation, chainQuote },
         }),
       });
       const data = await res.json();
@@ -322,8 +304,8 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     printDocumentNode(element, `${docMeta.numero} — ${clientData.name || "MaTable"}`);
   };
 
-  // Quote complet calculé en direct depuis les modules + engagement sélectionnés
-  const priceInfo = computeQuote(selectedModules, engagement);
+  // Quote calculé depuis le forfait + mode de facturation sélectionnés
+  const priceInfo = computeQuote(selectedPlan, billing);
 
   return (
     <div className="flex gap-8 items-start">
@@ -388,63 +370,69 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
 
           {(docType === "contrat" || docType === "devis" || docType === "facture" || docType === "tarification") && (
             <>
+              {/* Facturation mensuelle / annuelle */}
               <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Engagement</label>
-                <select
-                  value={engagement}
-                  onChange={(e) => setEngagement(e.target.value as any)}
-                  className={INPUT_CLS}
-                >
-                  {DURATIONS.map((d) => (
-                    <option key={d.key} value={d.key}>
-                      {d.label} — {d.displayDiscount === 0 ? "prix de base" : `−${d.displayDiscount} %`}{d.sub ? ` · ${d.sub}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Facturation</label>
+                <div className="flex rounded-lg overflow-hidden border border-slate-700 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setBilling("monthly")}
+                    className={`flex-1 py-2 transition-colors ${billing === "monthly" ? "bg-orange-500 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}
+                  >
+                    Mensuel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBilling("annual")}
+                    className={`flex-1 py-2 transition-colors ${billing === "annual" ? "bg-orange-500 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}
+                  >
+                    Annuel −12 %
+                  </button>
+                </div>
               </div>
 
+              {/* Sélection du forfait */}
               <div className="pt-3 border-t border-slate-800">
-                <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Modules souscrits</label>
+                <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Forfait</label>
                 <div className="space-y-1.5">
-                  {MODULES.map((m) => {
-                    const isSelected = selectedModules.includes(m.id);
+                  {PLANS.map((plan) => {
+                    const monthlyPrice = billing === "annual"
+                      ? Math.round(plan.priceMonthly * 0.88)
+                      : plan.priceMonthly;
+                    const isSelected = selectedPlan === plan.id;
                     return (
                       <label
-                        key={m.id}
+                        key={plan.id}
                         className={`flex items-start gap-2 p-2 rounded-lg cursor-pointer transition-colors text-xs ${
                           isSelected ? "bg-orange-500/10 border border-orange-500/30" : "bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800"
-                        } ${m.required ? "opacity-90 cursor-default" : ""}`}
+                        }`}
                       >
                         <input
-                          type="checkbox"
+                          type="radio"
+                          name="plan"
+                          value={plan.id}
                           checked={isSelected}
-                          onChange={() => toggleModule(m.id)}
-                          disabled={m.required}
+                          onChange={() => setSelectedPlan(plan.id)}
                           className="mt-0.5 accent-orange-500"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-2">
-                            <span className="font-bold text-slate-100">{m.name}</span>
-                            <span className="text-orange-400 font-mono text-[10px] whitespace-nowrap">{m.price} €</span>
+                            <span className="font-bold text-slate-100">{plan.name}</span>
+                            <span className="text-orange-400 font-mono text-[10px] whitespace-nowrap">{monthlyPrice} €/mois</span>
                           </div>
-                          {m.required && <span className="text-[9px] uppercase text-orange-400 tracking-wider">Requis</span>}
+                          {plan.popular && <span className="text-[9px] uppercase text-orange-400 tracking-wider">Le plus populaire</span>}
                         </div>
                       </label>
                     );
                   })}
                 </div>
 
-                {/* Récap live du total */}
+                {/* Récap live */}
                 <div className="mt-3 p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs">
-                  <div className="flex justify-between text-slate-400"><span>Sous-total HT</span><span>{priceInfo.subtotal?.toFixed(2)} €</span></div>
-                  {(priceInfo.volumePercent ?? 0) > 0 && (
-                    <div className="flex justify-between text-emerald-400"><span>Remise volume ({priceInfo.volumePercent} %)</span><span>−{priceInfo.volumeAmount?.toFixed(2)} €</span></div>
-                  )}
-                  <div className="flex justify-between text-orange-400 font-black border-t border-slate-700 mt-1 pt-1"><span>HT / mois</span><span>{priceInfo.monthly.toFixed(2)} €</span></div>
-                  <div className="flex justify-between text-slate-500 text-[10px]"><span>Total période ({priceInfo.durationLabel})</span><span>{priceInfo.total.toFixed(2)} €</span></div>
-                  {priceInfo.isAnnualPay && (
-                    <div className="flex justify-between text-orange-300 text-[10px] mt-1"><span>→ Annuel à la signature</span><span>{priceInfo.annualPayTotal?.toFixed(2)} €</span></div>
-                  )}
+                  <div className="flex justify-between text-orange-400 font-black"><span>Forfait {priceInfo.planName}</span><span>{priceInfo.monthly.toFixed(2)} €/mois</span></div>
+                  <div className="flex justify-between text-slate-500 text-[10px] mt-0.5"><span>{priceInfo.durationLabel}</span>
+                    {billing === "annual" && <span>Annuel : {priceInfo.annualPayTotal?.toFixed(2)} €</span>}
+                  </div>
                 </div>
               </div>
             </>
@@ -870,7 +858,7 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
           vendor={vendor}
           clientData={clientData}
           docMeta={docMeta}
-          engagement={engagement}
+          engagement={billing}
           prestation={prestation}
           priceInfo={priceInfo}
           chainQuote={chainQuote}

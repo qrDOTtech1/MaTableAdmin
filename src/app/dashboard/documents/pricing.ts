@@ -1,157 +1,113 @@
 /**
- * Tarification MaTable — source de vérité côté admin.
+ * Tarification MaTable.Pro — source de vérité côté admin.
  *
  * IMPORTANT : ces constantes DOIVENT rester strictement synchronisées avec
  *   apps/web/components/landing/landingData.ts  (MaTable.Atable)
  * Toute évolution tarifaire doit modifier les DEUX fichiers en même temps.
  *
- * Modèle : prix de référence = engagement 12 mois.
- *   - 3m  : × 1.07 (le plus cher, "sans risque")
- *   - 6m  : × 1.05
- *   - 9m  : × 1.03
- *   - 12m : × 1.00 (référence)
- *   - 12a : × 0.95 (paiement annuel, -5%)
+ * Modèle : 3 forfaits fixes.
+ *   - Mensuel : sans engagement, résiliable à tout moment
+ *   - Annuel  : −12 % sur le mensuel, paiement mensuel ou en une fois
  *
- * Remise volume (application sur le total HT mensuel après application du
- * multiplicateur de durée) :
- *   - 1 module  : 0 %
- *   - 2 modules : 10 %
- *   - 3 modules : 15 %
- *   - 4+ modules : 20 %
+ * Chaîne / Groupe : sur devis (DocumentsClient.tsx → devis-chaine)
  */
 
-export const MODULES = [
-  { id: "avis",         name: "Avis Google & Réputation",     desc: "Campagne QR, IA rédactionnelle, bons de réduction auto.",                                                              price: 79,  required: true  },
-  { id: "qr",           name: "Commande & Paiement",          desc: "Menu digital QR, paiement fractionné ou espèces, tickets.",                                                            price: 99,  required: false },
-  { id: "server",       name: "Portail Serveur (Live)",       desc: "Portail serveur, cuisine et caisse — gestion tables, suivi temps réel, appels instantanés.",                            price: 69,  required: false },
-  { id: "stock",        name: "Nova Stock IA",                desc: "Listes de courses auto, alertes ruptures, food cost. Quota mensuel inclus.",                                            price: 89,  required: false },
-  { id: "finance",      name: "Nova Finance IA",              desc: "Food cost réel, KPIs, marges, prévisions CA et recommandations de rentabilité. Quota mensuel inclus.",                  price: 69,  required: false },
-  { id: "contab",       name: "Nova Contab IA",               desc: "Exports comptables, TVA, rapports de fin de mois intelligents. Quota mensuel inclus.",                                  price: 69,  required: false },
-  { id: "reservations", name: "Réservations Intelligentes",   desc: "Créneaux dynamiques, arrhes Stripe, confirmation automatique, anti no-show, gestion de salle temps réel.",              price: 129, required: false },
+export const PLANS = [
+  {
+    id: "starter",
+    name: "Starter",
+    priceMonthly: 59,
+    color: "emerald" as const,
+    popular: false,
+    desc: "L'essentiel pour digitaliser votre salle dès le premier jour.",
+    features: [
+      "Avis Google & Réputation (campagne QR, IA rédactionnelle)",
+      "Commande & Paiement QR (menu digital, paiement fractionné)",
+      "Portail Serveur · Portail Cuisine · Portail Caisse",
+    ],
+    featuresShort: ["Avis Google & Réputation", "Commande & Paiement QR", "Portail Serveur / Cuisine / Caisse"],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    priceMonthly: 119,
+    color: "orange" as const,
+    popular: true,
+    desc: "La solution complète pour piloter votre restaurant au quotidien.",
+    features: [
+      "Tout le forfait Starter",
+      "Réservations Intelligentes (créneaux dynamiques, arrhes Stripe, anti no-show)",
+    ],
+    featuresShort: ["Tout Starter inclus", "Réservations Intelligentes & anti no-show"],
+  },
+  {
+    id: "business",
+    name: "Business",
+    priceMonthly: 249,
+    color: "purple" as const,
+    popular: false,
+    desc: "Performance maximale — IA complète pour les restaurateurs ambitieux.",
+    features: [
+      "Tout le forfait Pro",
+      "Nova Stock IA (liste de courses auto, alertes ruptures, food cost)",
+      "Nova Finance IA (KPIs, marges, prévisions CA, recommandations rentabilité)",
+      "Nova Contab IA (exports comptables, TVA, rapports de fin de mois)",
+    ],
+    featuresShort: ["Tout Pro inclus", "Nova Stock IA", "Nova Finance IA", "Nova Contab IA"],
+  },
 ] as const;
 
-export type ModuleId = (typeof MODULES)[number]["id"];
+export type PlanId = (typeof PLANS)[number]["id"];
 
-/**
- * `realMult`     = facteur interne appliqué au prix de base 12m pour obtenir le prix réel facturé.
- * `displayDiscount` = pourcentage de réduction AFFICHÉ au client par rapport au prix 3 mois
- *                     (qui sert de prix de base visible). Sert uniquement à la communication.
- *                     Doit rester strictement synchronisé avec `fakeDiscount` côté landing.
- */
-export const DURATIONS = [
-  { key: "3m",  label: "3 mois",            sub: "Prix de base",       realMult: 1.07, displayDiscount: 0  },
-  { key: "6m",  label: "6 mois",            sub: "Le plus populaire",  realMult: 1.05, displayDiscount: 2  },
-  { key: "9m",  label: "9 mois",            sub: "Presque annuel",     realMult: 1.03, displayDiscount: 4  },
-  { key: "12m", label: "12 mois",           sub: "Recommandé",         realMult: 1.00, displayDiscount: 7  },
-  { key: "12a", label: "12 mois — annuel",  sub: "Paiement annuel",    realMult: 0.95, displayDiscount: 12 },
-] as const;
+/** Remise annuelle appliquée sur le prix mensuel (en %) */
+export const ANNUAL_DISCOUNT_PERCENT = 12;
 
-export type DurationKey = (typeof DURATIONS)[number]["key"];
-
-function round2(n: number) {
-  return Math.round(n * 100) / 100;
+/** Prix mensuel effectif pour un abonnement annuel (arrondi à l'euro) */
+export function getAnnualMonthlyPrice(monthly: number): number {
+  return Math.round(monthly * (1 - ANNUAL_DISCOUNT_PERCENT / 100));
 }
-
-function volumePercentFor(count: number) {
-  if (count >= 4) return 20;
-  if (count === 3) return 15;
-  if (count === 2) return 10;
-  return 0;
-}
-
-export type QuoteLine = {
-  id: string;
-  name: string;
-  desc: string;
-  basePrice: number;     // prix 12m de référence
-  unitPrice: number;     // prix unitaire après multiplicateur de durée (avant remise volume)
-  required: boolean;
-};
 
 export type Quote = {
-  // Modules sélectionnés avec leur ligne tarifaire (déjà multipliée par la durée)
-  modules: QuoteLine[];
+  // Plan sélectionné
+  planId: PlanId;
+  planName: string;
+  planFeatures: readonly string[];
 
-  // Engagement
-  durationKey: DurationKey;
-  durationLabel: string;
-  realMult: number;
+  // Facturation
+  billing: "monthly" | "annual";
+  priceMonthly: number;      // prix mensuel affiché (peut être réduit si annuel)
+  annualTotal?: number;      // total annuel à la signature (billing=annual uniquement)
+
+  // Rétro-compat avec les champs utilisés dans DocumentTemplate
+  monthly: number;           // alias de priceMonthly
+  total: number;             // mensuel × 12 si annuel, sinon mensuel × 1
+  mult: string;              // label affiché
   isAnnualPay: boolean;
-
-  // Calculs (tous en € HT)
-  subtotal: number;          // somme des unitPrice, AVANT remise volume
-  volumePercent: number;     // 0 / 10 / 15 / 20
-  volumeAmount: number;      // montant de la remise volume
-  monthlyHT: number;         // total mensuel HT après remise — c'est CE qui est facturé chaque mois
-  totalEngagement: number;   // monthlyHT × durée en mois (= total période d'engagement)
-  annualPayTotal?: number;   // pour 12a : monthlyHT × 12, à payer en une fois
-
-  // Rétro-compat avec les anciens champs PriceInfo
-  monthly: number;           // alias de monthlyHT
-  total: number;             // alias de totalEngagement
-  mult: string;              // label visible de la majoration ("+7%", "0%", "-5%"…)
+  annualPayTotal?: number;   // alias de annualTotal
+  durationLabel: string;
 };
 
-/**
- * Calcule un devis complet à partir des modules sélectionnés et de la durée.
- * Reproduit exactement la formule du PricingBuilder de la landing.
- */
-export function computeQuote(selectedIds: readonly string[], durationKey: DurationKey): Quote {
-  const dur = DURATIONS.find((d) => d.key === durationKey) ?? DURATIONS[3]; // défaut 12m
-  const isAnnualPay = dur.key === "12a";
-
-  // S'assurer qu'on a au moins le module "avis" (requis)
-  const ids = new Set<string>(selectedIds);
-  ids.add("avis");
-
-  // Lignes tarifaires
-  const modules: QuoteLine[] = [];
-  for (const m of MODULES) {
-    if (!ids.has(m.id)) continue;
-    const unitPrice = round2(m.price * dur.realMult);
-    modules.push({
-      id: m.id,
-      name: m.name,
-      desc: m.desc,
-      basePrice: m.price,
-      unitPrice,
-      required: m.required,
-    });
-  }
-
-  const subtotal = round2(modules.reduce((s, m) => s + m.unitPrice, 0));
-  const volumePercent = volumePercentFor(modules.length);
-  const volumeAmount = round2(subtotal * (volumePercent / 100));
-  const monthlyHT = round2(subtotal - volumeAmount);
-
-  // Durée en mois pour le total période
-  const months = dur.key === "3m" ? 3
-              : dur.key === "6m" ? 6
-              : dur.key === "9m" ? 9
-              : 12;
-  const totalEngagement = round2(monthlyHT * months);
-
-  // Label réduction affichée vs prix de base (3 mois) — toujours négatif ou "—"
-  const mult = dur.displayDiscount === 0
-    ? "Prix de base"
-    : `−${dur.displayDiscount} %`;
+export function computeQuote(planId: PlanId, billing: "monthly" | "annual"): Quote {
+  const plan = PLANS.find((p) => p.id === planId) ?? PLANS[0];
+  const priceMonthly = billing === "annual"
+    ? getAnnualMonthlyPrice(plan.priceMonthly)
+    : plan.priceMonthly;
+  const annualTotal = billing === "annual" ? priceMonthly * 12 : undefined;
 
   return {
-    modules,
-    durationKey: dur.key,
-    durationLabel: dur.label,
-    realMult: dur.realMult,
-    isAnnualPay,
-    subtotal,
-    volumePercent,
-    volumeAmount,
-    monthlyHT,
-    totalEngagement,
-    annualPayTotal: isAnnualPay ? round2(monthlyHT * 12) : undefined,
-    // Aliases rétro-compat
-    monthly: monthlyHT,
-    total: totalEngagement,
-    mult,
+    planId: plan.id,
+    planName: plan.name,
+    planFeatures: plan.features,
+    billing,
+    priceMonthly,
+    annualTotal,
+    // Rétro-compat
+    monthly: priceMonthly,
+    total: billing === "annual" ? priceMonthly * 12 : priceMonthly,
+    mult: billing === "annual" ? `−${ANNUAL_DISCOUNT_PERCENT} %` : "Sans engagement",
+    isAnnualPay: billing === "annual",
+    annualPayTotal: annualTotal,
+    durationLabel: billing === "annual" ? "Annuel (−12 %)" : "Mensuel",
   };
 }
 
