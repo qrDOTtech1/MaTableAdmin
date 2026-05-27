@@ -152,6 +152,10 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_reservation_alert_email",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "reservationAlertEmail" TEXT`,
   },
+  {
+    name: "add_reservation_alert_emails",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "reservationAlertEmails" JSONB NOT NULL DEFAULT '[]'::jsonb`,
+  },
   // ── Config fidélité ───────────────────────────────────────────────────────
   {
     name: "create_loyalty_config",
