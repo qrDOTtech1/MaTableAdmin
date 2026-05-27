@@ -213,6 +213,9 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
           <p>• <code className="text-blue-300">add_reservable_to_table</code> — <code>Table.reservable BOOLEAN DEFAULT true</code></p>
           <p>• <code className="text-blue-300">create_zone_config</code> — table <code>ZoneConfig</code> (quotas walk-in par zone)</p>
           <p>• <code className="text-blue-300">create_zone_config_idx</code> — index <code>ZoneConfig.restaurantId</code></p>
+          <p>• <code className="text-blue-300">create_loyalty_customer</code> — table <code>LoyaltyCustomer</code> (programme fidélité)</p>
+          <p>• <code className="text-blue-300">create_loyalty_offer</code> — table <code>LoyaltyOffer</code> (récompenses)</p>
+          <p>• <code className="text-blue-300">create_loyalty_transaction</code> — table <code>LoyaltyTransaction</code> (historique points)</p>
         </div>
       </div>
 
