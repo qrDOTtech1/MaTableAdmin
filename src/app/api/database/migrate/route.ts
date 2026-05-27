@@ -29,8 +29,28 @@ function isAuthorized(req: NextRequest, session: any): boolean {
 // ── Migrations déclarées ici — IF NOT EXISTS = idempotentes ──────────────────
 const MIGRATIONS: Array<{ name: string; sql: string }> = [
   {
+    name: "add_zone_to_table",
+    sql: `ALTER TABLE "Table" ADD COLUMN IF NOT EXISTS "zone" TEXT`,
+  },
+  {
     name: "add_reservable_to_table",
     sql: `ALTER TABLE "Table" ADD COLUMN IF NOT EXISTS "reservable" BOOLEAN NOT NULL DEFAULT true`,
+  },
+  {
+    name: "add_assigned_server_to_table",
+    sql: `ALTER TABLE "Table" ADD COLUMN IF NOT EXISTS "assignedServerId" TEXT`,
+  },
+  {
+    name: "create_table_zone_idx",
+    sql: `CREATE INDEX IF NOT EXISTS "Table_restaurantId_zone_idx" ON "Table"("restaurantId", "zone")`,
+  },
+  {
+    name: "add_opening_hour_service",
+    sql: `ALTER TABLE "OpeningHour" ADD COLUMN IF NOT EXISTS "service" TEXT`,
+  },
+  {
+    name: "add_restaurant_is_partner",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "isPartner" BOOLEAN NOT NULL DEFAULT false`,
   },
   {
     name: "create_zone_config",

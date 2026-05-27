@@ -210,7 +210,12 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
         </div>
         <div className="rounded-lg bg-slate-800/60 border border-slate-700 p-3 text-xs text-slate-400 space-y-1">
           <p className="font-bold text-slate-300">Migrations déclarées :</p>
+          <p>• <code className="text-blue-300">add_zone_to_table</code> — <code>Table.zone TEXT</code> pour zones de réservation</p>
           <p>• <code className="text-blue-300">add_reservable_to_table</code> — <code>Table.reservable BOOLEAN DEFAULT true</code></p>
+          <p>• <code className="text-blue-300">add_assigned_server_to_table</code> — <code>Table.assignedServerId TEXT</code></p>
+          <p>• <code className="text-blue-300">create_table_zone_idx</code> — index <code>Table.restaurantId + zone</code></p>
+          <p>• <code className="text-blue-300">add_opening_hour_service</code> — <code>OpeningHour.service TEXT</code> pour horaires midi/soir</p>
+          <p>• <code className="text-blue-300">add_restaurant_is_partner</code> — <code>Restaurant.isPartner BOOLEAN</code> pour visibilité sociale</p>
           <p>• <code className="text-blue-300">create_zone_config</code> — table <code>ZoneConfig</code> (quotas walk-in par zone)</p>
           <p>• <code className="text-blue-300">create_zone_config_idx</code> — index <code>ZoneConfig.restaurantId</code></p>
           <p>• <code className="text-blue-300">create_loyalty_customer</code> — table <code>LoyaltyCustomer</code> (programme fidélité)</p>
