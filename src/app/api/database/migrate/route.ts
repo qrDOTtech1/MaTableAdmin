@@ -127,6 +127,28 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "create_loyalty_transaction_idx",
     sql: `CREATE INDEX IF NOT EXISTS "LoyaltyTransaction_customerId_idx" ON "LoyaltyTransaction"("customerId")`,
   },
+  // ── Alerte email réservation ──────────────────────────────────────────────
+  {
+    name: "add_reservation_alert_email",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "reservationAlertEmail" TEXT`,
+  },
+  // ── Config fidélité ───────────────────────────────────────────────────────
+  {
+    name: "create_loyalty_config",
+    sql: `CREATE TABLE IF NOT EXISTS "LoyaltyConfig" (
+      "id"             TEXT NOT NULL,
+      "restaurantId"   TEXT NOT NULL,
+      "enabled"        BOOLEAN NOT NULL DEFAULT false,
+      "ptsPerEuro"     INTEGER NOT NULL DEFAULT 10,
+      "minSpendCents"  INTEGER NOT NULL DEFAULT 0,
+      "updatedAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "LoyaltyConfig_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "LoyaltyConfig_restaurantId_fkey"
+        FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE,
+      CONSTRAINT "LoyaltyConfig_restaurantId_key"
+        UNIQUE ("restaurantId")
+    )`,
+  },
 ];
 
 export async function runMigrations(): Promise<{ applied: string[]; errors: Record<string, string> }> {

@@ -216,6 +216,8 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
           <p>• <code className="text-blue-300">create_loyalty_customer</code> — table <code>LoyaltyCustomer</code> (programme fidélité)</p>
           <p>• <code className="text-blue-300">create_loyalty_offer</code> — table <code>LoyaltyOffer</code> (récompenses)</p>
           <p>• <code className="text-blue-300">create_loyalty_transaction</code> — table <code>LoyaltyTransaction</code> (historique points)</p>
+          <p>• <code className="text-blue-300">add_reservation_alert_email</code> — <code>Restaurant.reservationAlertEmail TEXT</code></p>
+          <p>• <code className="text-blue-300">create_loyalty_config</code> — table <code>LoyaltyConfig</code> (config points/€, seuil min)</p>
         </div>
       </div>
 
