@@ -11,7 +11,7 @@ const TABLES = [
   "Restaurant", "MenuItem", "User", "Server", "Table", "TableSession", "Order",
   "CustomerReview", "Prospect", "PricingRequest",
   "GeneratedDocument", "AdminConfig", "GlobalConfig",
-  "Reservation", "ServiceCall", "DishReview", "ServerReview",
+  "Reservation", "ServiceCall", "DishReview", "ServerReview", "ZoneConfig",
 ];
 
 export async function GET() {

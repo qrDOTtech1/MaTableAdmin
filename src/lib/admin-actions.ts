@@ -17,16 +17,36 @@ export async function updateRestaurant(id: string, formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+// Mapping forfait UI → SubscriptionPlan enum Prisma
+// "business" utilise PRO_IA (valeur enum existante) en attendant une migration Prisma
+const PLAN_TO_ENUM: Record<string, SubscriptionPlan> = {
+  starter:  "STARTER",
+  pro:      "PRO",
+  business: "PRO_IA",   // alias jusqu'à ajout de BUSINESS dans l'enum
+  // legacy
+  STARTER:  "STARTER",
+  PRO:      "PRO",
+  PRO_IA:   "PRO_IA",
+};
+
+// Apps activées par plan
+const PLAN_APPS: Record<string, string[]> = {
+  starter:  ["reviews", "reservations", "orders"],
+  pro:      ["reviews", "reservations", "orders"],
+  business: ["reviews", "reservations", "orders", "nova_ia", "nova_stock", "nova_contab", "nova_finance"],
+};
+
 export async function updateSubscription(id: string, formData: FormData) {
   "use server";
-  const subscription = formData.get("subscription") as SubscriptionPlan;
+  const rawPlan = formData.get("subscription") as string;
+  const subscription: SubscriptionPlan = PLAN_TO_ENUM[rawPlan] ?? "STARTER";
 
   const current = await prisma.restaurant.findUnique({
     where: { id },
     select: { subscription: true, ollamaApiKey: true },
   });
 
-  // Auto-génère une clé si upgrade vers PRO_IA sans clé existante
+  // Auto-génère une clé si upgrade vers Business / PRO_IA sans clé existante
   const needsNewKey = subscription === "PRO_IA" && !current?.ollamaApiKey;
   const ollamaApiKey = needsNewKey
     ? `nova_${crypto.randomBytes(24).toString("hex")}`
@@ -41,6 +61,14 @@ export async function updateSubscription(id: string, formData: FormData) {
       ...(ollamaApiKey ? { ollamaApiKey } : {}),
     },
   });
+
+  // Met aussi à jour enabledApps selon le plan sélectionné
+  const planKey = rawPlan.toLowerCase();
+  const apps = PLAN_APPS[planKey] ?? PLAN_APPS.starter;
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Restaurant" SET "enabledApps" = $1::jsonb WHERE id = $2`,
+    JSON.stringify(apps), id,
+  );
 
   revalidatePath(`/dashboard/restaurants/${id}`);
   revalidatePath("/dashboard");

@@ -35,7 +35,7 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [cfg, setCfg] = useState<Config>(initialConfig);
-  const [busy, setBusy] = useState<"backup" | "download" | "save" | "send" | null>(null);
+  const [busy, setBusy] = useState<"backup" | "download" | "save" | "send" | "migrate" | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const loadStats = async () => {
@@ -89,6 +89,25 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
       a.click();
       URL.revokeObjectURL(url);
       toast("Backup téléchargé.");
+      loadStats();
+    } catch (e: any) {
+      toast(e.message ?? "Erreur", "err");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const runMigrations = async () => {
+    setBusy("migrate");
+    try {
+      const r = await fetch("/api/database/migrate", { method: "POST" });
+      const data = await r.json();
+      const errorCount = Object.keys(data.errors ?? {}).length;
+      if (errorCount > 0) {
+        toast(`${data.applied.length} migration(s) OK, ${errorCount} erreur(s) : ${Object.values(data.errors).join(", ")}`, "err");
+      } else {
+        toast(`✓ ${data.applied.length} migration(s) appliquée(s) avec succès.`);
+      }
       loadStats();
     } catch (e: any) {
       toast(e.message ?? "Erreur", "err");
@@ -169,6 +188,32 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
             })}
           </div>
         )}
+      </div>
+
+      {/* Migrations */}
+      <div className="bg-slate-900 border border-blue-500/30 rounded-xl p-5">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+          <div>
+            <h2 className="text-lg font-bold text-white">🔧 Migrations base de données</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Applique les migrations SQL non-destructives (<code className="text-blue-400">IF NOT EXISTS</code>).
+              Idempotent — peut être relancé plusieurs fois sans risque. Exécuté automatiquement par le cron daily-backup.
+            </p>
+          </div>
+          <button
+            onClick={runMigrations}
+            disabled={busy === "migrate"}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-colors"
+          >
+            {busy === "migrate" ? "En cours…" : "▶ Lancer les migrations"}
+          </button>
+        </div>
+        <div className="rounded-lg bg-slate-800/60 border border-slate-700 p-3 text-xs text-slate-400 space-y-1">
+          <p className="font-bold text-slate-300">Migrations déclarées :</p>
+          <p>• <code className="text-blue-300">add_reservable_to_table</code> — <code>Table.reservable BOOLEAN DEFAULT true</code></p>
+          <p>• <code className="text-blue-300">create_zone_config</code> — table <code>ZoneConfig</code> (quotas walk-in par zone)</p>
+          <p>• <code className="text-blue-300">create_zone_config_idx</code> — index <code>ZoneConfig.restaurantId</code></p>
+        </div>
       </div>
 
       {/* Backup */}

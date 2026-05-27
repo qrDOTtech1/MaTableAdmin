@@ -9,7 +9,6 @@ import {
   updateCaissePin,
   updateStripeKeys,
   updateContactEmail,
-  updateEnabledApps,
   updateServerUniqueQr,
   deleteRestaurant,
 } from "@/lib/admin-actions";
@@ -45,22 +44,63 @@ const VISION_MODELS: { id: string; label: string; desc: string }[] = [
   { id: "gemini-3-flash-preview", label: "Gemini 3 Flash Preview",     desc: "Preview Google Cloud — rapide" },
 ];
 
-const PLANS = {
-  STARTER: { label: "Starter",            price: "49,99€/mois",  color: "text-slate-300",  bg: "bg-slate-700/50",    border: "border-slate-600" },
-  PRO:     { label: "Pro",                price: "139,99€/mois", color: "text-blue-300",   bg: "bg-blue-900/30",     border: "border-blue-700" },
-  PRO_IA:  { label: "Pro + NovaTech IA",  price: "299€/mois",    color: "text-orange-300", bg: "bg-orange-900/30",   border: "border-orange-600" },
-};
+// ── Nouveaux forfaits (Starter / Pro / Business) ─────────────────────────────
+const PLANS = [
+  {
+    id: "starter",
+    enumVal: "STARTER",
+    label: "Starter",
+    priceMonthly: 59,
+    color: "text-emerald-300",
+    bg: "bg-emerald-900/30",
+    border: "border-emerald-600",
+    dot: "bg-emerald-400",
+    features: [
+      "Avis Google & Réputation (QR, IA rédactionnelle)",
+      "Commande & Paiement QR (menu digital, paiement fractionné)",
+      "Portail Serveur · Portail Cuisine · Portail Caisse",
+      "Réservations Intelligentes (créneaux, arrhes Stripe, anti no-show)",
+    ],
+  },
+  {
+    id: "pro",
+    enumVal: "PRO",
+    label: "Pro",
+    priceMonthly: 119,
+    color: "text-orange-300",
+    bg: "bg-orange-900/30",
+    border: "border-orange-600",
+    dot: "bg-orange-400",
+    popular: true,
+    features: [
+      "Tout le forfait Starter",
+      "Nova IA — chatbot, Magic Scan, génération menu, accords",
+    ],
+  },
+  {
+    id: "business",
+    enumVal: "PRO_IA",   // enum Prisma existante — alias jusqu'à migration BUSINESS
+    label: "Business",
+    priceMonthly: 249,
+    color: "text-purple-300",
+    bg: "bg-purple-900/30",
+    border: "border-purple-600",
+    dot: "bg-purple-400",
+    features: [
+      "Tout le forfait Pro",
+      "Nova Stock IA — gestion stocks, alertes, courses",
+      "Nova Finance IA — conseils, promotions anti-gaspillage",
+      "Nova Contab IA — comptabilité, URSSAF/TVA, export",
+    ],
+  },
+] as const;
 
-// ── App catalog ──────────────────────────────────────────────────────────────
-const APP_CATALOG = [
-  { id: "reviews",      name: "Avis Google & Reputation",  icon: "⭐", price: "45,99", desc: "QR code avis, chatbot IA, vouchers — app de base",                   base: true },
-  { id: "reservations", name: "Reservations en ligne",     icon: "📅", price: "29,99", desc: "Booking, creneaux, confirmation email",                              base: false },
-  { id: "orders",       name: "Commandes & Service",       icon: "🍽️", price: "39,99", desc: "QR commandes, appels serveur, pourboires, caisse",                   base: false },
-  { id: "nova_ia",      name: "Nova IA",                   icon: "🤖", price: "49,99", desc: "Chatbot, Magic Scan, generateur menu, accords mets/vins",            base: false },
-  { id: "nova_stock",   name: "Nova Stock IA",             icon: "📦", price: "39,99", desc: "Analyse stock, listes de courses, alertes, ingredients",              base: false },
-  { id: "nova_contab",  name: "Nova Contab IA",            icon: "📊", price: "39,99", desc: "Comptabilite IA, rapports URSSAF/TVA, export",                       base: false },
-  { id: "nova_finance", name: "Nova Finance IA",           icon: "💰", price: "29,99", desc: "Conseils financiers, promotions anti-gaspillage",                     base: false },
-];
+// Reverse lookup : enum Prisma → plan
+const ENUM_TO_PLAN: Record<string, typeof PLANS[number]> = {
+  STARTER: PLANS[0],
+  PRO:     PLANS[1],
+  PRO_IA:  PLANS[2],
+};
 
 export default async function RestaurantManagePage({ params }: { params: { id: string } }) {
   const { id } = await params;
@@ -74,7 +114,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   async function handleRegenKey() { "use server"; await regenerateOllamaKey(id); }
   async function handleRevokeKey() { "use server"; await revokeOllamaKey(id); }
 
-  const plan = PLANS[restaurant.subscription as keyof typeof PLANS] ?? PLANS.STARTER;
+  const plan = ENUM_TO_PLAN[restaurant.subscription as string] ?? PLANS[0];
   const currentLang   = (restaurant as any).ollamaLangModel   ?? "gpt-oss:120b";
   const currentVision = (restaurant as any).ollamaVisionModel ?? "qwen3-vl:235b";
   const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
@@ -85,12 +125,6 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
     SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
   `;
   const currentContactEmail = contactEmailRows[0]?.contactEmail ?? contactEmailRows[0]?.email ?? "";
-
-  // enabledApps (modular app system)
-  const appsRows = await prisma.$queryRaw<Array<{ enabledApps: unknown }>>`
-    SELECT "enabledApps" FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `;
-  const enabledApps: string[] = Array.isArray(appsRows[0]?.enabledApps) ? appsRows[0].enabledApps as string[] : ["reviews"];
 
   // Stripe per-restaurant keys
   const stripeKeys = await prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
@@ -112,7 +146,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         <Link href="/dashboard" className="text-slate-500 hover:text-white transition-colors">← Retour</Link>
         <h1 className="text-3xl font-bold">{restaurant.name}</h1>
         <span className={`text-xs px-3 py-1 rounded-full font-semibold border ${plan.bg} ${plan.color} ${plan.border}`}>
-          {plan.label}
+          Forfait {plan.label} — {plan.priceMonthly}€/mois
         </span>
         <div className="ml-auto flex items-center gap-4">
           <Link 
@@ -183,120 +217,86 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         <UsersManager restaurantId={restaurant.id} restaurantSlug={restaurant.slug ?? ""} />
       </div>
 
-      {/* ── Applications activees (modular pricing) ── */}
-      <div className="bg-slate-900 border border-orange-600/40 p-6 rounded-xl space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl">📱</div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Applications actives</h2>
-              <p className="text-xs text-slate-400">Activez/desactivez les modules pour ce restaurant — tarification a l'app</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-slate-400">Total mensuel</div>
-            <div className="text-lg font-bold text-orange-400">
-              {(() => {
-                const total = APP_CATALOG.filter(a => enabledApps.includes(a.id)).reduce((s, a) => s + parseFloat(a.price.replace(",", ".")), 0);
-                const count = enabledApps.length;
-                const discount = count >= 4 ? 0.20 : count >= 3 ? 0.15 : count >= 2 ? 0.10 : 0;
-                const final = total * (1 - discount);
-                return `${final.toFixed(2).replace(".", ",")}EUR`;
-              })()}
-            </div>
-            {enabledApps.length >= 2 && (
-              <div className="text-[10px] text-emerald-400">
-                {enabledApps.length >= 4 ? "-20%" : enabledApps.length >= 3 ? "-15%" : "-10%"} multi-app
-              </div>
-            )}
+      {/* ── Forfait d'abonnement ── */}
+      <div className={`bg-slate-900 border p-6 rounded-xl space-y-6 ${plan.border}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${plan.bg}`}>💳</div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Forfait d'abonnement</h2>
+            <p className="text-xs text-slate-400">
+              Forfait actif :&nbsp;
+              <span className={`font-bold ${plan.color}`}>{plan.label}</span>
+              &nbsp;— {plan.priceMonthly}€/mois HT
+              {restaurant.subscriptionStartedAt && (
+                <> · depuis le {new Date(restaurant.subscriptionStartedAt).toLocaleDateString("fr-FR")}</>
+              )}
+              {restaurant.subscriptionExpiresAt && (
+                <> · expire le {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString("fr-FR")}</>
+              )}
+            </p>
           </div>
         </div>
 
-        <form action={updateEnabledApps.bind(null, id)} className="space-y-3">
-          <div className="grid grid-cols-1 gap-2">
-            {APP_CATALOG.map(app => {
-              const isEnabled = enabledApps.includes(app.id);
+        <form action={updateSubscription.bind(null, id)} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {PLANS.map(p => {
+              const isCurrent = plan.id === p.id;
               return (
-                <label key={app.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                  isEnabled
-                    ? app.base ? "border-orange-500 bg-orange-500/10" : "border-emerald-500 bg-emerald-500/10"
-                    : "border-slate-700 hover:border-slate-600 bg-slate-800/50"
+                <label key={p.id} className={`relative flex flex-col p-4 rounded-xl border cursor-pointer transition-all ${
+                  isCurrent
+                    ? `${p.border} ${p.bg}`
+                    : "border-slate-700 hover:border-slate-500 bg-slate-800/50"
                 }`}>
                   <input
-                    type="checkbox"
-                    name={`app_${app.id}`}
-                    defaultChecked={isEnabled}
-                    disabled={app.base}
-                    className="accent-orange-500 w-4 h-4"
+                    type="radio"
+                    name="subscription"
+                    value={p.id}
+                    defaultChecked={isCurrent}
+                    className="sr-only"
                   />
-                  <div className="text-xl w-8 text-center">{app.icon}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm text-white">{app.name}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-700 text-slate-400 rounded">{app.price}EUR/mois</span>
-                      {app.base && <span className="text-[10px] px-1.5 py-0.5 bg-orange-500/30 text-orange-300 rounded">BASE</span>}
+                  {/* Popular badge */}
+                  {"popular" in p && p.popular && (
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2">
+                      <span className="text-[10px] px-2 py-0.5 bg-orange-500 text-white rounded-full font-bold">⭐ POPULAIRE</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">{app.desc}</p>
+                  )}
+                  {/* Plan header */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${p.dot}`}></div>
+                    <span className={`font-bold text-sm ${isCurrent ? p.color : "text-white"}`}>{p.label}</span>
+                    {isCurrent && (
+                      <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-white/10 text-white rounded">ACTIF</span>
+                    )}
                   </div>
+                  <div className={`text-2xl font-black mb-3 ${isCurrent ? p.color : "text-slate-200"}`}>
+                    {p.priceMonthly}€
+                    <span className="text-xs font-normal text-slate-400">/mois HT</span>
+                  </div>
+                  <ul className="space-y-1 flex-1">
+                    {p.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-1.5 text-[11px] text-slate-400">
+                        <span className="text-emerald-400 mt-0.5 flex-shrink-0">✓</span>
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </label>
               );
             })}
           </div>
 
-          {/* Hidden field: JS-free form — build enabledApps from checked boxes server-side */}
-          <input type="hidden" name="enabledApps" value={JSON.stringify(enabledApps)} />
-
           <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3">
             <p className="text-xs text-blue-400">
-              <strong>Tarif degressif :</strong> 1 app = prix plein, 2 apps = -10%, 3 apps = -15%, 4+ apps = -20%.
-              L'app "Avis Google & Reputation" est obligatoire (base).
+              Changer de forfait met à jour automatiquement les applications activées pour ce restaurant.
+              La date de souscription est réinitialisée à aujourd'hui.
             </p>
           </div>
 
           <button type="submit"
-            className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors text-sm"
-            onClick={`
-              const form = this.closest('form');
-              const checks = form.querySelectorAll('input[type=checkbox]');
-              const apps = [];
-              checks.forEach(c => { if (c.checked || c.disabled) apps.push(c.name.replace('app_','')); });
-              form.querySelector('input[name=enabledApps]').value = JSON.stringify(apps);
-            `}>
-            Enregistrer les applications
+            className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-xl transition-colors text-sm">
+            💾 Appliquer le forfait
           </button>
         </form>
-      </div>
-
-      {/* ── Souscription (legacy — kept for backward compat) ── */}
-      <div className={`bg-slate-900 border p-6 rounded-xl space-y-4 ${plan.border}`}>
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-lg font-bold">💳 Souscription (legacy)</h2>
-          <span className={`text-sm px-3 py-1 rounded-full font-semibold border ${plan.bg} ${plan.color} ${plan.border}`}>
-            {plan.label} — {plan.price}
-          </span>
-        </div>
-        <form action={updateSubscription.bind(null, id)} className="flex items-end gap-4 flex-wrap">
-          <div className="flex-1 min-w-48">
-            <label className="block text-sm font-medium text-slate-400 mb-1">Niveau d'abonnement</label>
-            <select name="subscription" defaultValue={restaurant.subscription}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white">
-              <option value="STARTER">Starter — 49,99€/mois (30 tables)</option>
-              <option value="PRO">Pro — 139,99€/mois (illimite + analytics)</option>
-              <option value="PRO_IA">Pro + NovaTech IA — 299€/mois (IA complete)</option>
-            </select>
-          </div>
-          <button type="submit" className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-            Appliquer
-          </button>
-        </form>
-        {restaurant.subscriptionStartedAt && (
-          <div className="text-xs text-slate-500 flex gap-6 flex-wrap">
-            <span>Debut : {new Date(restaurant.subscriptionStartedAt).toLocaleDateString("fr-FR")}</span>
-            {restaurant.subscriptionExpiresAt && (
-              <span>Expire : {new Date(restaurant.subscriptionExpiresAt).toLocaleDateString("fr-FR")}</span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* ── Service Caisse ── */}
@@ -435,8 +435,8 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
         )}
       </div>
 
-      {/* ── Configuration IA (PRO_IA uniquement) ── */}
-      {restaurant.subscription === "PRO_IA" && (
+      {/* ── Configuration IA (forfait Business) ── */}
+      {(restaurant.subscription === "PRO_IA" || plan.id === "business") && (
         <div className="bg-slate-900 border border-orange-600/40 p-6 rounded-xl space-y-8">
             <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center text-xl">🦙</div>

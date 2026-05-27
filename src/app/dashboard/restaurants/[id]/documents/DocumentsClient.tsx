@@ -527,33 +527,29 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
                     onChange={(ev) => updateChainEstablishment(e.id, { engagement: ev.target.value })}
                     className={INPUT_CLS + " text-xs"}
                   >
-                    {DURATIONS.map((d) => (
-                      <option key={d.key} value={d.key}>{d.label}</option>
-                    ))}
+                    <option value="monthly">Mensuel (sans engagement)</option>
+                    <option value="annual">Annuel (−12 %)</option>
                   </select>
                   <div>
-                    <p className="text-[10px] text-slate-500 mb-0.5">Modules</p>
+                    <p className="text-[10px] text-slate-500 mb-0.5">Forfait</p>
                     <div className="flex flex-wrap gap-1">
-                      {MODULES.map((mod) => {
-                        const isSel = e.modules.includes(mod.id);
+                      {PLANS.map((p) => {
+                        const isSel = e.modules.includes(p.id);
                         return (
                           <button
-                            key={mod.id}
+                            key={p.id}
                             type="button"
                             onClick={() => {
-                              if (mod.required) return;
-                              const next = isSel ? e.modules.filter((x) => x !== mod.id) : [...e.modules, mod.id];
-                              updateChainEstablishment(e.id, { modules: next });
+                              // Sélection exclusive — un seul forfait par établissement
+                              updateChainEstablishment(e.id, { modules: isSel ? [] : [p.id] });
                             }}
-                            disabled={mod.required}
                             className={`text-[10px] px-1.5 py-0.5 rounded border ${
                               isSel
                                 ? "bg-orange-500/20 text-orange-300 border-orange-500/40"
                                 : "bg-slate-900 text-slate-500 border-slate-700 hover:bg-slate-800"
-                            } ${mod.required ? "opacity-90" : ""}`}
-                            title={mod.required ? "Module requis" : ""}
+                            }`}
                           >
-                            {mod.name.split(" ")[0]}{mod.required && "*"}
+                            {p.name} — {p.priceMonthly}€
                           </button>
                         );
                       })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { PLANS, eur } from "./pricing";
+import { PLANS, MODULES, DURATIONS, eur, computeQuote } from "./pricing";
 
 // ───────────────────────────────────────────────────────────────────────────
 // Bannière latérale décorative — signature visuelle MaTable (6 mm)
@@ -464,11 +464,20 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                 <td className="p-3">
                   <b>Forfait {priceInfo.planName ?? "Starter"}</b>
                   <br/>
-                  <ul className="text-xs text-gray-500 mt-1 space-y-0.5 list-disc ml-4">
-                    {(priceInfo.planFeatures ?? PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.features ?? []).map((f, i) => (
-                      <li key={i}>{f}</li>
-                    ))}
-                  </ul>
+                  {(() => {
+                    const det = PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.featuresDetailed ?? [];
+                    return (
+                      <ul className="text-xs mt-1.5 space-y-1.5 list-none ml-0">
+                        {det.map((f, i) => (
+                          <li key={i}>
+                            <span className="font-semibold text-gray-800">✓ {f.name}</span>
+                            <br/>
+                            <span className="italic text-gray-400 text-[10.5px] leading-snug">{f.desc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  })()}
                 </td>
                 <td className="p-3 text-right align-top font-bold">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
@@ -701,11 +710,20 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
                   <b>Forfait {priceInfo.planName ?? "Starter"}</b>
                   {priceInfo.isAnnualPay && <span className="text-xs italic text-orange-600"> · −12 % engagement annuel</span>}
                   <br/>
-                  <ul className="text-xs text-gray-500 mt-1 space-y-0.5 list-disc ml-4">
-                    {(priceInfo.planFeatures ?? PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.features ?? []).map((f, i) => (
-                      <li key={i}>{f}</li>
-                    ))}
-                  </ul>
+                  {(() => {
+                    const det = PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.featuresDetailed ?? [];
+                    return (
+                      <ul className="text-xs mt-1.5 space-y-1.5 list-none ml-0">
+                        {det.map((f, i) => (
+                          <li key={i}>
+                            <span className="font-semibold text-gray-800">✓ {f.name}</span>
+                            <br/>
+                            <span className="italic text-gray-400 text-[10.5px] leading-snug">{f.desc}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  })()}
                 </td>
                 <td className="p-3 text-right align-top">{priceInfo.monthly.toFixed(2)} €</td>
               </tr>
@@ -1252,10 +1270,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
               </tr>
             </thead>
             <tbody>
-              {(priceInfo.planFeatures ?? PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.features ?? []).map((f, i) => (
+              {(PLANS.find(p => p.id === (priceInfo.planId ?? "starter"))?.featuresDetailed ?? []).map((f, i) => (
                 <tr key={i} className="border-b">
-                  <td className="p-3 text-sm">✓ {f}</td>
-                  <td className="p-3 text-right text-gray-400 text-xs">inclus</td>
+                  <td className="p-3">
+                    <span className="text-sm font-semibold text-gray-900">✓ {f.name}</span>
+                    <br/>
+                    <span className="italic text-gray-400 text-[10.5px] leading-snug">{f.desc}</span>
+                  </td>
+                  <td className="p-3 text-right text-gray-400 text-xs align-top">inclus</td>
                 </tr>
               ))}
               <tr className="bg-orange-50 font-black">
@@ -1387,30 +1409,25 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </div>
           </div>
 
-          {/* Grille tarifaire — modules à la carte */}
-          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-1">Tarifs à la carte — modules HT/mois</h2>
-          <p className="text-xs text-gray-500 italic mb-3">Tarifs de base, engagement 3 mois. Réductions appliquées sur les engagements plus longs (voir ci-dessous).</p>
-          <table className="w-full text-xs mb-3 border-collapse">
-            <tbody>
-              {MODULES.map((m) => (
-                <tr key={m.id} className="border-b border-gray-200">
-                  <td className="py-1.5"><b>{m.name}</b>{m.required && <span className="text-orange-600 italic"> · requis</span>}</td>
-                  <td className="py-1.5 text-right font-bold text-gray-900">{(m.price * 1.07).toFixed(2)} €</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* Grille tarifaire — 3 forfaits */}
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-1">Forfaits — tarifs HT/mois</h2>
+          <p className="text-xs text-gray-500 italic mb-3">Sans engagement. Résiliable à tout moment. −12 % en paiement annuel.</p>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {PLANS.map((p) => (
+              <div key={p.id} className="border border-orange-200 rounded-xl p-3 bg-orange-50/30">
+                <p className="font-black text-sm text-gray-900">{p.name}</p>
+                <p className="text-2xl font-black text-orange-500 my-1">{p.priceMonthly} €<span className="text-xs font-normal text-gray-400">/mois</span></p>
+                <ul className="text-[10px] text-gray-600 space-y-1 mt-1">
+                  {p.featuresDetailed.map((f, i) => (
+                    <li key={i}><b className="text-gray-800">{f.name}</b><br/><span className="italic text-gray-400">{f.desc}</span></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
           <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-4 mb-6 text-sm">
-            <p className="font-black text-orange-600 mb-2">💡 Cumulez les modules pour des remises supplémentaires :</p>
-            <div className="grid grid-cols-3 gap-2 text-xs text-gray-700">
-              <div><b className="text-emerald-600">−10 %</b> dès 2 modules</div>
-              <div><b className="text-emerald-600">−15 %</b> dès 3 modules</div>
-              <div><b className="text-emerald-600">−20 %</b> dès 4 modules</div>
-            </div>
-            <p className="text-xs text-gray-700 mt-3 pt-3 border-t border-orange-200">
-              <b className="text-orange-600">Plus l'engagement est long, plus la réduction est forte :</b><br/>
-              3 mois (prix de base) · 6 mois (<b className="text-emerald-700">−2 %</b>) · 9 mois (<b className="text-emerald-700">−4 %</b>) · <b>12 mois (<span className="text-emerald-700">−7 %</span>)</b> · 12 mois en paiement annuel (<b className="text-emerald-700">−12 %</b>)
-            </p>
+            <p className="font-black text-orange-600 mb-1">💡 Réduction annuelle :</p>
+            <p className="text-xs text-gray-700">Paiement annuel = <b className="text-emerald-700">−12 %</b> sur le mensuel. Sans frais d'installation, sans engagement minimum.</p>
           </div>
 
           {/* CTA */}
@@ -1478,38 +1495,42 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             Votre équipe ne fait <b>rien de plus</b> : tout est automatique.
           </p>
 
-          {/* Modules disponibles — liste avec prix de base 3 mois */}
-          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-1">Modules à la carte — tarifs HT/mois</p>
-          <p className="text-[10px] text-gray-500 italic mb-2">Prix de base (engagement 3 mois). Réductions appliquées pour engagements plus longs.</p>
-          <table className="w-full text-sm mb-4">
+          {/* Forfaits — version économe */}
+          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-1">Forfaits HT/mois — sans engagement</p>
+          <p className="text-[10px] text-gray-500 italic mb-2">Paiement annuel : −12 % sur le mensuel.</p>
+          <table className="w-full text-sm mb-4 border-collapse">
             <tbody>
-              {MODULES.map((m) => (
-                <tr key={m.id} className="border-b border-gray-200">
-                  <td className="py-1.5"><span className="text-orange-500 font-black">›</span> <b>{m.name}</b>{m.required && <span className="text-orange-600 italic text-xs"> · requis</span>}</td>
-                  <td className="py-1.5 text-right font-bold">{(m.price * 1.07).toFixed(2)} €</td>
+              {PLANS.map((p) => (
+                <tr key={p.id} className="border-b border-gray-200">
+                  <td className="py-1.5 pr-2">
+                    <b>{p.name}</b>
+                    <ul className="text-[10px] text-gray-500 mt-0.5 space-y-0.5">
+                      {p.featuresDetailed.map((f, i) => (
+                        <li key={i}><span className="text-orange-500">›</span> <b className="text-gray-700">{f.name}</b> — <span className="italic">{f.desc}</span></li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td className="py-1.5 text-right font-bold align-top">{p.priceMonthly} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <p className="text-xs text-gray-700 mb-2 leading-relaxed">
-            <b className="text-orange-600">Cumulez plusieurs modules :</b> <b className="text-emerald-700">−10 %</b> dès 2 · <b className="text-emerald-700">−15 %</b> dès 3 · <b className="text-emerald-700">−20 %</b> dès 4.
-          </p>
           <p className="text-xs text-gray-700 mb-6 leading-relaxed">
-            <b className="text-orange-600">Réduction engagement :</b> 3 m (prix de base) · 6 m (<b className="text-emerald-700">−2 %</b>) · 9 m (<b className="text-emerald-700">−4 %</b>) · 12 m (<b className="text-emerald-700">−7 %</b>) · 12 m annuel (<b className="text-emerald-700">−12 %</b>).
+            Annuel : <b className="text-emerald-700">−12 %</b> sur chaque forfait. Sans frais d'installation.
           </p>
 
           <div className="h-px bg-gray-300 mb-6" />
 
-          {/* Prix d'entrée + tarif tout activé */}
+          {/* Prix d'entrée */}
           <div className="mb-8 text-sm">
             <div className="flex items-baseline justify-between">
-              <p className="text-gray-700">Configuration minimale (Avis Google seul, 3 m)</p>
-              <p className="text-2xl font-black text-orange-500">84,53 € HT/mois</p>
+              <p className="text-gray-700">Forfait d'entrée (Starter)</p>
+              <p className="text-2xl font-black text-orange-500">59 € HT/mois</p>
             </div>
             <div className="flex items-baseline justify-between mt-1 text-xs text-gray-500">
-              <p>Pack complet 7 modules (−20 % volume, 12 m)</p>
-              <p className="font-bold">482,40 € HT/mois</p>
+              <p>Forfait complet (Business, engagement annuel)</p>
+              <p className="font-bold">219 € HT/mois</p>
             </div>
           </div>
 
@@ -1598,57 +1619,47 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             ))}
           </div>
 
-          {/* Grille tarifaire complète + offres */}
-          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-1 border-t pt-4">Grille tarifaire — sur-mesure modulaire</h2>
-          <p className="text-[11px] text-gray-500 italic mb-2">Prix de base = engagement 3 mois. Plus l'engagement est long, plus la réduction est forte.</p>
+          {/* Grille tarifaire complète — 3 forfaits */}
+          <h2 className="text-xs font-black uppercase tracking-widest text-orange-500 mb-1 border-t pt-4">Grille tarifaire — 3 forfaits tout inclus</h2>
+          <p className="text-[11px] text-gray-500 italic mb-2">Sans engagement. Paiement annuel : −12 % sur le mensuel. Aucun frais d'installation.</p>
           <table className="w-full text-xs mb-3 border-collapse">
             <thead>
               <tr className="bg-orange-50 text-orange-900 border-y-2 border-orange-500">
-                <th className="p-2 text-left">Module</th>
-                <th className="p-2 text-right">HT/mois (3 m)</th>
+                <th className="p-2 text-left">Forfait & fonctionnalités incluses</th>
+                <th className="p-2 text-right">HT/mois</th>
               </tr>
             </thead>
             <tbody>
-              {MODULES.map((m) => (
-                <tr key={m.id} className="border-b border-gray-200">
-                  <td className="p-2"><b>{m.name}</b>{m.required && <span className="text-orange-600 italic text-[10px]"> · requis</span>}<br/><span className="text-[10px] text-gray-500">{m.desc.slice(0, 80)}…</span></td>
-                  <td className="p-2 text-right font-bold">{(m.price * 1.07).toFixed(2)} €</td>
+              {PLANS.map((p) => (
+                <tr key={p.id} className="border-b border-gray-200">
+                  <td className="p-2">
+                    <b className="text-gray-900">{p.name}</b>
+                    <ul className="mt-1 space-y-1">
+                      {p.featuresDetailed.map((f, i) => (
+                        <li key={i} className="text-[10px]">
+                          <b className="text-gray-700">{f.name}</b>
+                          <span className="text-gray-400 italic"> — {f.desc}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td className="p-2 text-right font-bold align-top text-orange-600">{p.priceMonthly} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="border border-orange-200 bg-orange-50/40 rounded-lg p-3">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Remises volume modules</p>
-              <ul className="text-xs space-y-1">
-                <li>· 2 modules — <b className="text-emerald-700">−10 %</b></li>
-                <li>· 3 modules — <b className="text-emerald-700">−15 %</b></li>
-                <li>· 4 modules et + — <b className="text-emerald-700">−20 %</b></li>
-              </ul>
-            </div>
-            <div className="border border-orange-200 bg-orange-50/40 rounded-lg p-3">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Réduction engagement</p>
-              <ul className="text-xs space-y-1">
-                <li>· 3 mois — prix de base</li>
-                <li>· 6 mois — <b className="text-emerald-700">−2 %</b> · 9 mois — <b className="text-emerald-700">−4 %</b></li>
-                <li>· <b>12 mois — <span className="text-emerald-700">−7 %</span></b> (recommandé)</li>
-                <li>· 12 mois en paiement annuel — <b className="text-emerald-700">−12 %</b></li>
-              </ul>
-            </div>
-          </div>
-
           <div className="bg-orange-50/60 border-2 border-orange-500 rounded-xl p-4 mb-4 text-sm">
-            <div className="flex items-baseline justify-between">
-              <p className="text-xs uppercase tracking-widest text-orange-600 font-black">Exemples de configurations (12 mois)</p>
+            <p className="text-xs uppercase tracking-widest text-orange-600 font-black mb-2">Tarifs annuels (−12 %)</p>
+            <div className="grid grid-cols-3 gap-2 text-xs text-gray-700">
+              {PLANS.map((p) => (
+                <div key={p.id} className="flex justify-between">
+                  <span>{p.name}</span>
+                  <b className="text-emerald-700">{Math.round(p.priceMonthly * 0.88)} €/mois</b>
+                </div>
+              ))}
             </div>
-            <div className="mt-2 space-y-1 text-xs text-gray-700">
-              <div className="flex justify-between"><span>Avis Google seul (entrée de gamme)</span><b className="text-gray-900">79,00 € HT/mois</b></div>
-              <div className="flex justify-between"><span>Avis + QR Commande (pack vitrine)</span><b className="text-gray-900">160,20 € HT/mois</b></div>
-              <div className="flex justify-between"><span>Avis + QR + Serveur (pack salle)</span><b className="text-gray-900">209,95 € HT/mois</b></div>
-              <div className="flex justify-between"><span>Pack complet 7 modules (−20 % volume)</span><b className="text-orange-600">482,40 € HT/mois</b></div>
-            </div>
-            <p className="text-[10px] text-gray-500 italic mt-2 pt-2 border-t border-orange-200">Configurations chiffrées sur engagement 12 mois. Mise en service sous 7 jours. Aucun frais d'installation.</p>
+            <p className="text-[10px] text-gray-500 italic mt-2 pt-2 border-t border-orange-200">Mise en service sous 7 jours. Aucun frais d'installation. Résiliable à tout moment.</p>
           </div>
 
           {/* CTA premium */}
@@ -1700,31 +1711,33 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </div>
           </div>
 
-          <p className="text-[10px] uppercase tracking-wider text-orange-500 font-black mb-1">Modules à la carte — HT/mois (3 m)</p>
-          <table className="w-full text-[10px] mb-3">
+          <p className="text-[10px] uppercase tracking-wider text-orange-500 font-black mb-1">3 Forfaits HT/mois — sans engagement</p>
+          <table className="w-full text-[10px] mb-3 border-collapse">
             <tbody>
-              {MODULES.map((m) => (
-                <tr key={m.id} className="border-b border-gray-200">
-                  <td className="py-0.5"><b className="text-orange-500">›</b> {m.name}{m.required && <span className="text-orange-600 italic"> ·req.</span>}</td>
-                  <td className="py-0.5 text-right font-bold">{(m.price * 1.07).toFixed(2)} €</td>
+              {PLANS.map((p) => (
+                <tr key={p.id} className="border-b border-gray-200">
+                  <td className="py-1 pr-1">
+                    <b className="text-gray-900">{p.name}</b>
+                    <span className="text-gray-400 italic"> — {p.featuresDetailed.map(f => f.name).join(" · ")}</span>
+                  </td>
+                  <td className="py-1 text-right font-bold align-top">{p.priceMonthly} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           <p className="text-[10px] text-gray-700 mb-3 leading-snug">
-            <b>Cumulez modules :</b> <b className="text-emerald-700">−10 %</b> à <b className="text-emerald-700">−20 %</b>.<br/>
-            <b>Engagement long :</b> <b className="text-emerald-700">−2 %</b> à <b className="text-emerald-700">−12 %</b> selon durée.
+            <b>Annuel :</b> <b className="text-emerald-700">−12 %</b> sur chaque forfait.
           </p>
 
           <div className="border-y border-gray-300 py-2 mb-4 text-xs">
             <div className="flex items-baseline justify-between">
               <span className="text-gray-700">Dès</span>
-              <b className="text-xl text-orange-500">84,53 € HT/mois</b>
+              <b className="text-xl text-orange-500">59 € HT/mois</b>
             </div>
             <div className="flex items-baseline justify-between text-[10px] text-gray-500">
-              <span>Pack complet 7 mod. (12 m, −20 %)</span>
-              <span>482,40 € HT/mois</span>
+              <span>Business annuel (−12 %)</span>
+              <span>219 € HT/mois</span>
             </div>
           </div>
 
@@ -1800,14 +1813,21 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </div>
           </div>
 
-          {/* Modules — comme les restos individuels */}
-          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Modules disponibles</h2>
-          <p className="text-xs text-gray-600 mb-3">Les mêmes 7 modules que l'offre Restaurant individuel, activables au choix par établissement :</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-6">
-            {MODULES.map((m) => (
-              <div key={m.id} className="flex items-center gap-2">
-                <span className="text-orange-500 font-black">›</span>
-                <span><b>{m.name}</b>{m.required && <span className="text-orange-600 italic"> · requis</span>}</span>
+          {/* Forfaits — offre chaîne basée sur les mêmes plans */}
+          <h2 className="text-sm font-black uppercase tracking-widest text-orange-500 mb-3 border-t pt-4">Forfaits disponibles par établissement</h2>
+          <p className="text-xs text-gray-600 mb-3">Chaque établissement du groupe est associé à un forfait. Les tarifs chaîne sont négociés sur devis :</p>
+          <div className="space-y-3 mb-6">
+            {PLANS.map((p) => (
+              <div key={p.id} className="border border-orange-200 bg-orange-50/20 rounded-xl p-3">
+                <div className="flex items-baseline justify-between mb-1">
+                  <b className="text-sm text-gray-900">{p.name}</b>
+                  <span className="text-xs text-orange-600 font-bold">{p.priceMonthly} €/mois (tarif unitaire)</span>
+                </div>
+                <ul className="text-[10px] text-gray-600 space-y-0.5">
+                  {p.featuresDetailed.map((f, i) => (
+                    <li key={i}><span className="text-orange-500">›</span> <b className="text-gray-700">{f.name}</b> — <span className="italic">{f.desc}</span></li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
@@ -3537,14 +3557,12 @@ function TutoAvisEcoSheet({ vendor, client }: { vendor: Vendor; client: ClientDa
   );
 }
 
-// Re-exports depuis pricing.ts pour rétro-compatibilité avec les imports
-// existants ailleurs dans le code (DocumentsClient, DocumentViewerClient).
-export { computeQuote, MODULES, DURATIONS, eur };
-export type { DurationKey, ModuleId, QuoteLine, Quote };
+// Legacy re-exports — préférer des imports directs depuis "./pricing"
+export { MODULES, DURATIONS, eur, computeQuote };
+export type { DurationKey, ModuleId, QuoteLine, Quote } from "./pricing";
 
-// Fallback : calcule un priceInfo en supposant que seul le module "avis" est actif
-// (= configuration minimale). Utilisé pour les anciens documents sauvegardés
-// qui n'ont pas encore de `selectedModules` en data.
-export function computePriceInfo(engagement: string): PriceInfo {
-  return computeQuote(["avis"], (engagement as any) ?? "12m");
+// Fallback : calcule un priceInfo pour le forfait Starter mensuel.
+// Utilisé pour les anciens documents sauvegardés sans données de plan.
+export function computePriceInfo(_engagement?: string): PriceInfo {
+  return computeQuote("starter", "monthly");
 }

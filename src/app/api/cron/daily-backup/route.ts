@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { buildBackup, emailBackup } from "@/lib/db-backup";
+import { runMigrations } from "@/app/api/database/migrate/route";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -30,6 +31,9 @@ function isAuthorized(req: NextRequest, session: any): boolean {
 }
 
 async function runDailyBackup(opts: { force?: boolean }) {
+  // Appliquer les migrations non-destructives au démarrage du cron
+  await runMigrations().catch(() => { /* ne pas bloquer le backup */ });
+
   const cfg = await (prisma as any).adminConfig.findUnique({ where: { id: "default" } });
   if (!cfg || !cfg.backupEnabled) return { ok: false, reason: "backup_disabled" };
   if (!cfg.backupRecipient) return { ok: false, reason: "no_recipient" };
