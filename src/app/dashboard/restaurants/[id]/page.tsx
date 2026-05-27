@@ -73,9 +73,9 @@ const PLANS = [
     dot: "bg-orange-400",
     popular: true,
     features: [
-      "Tout le forfait Starter",
+      "Tout le forfait Starter dont Avis Google, Commande QR, Paiement QR, Portail Serveur, Portail Cuisine et Portail Caisse",
       "Nova IA — chatbot, Magic Scan, génération menu, accords",
-      "Programme Fidélité inclus — clients, points, offres, récompenses",
+      "Programme Fidélité inclus — clients, points, niveaux VIP, offres, récompenses",
     ],
   },
   {
@@ -88,8 +88,8 @@ const PLANS = [
     border: "border-purple-600",
     dot: "bg-purple-400",
     features: [
-      "Tout le forfait Pro",
-      "Programme Fidélité inclus dans Pro",
+      "Tout le forfait Pro dont Starter complet, Réservations Intelligentes et Programme Fidélité",
+      "Programme Fidélité inclus dans Pro — clients, points, niveaux VIP, offres, récompenses",
       "Nova Stock IA — gestion stocks, alertes, courses",
       "Nova Finance IA — conseils, promotions anti-gaspillage",
       "Nova Contab IA — comptabilité, URSSAF/TVA, export",
