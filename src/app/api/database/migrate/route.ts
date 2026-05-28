@@ -204,6 +204,11 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_max_covers_per_slot",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "maxCoversPerSlot" INTEGER`,
   },
+  // ── Raccourcis rapides dashboard ──────────────────────────────────────────
+  {
+    name: "add_dashboard_quick_actions",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardQuickActions" JSONB NOT NULL DEFAULT '[]'::jsonb`,
+  },
   // ── Config fidélité ───────────────────────────────────────────────────────
   {
     name: "create_loyalty_config",
