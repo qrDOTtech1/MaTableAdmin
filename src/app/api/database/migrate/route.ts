@@ -209,6 +209,23 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_dashboard_quick_actions",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardQuickActions" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  // ── Config billing plateforme (Stripe Billing — facturer les restos) ──────
+  {
+    name: "create_global_config",
+    sql: `CREATE TABLE IF NOT EXISTS "GlobalConfig" (
+      "id"        TEXT NOT NULL DEFAULT 'global',
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "GlobalConfig_pkey" PRIMARY KEY ("id")
+    )`,
+  },
+  {
+    name: "add_platform_billing",
+    sql: `ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "platformBilling" JSONB NOT NULL DEFAULT '{}'::jsonb`,
+  },
+  {
+    name: "seed_global_config_row",
+    sql: `INSERT INTO "GlobalConfig" (id) VALUES ('global') ON CONFLICT (id) DO NOTHING`,
+  },
   // ── Journal d'abonnements SaaS (churn / MRR historisé) ────────────────────
   // PAS de FK vers Restaurant : les events doivent survivre à la suppression
   // d'un resto pour conserver l'historique de churn.

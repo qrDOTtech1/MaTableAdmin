@@ -226,6 +226,72 @@ export async function updateServerUniqueQr(id: string, formData: FormData) {
   revalidatePath(`/dashboard/restaurants/${id}`);
 }
 
+// ── Config billing plateforme (Stripe Billing pour facturer les restos) ──────
+export type PlatformBilling = {
+  enabled: boolean;
+  stripeSecretKey: string;
+  stripePublicKey: string;
+  stripeWebhookSecret: string;
+  currency: string;        // "eur"
+  trialDays: number;
+  prices: {
+    starter:  { monthly: string; yearly: string };
+    pro:      { monthly: string; yearly: string };
+    business: { monthly: string; yearly: string };
+  };
+};
+
+const EMPTY_BILLING: PlatformBilling = {
+  enabled: false,
+  stripeSecretKey: "", stripePublicKey: "", stripeWebhookSecret: "",
+  currency: "eur", trialDays: 0,
+  prices: {
+    starter:  { monthly: "", yearly: "" },
+    pro:      { monthly: "", yearly: "" },
+    business: { monthly: "", yearly: "" },
+  },
+};
+
+export async function getPlatformBilling(): Promise<PlatformBilling> {
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ platformBilling: any }>>(
+      `SELECT "platformBilling" FROM "GlobalConfig" WHERE id = 'global' LIMIT 1`
+    );
+    const raw = rows[0]?.platformBilling ?? {};
+    return {
+      ...EMPTY_BILLING,
+      ...raw,
+      prices: { ...EMPTY_BILLING.prices, ...(raw?.prices ?? {}) },
+    };
+  } catch {
+    return EMPTY_BILLING;
+  }
+}
+
+export async function updatePlatformBilling(formData: FormData) {
+  "use server";
+  const g = (k: string) => ((formData.get(k) as string) ?? "").trim();
+  const billing: PlatformBilling = {
+    enabled: formData.has("enabled"),
+    stripeSecretKey:     g("stripeSecretKey"),
+    stripePublicKey:     g("stripePublicKey"),
+    stripeWebhookSecret: g("stripeWebhookSecret"),
+    currency:            g("currency") || "eur",
+    trialDays:           Math.max(0, parseInt(g("trialDays") || "0", 10) || 0),
+    prices: {
+      starter:  { monthly: g("price_starter_monthly"),  yearly: g("price_starter_yearly") },
+      pro:      { monthly: g("price_pro_monthly"),       yearly: g("price_pro_yearly") },
+      business: { monthly: g("price_business_monthly"),  yearly: g("price_business_yearly") },
+    },
+  };
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO "GlobalConfig" (id, "platformBilling") VALUES ('global', $1::jsonb)
+     ON CONFLICT (id) DO UPDATE SET "platformBilling" = $1::jsonb, "updatedAt" = CURRENT_TIMESTAMP`,
+    JSON.stringify(billing),
+  );
+  revalidatePath("/dashboard/billing-config");
+}
+
 export async function deleteRestaurant(id: string) {
   "use server";
   // Journalise le churn AVANT suppression (les events n'ont pas de FK, ils survivent)
