@@ -247,9 +247,19 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
       "plan"           TEXT NOT NULL,
       "mrrCents"       INTEGER NOT NULL DEFAULT 0,
       "mrrDeltaCents"  INTEGER NOT NULL DEFAULT 0,
+      "method"         TEXT,
+      "note"           TEXT,
       "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "SubscriptionEvent_pkey" PRIMARY KEY ("id")
     )`,
+  },
+  {
+    name: "add_subscription_event_method",
+    sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "method" TEXT`,
+  },
+  {
+    name: "add_subscription_event_note",
+    sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "note" TEXT`,
   },
   {
     name: "create_subscription_event_idx_created",

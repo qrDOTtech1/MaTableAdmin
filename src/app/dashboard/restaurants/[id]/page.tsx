@@ -11,6 +11,7 @@ import {
   updateContactEmail,
   updateServerUniqueQr,
   deleteRestaurant,
+  recordManualPayment,
 } from "@/lib/admin-actions";
 import Link from "next/link";
 import UsersManager from "./UsersManager";
@@ -299,6 +300,42 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             💾 Appliquer le forfait
           </button>
         </form>
+
+        {/* ── Paiement manuel (chèque / espèces / virement) ── */}
+        <div className="mt-6 pt-6 border-t border-slate-800">
+          <h3 className="text-sm font-bold text-white mb-1">💶 Enregistrer un paiement reçu</h3>
+          <p className="text-xs text-slate-400 mb-3">
+            Le resto t'a payé hors Stripe ? Enregistre-le : ça prolonge son abonnement
+            et alimente le suivi MRR / Churn (forfait actuel : <span className={plan.color}>{plan.label}</span> · {plan.priceMonthly}€/mois).
+          </p>
+          <form action={recordManualPayment.bind(null, id)} className="flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Moyen</label>
+              <select name="method" className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                <option value="cheque">Chèque</option>
+                <option value="especes">Espèces</option>
+                <option value="virement">Virement</option>
+                <option value="autre">Autre</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Période</label>
+              <select name="interval" className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                <option value="monthly">+ 1 mois</option>
+                <option value="yearly">+ 1 an</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-40">
+              <label className="block text-xs font-medium text-slate-400 mb-1">Note (optionnel)</label>
+              <input name="note" type="text" placeholder="N° chèque, réf virement…"
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+            </div>
+            <button type="submit"
+              className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors text-sm">
+              ✓ Encaisser
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* ── Service Caisse ── */}

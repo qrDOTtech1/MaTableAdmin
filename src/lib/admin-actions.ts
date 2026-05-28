@@ -51,19 +51,69 @@ async function logSubscriptionEvent(opts: {
   plan: string;
   mrrCents: number;
   mrrDeltaCents: number;
+  method?: string | null;   // stripe | cheque | especes | virement | autre | manual
+  note?: string | null;
 }) {
   try {
     const id = `se_${crypto.randomBytes(12).toString("hex")}`;
     await prisma.$executeRawUnsafe(
       `INSERT INTO "SubscriptionEvent"
-        ("id","restaurantId","restaurantName","type","plan","mrrCents","mrrDeltaCents")
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        ("id","restaurantId","restaurantName","type","plan","mrrCents","mrrDeltaCents","method","note")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       id, opts.restaurantId, opts.restaurantName ?? null, opts.type, opts.plan,
-      opts.mrrCents, opts.mrrDeltaCents,
+      opts.mrrCents, opts.mrrDeltaCents, opts.method ?? null, opts.note ?? null,
     );
   } catch (e) {
     console.warn("logSubscriptionEvent skipped:", (e as Error).message?.split("\n")[0]);
   }
+}
+
+/**
+ * Enregistre un PAIEMENT MANUEL (chèque / espèces / virement / autre) reçu d'un resto.
+ * Prolonge l'abonnement (1 mois ou 1 an) et journalise un SubscriptionEvent.
+ */
+export async function recordManualPayment(id: string, formData: FormData) {
+  "use server";
+  const method   = (formData.get("method")   as string)?.trim() || "autre";
+  const interval = (formData.get("interval") as string)?.trim() === "yearly" ? "yearly" : "monthly";
+  const note     = (formData.get("note")     as string)?.trim() || null;
+
+  const r = await prisma.restaurant.findUnique({
+    where: { id },
+    select: { name: true, subscription: true, subscriptionStartedAt: true, subscriptionExpiresAt: true },
+  });
+  if (!r) return;
+
+  // Nouvelle échéance : on prolonge depuis max(maintenant, échéance actuelle)
+  const now = new Date();
+  const base = r.subscriptionExpiresAt && r.subscriptionExpiresAt > now ? new Date(r.subscriptionExpiresAt) : now;
+  const next = new Date(base);
+  if (interval === "yearly") next.setFullYear(next.getFullYear() + 1);
+  else next.setMonth(next.getMonth() + 1);
+
+  const isFirst = !r.subscriptionStartedAt;
+  await prisma.restaurant.update({
+    where: { id },
+    data: {
+      subscriptionStartedAt: r.subscriptionStartedAt ?? now,
+      subscriptionExpiresAt: next,
+    },
+  });
+
+  const mrr = PLAN_MRR_CENTS[r.subscription] ?? 0;
+  await logSubscriptionEvent({
+    restaurantId: id,
+    restaurantName: r.name,
+    type: isFirst ? "created" : "renewed",
+    plan: r.subscription,
+    mrrCents: mrr,
+    mrrDeltaCents: isFirst ? mrr : 0,
+    method,
+    note,
+  });
+
+  revalidatePath(`/dashboard/restaurants/${id}`);
+  revalidatePath("/dashboard/metrics");
 }
 
 export async function updateSubscription(id: string, formData: FormData) {
@@ -106,6 +156,7 @@ export async function updateSubscription(id: string, formData: FormData) {
     plan: subscription,
     mrrCents: newMrr,
     mrrDeltaCents: newMrr - oldMrr,
+    method: "manual",
   });
 
   // Met aussi à jour enabledApps selon le plan sélectionné
