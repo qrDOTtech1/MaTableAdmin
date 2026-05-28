@@ -359,15 +359,17 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
   return (
     <div
       ref={ref}
-      className="bg-white"
+      className="bg-white matable-print-doc"
       style={{
         width: "210mm",
         minHeight: "297mm",
-        padding: "18mm 14mm 18mm 14mm",  // 14 mm latéral = 6 mm bannière + 8 mm air avant le texte
+        padding: "14mm 12mm 14mm 12mm",  // compact impression : plus de contenu par page, sans suppression
         position: "relative",
         boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
         fontFamily: "Arial, sans-serif",
         color: "#1a1a1a",
+        fontSize: "11.5px",
+        lineHeight: 1.35,
       }}
     >
       {/* Bannières décoratives sur les deux côtés — signature visuelle MaTable */}
@@ -375,7 +377,7 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       <SideBanner side="right" />
 
       {/* Contenu principal au-dessus des bannières */}
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div className="matable-print-content" style={{ position: "relative", zIndex: 1 }}>
 
       {/* Header commun */}
       <div className="flex justify-between items-start border-b-2 border-orange-500 pb-5 mb-8">

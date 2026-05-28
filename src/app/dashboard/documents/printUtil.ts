@@ -67,6 +67,46 @@ body > div {
   margin: 0 auto !important;
 }
 
+.matable-print-doc {
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.matable-print-content {
+  font-size: 11px !important;
+  line-height: 1.32 !important;
+}
+
+.matable-print-content p,
+.matable-print-content li,
+.matable-print-content td,
+.matable-print-content th {
+  line-height: 1.32 !important;
+}
+
+.matable-print-content p { margin-top: 0 !important; }
+.matable-print-content h1 { margin-top: 0 !important; margin-bottom: 10px !important; padding-bottom: 8px !important; }
+.matable-print-content h2 { margin-top: 9px !important; margin-bottom: 5px !important; padding-top: 7px !important; }
+.matable-print-content h3 { margin-bottom: 5px !important; }
+.matable-print-content table { margin-top: 4px !important; margin-bottom: 8px !important; }
+.matable-print-content th,
+.matable-print-content td { padding: 6px 7px !important; vertical-align: top !important; }
+.matable-print-content ul { margin-top: 3px !important; margin-bottom: 7px !important; }
+.matable-print-content .mb-8 { margin-bottom: 14px !important; }
+.matable-print-content .mb-6 { margin-bottom: 10px !important; }
+.matable-print-content .mb-4 { margin-bottom: 7px !important; }
+.matable-print-content .mt-12 { margin-top: 18px !important; }
+.matable-print-content .p-4 { padding: 9px !important; }
+.matable-print-content .p-3 { padding: 7px !important; }
+.matable-print-content .gap-8 { gap: 16px !important; }
+.matable-print-content .gap-6 { gap: 12px !important; }
+
+/* Les guides très visuels débordaient parfois en PDF : on compacte sans rien masquer. */
+.matable-print-doc [style*="minHeight: 277mm"],
+.matable-print-doc [style*="min-height: 277mm"] {
+  min-height: 268mm !important;
+}
+
 /* Suggestion d'impression recto-seul (le navigateur respecte si supporté) */
 @media print {
   html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -74,6 +114,30 @@ body > div {
   /* Évite de couper un bloc signature ou un tableau de prix au milieu */
   .grid, table, tr, h2, .signature-block { page-break-inside: avoid; break-inside: avoid; }
   thead { display: table-header-group; }
+
+  .matable-print-doc {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    padding: 12mm 10mm 12mm 10mm !important;
+    transform: none !important;
+  }
+
+  .matable-print-content {
+    font-size: 10.5px !important;
+    line-height: 1.28 !important;
+  }
+
+  .matable-print-content .text-sm { font-size: 10.5px !important; }
+  .matable-print-content .text-xs { font-size: 9px !important; }
+  .matable-print-content .text-\[10\.5px\] { font-size: 8.8px !important; }
+  .matable-print-content .text-xl { font-size: 16px !important; }
+  .matable-print-content .text-2xl { font-size: 19px !important; }
+
+  .matable-print-content p { margin-bottom: 5px !important; }
+  .matable-print-content h2 { margin-top: 7px !important; margin-bottom: 4px !important; padding-top: 6px !important; }
+  .matable-print-content th,
+  .matable-print-content td { padding: 5px 6px !important; }
+  .matable-print-content ul { margin-bottom: 5px !important; }
 
   /* Force le rendu une seule face : on définit la taille de page sans verso.
      Les navigateurs ne peuvent pas réellement forcer le mode "recto seul",
