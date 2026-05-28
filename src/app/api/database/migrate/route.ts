@@ -223,6 +223,14 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     sql: `ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "platformBilling" JSONB NOT NULL DEFAULT '{}'::jsonb`,
   },
   {
+    name: "add_platform_stripe_customer",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "platformStripeCustomerId" TEXT`,
+  },
+  {
+    name: "add_platform_stripe_subscription",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "platformStripeSubscriptionId" TEXT`,
+  },
+  {
     name: "seed_global_config_row",
     sql: `INSERT INTO "GlobalConfig" (id) VALUES ('global') ON CONFLICT (id) DO NOTHING`,
   },
