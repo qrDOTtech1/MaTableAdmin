@@ -11,6 +11,7 @@ const NAV = [
     items: [
       { href: "/dashboard", label: "🍽️ Restaurateurs", exact: true },
       { href: "/dashboard/stats", label: "📊 Statistiques" },
+      { href: "/dashboard/metrics", label: "📈 Churn & Revenus" },
       { href: "/dashboard/settings", label: "⚙️ Configuration" },
       { href: "/dashboard/prospection", label: "🎯 Prospection" },
       { href: "/dashboard/demandes", label: "📩 Demandes / tarifs" },
