@@ -209,6 +209,31 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_dashboard_quick_actions",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardQuickActions" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  // ── Journal d'abonnements SaaS (churn / MRR historisé) ────────────────────
+  // PAS de FK vers Restaurant : les events doivent survivre à la suppression
+  // d'un resto pour conserver l'historique de churn.
+  {
+    name: "create_subscription_event",
+    sql: `CREATE TABLE IF NOT EXISTS "SubscriptionEvent" (
+      "id"             TEXT NOT NULL,
+      "restaurantId"   TEXT NOT NULL,
+      "restaurantName" TEXT,
+      "type"           TEXT NOT NULL,
+      "plan"           TEXT NOT NULL,
+      "mrrCents"       INTEGER NOT NULL DEFAULT 0,
+      "mrrDeltaCents"  INTEGER NOT NULL DEFAULT 0,
+      "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "SubscriptionEvent_pkey" PRIMARY KEY ("id")
+    )`,
+  },
+  {
+    name: "create_subscription_event_idx_created",
+    sql: `CREATE INDEX IF NOT EXISTS "SubscriptionEvent_createdAt_idx" ON "SubscriptionEvent"("createdAt")`,
+  },
+  {
+    name: "create_subscription_event_idx_resto",
+    sql: `CREATE INDEX IF NOT EXISTS "SubscriptionEvent_restaurantId_idx" ON "SubscriptionEvent"("restaurantId")`,
+  },
   // ── Config fidélité ───────────────────────────────────────────────────────
   {
     name: "create_loyalty_config",

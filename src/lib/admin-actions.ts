@@ -36,6 +36,36 @@ const PLAN_APPS: Record<string, string[]> = {
   business: ["reviews", "reservations", "orders", "nova_ia", "nova_stock", "nova_contab", "nova_finance"],
 };
 
+// MRR mensuel HT par plan (centimes) — Starter 59€ / Pro 119€ / Business 249€
+const PLAN_MRR_CENTS: Record<string, number> = { STARTER: 5900, PRO: 11900, PRO_IA: 24900 };
+
+/**
+ * Journalise un mouvement d'abonnement (churn/MRR historisé).
+ * Non-bloquant : si la table n'existe pas encore (migration non lancée),
+ * on avale l'erreur pour ne jamais casser le changement de forfait.
+ */
+async function logSubscriptionEvent(opts: {
+  restaurantId: string;
+  restaurantName?: string | null;
+  type: "created" | "renewed" | "upgraded" | "downgraded" | "canceled";
+  plan: string;
+  mrrCents: number;
+  mrrDeltaCents: number;
+}) {
+  try {
+    const id = `se_${crypto.randomBytes(12).toString("hex")}`;
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "SubscriptionEvent"
+        ("id","restaurantId","restaurantName","type","plan","mrrCents","mrrDeltaCents")
+       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      id, opts.restaurantId, opts.restaurantName ?? null, opts.type, opts.plan,
+      opts.mrrCents, opts.mrrDeltaCents,
+    );
+  } catch (e) {
+    console.warn("logSubscriptionEvent skipped:", (e as Error).message?.split("\n")[0]);
+  }
+}
+
 export async function updateSubscription(id: string, formData: FormData) {
   "use server";
   const rawPlan = formData.get("subscription") as string;
@@ -43,7 +73,7 @@ export async function updateSubscription(id: string, formData: FormData) {
 
   const current = await prisma.restaurant.findUnique({
     where: { id },
-    select: { subscription: true, ollamaApiKey: true },
+    select: { subscription: true, ollamaApiKey: true, name: true, subscriptionStartedAt: true },
   });
 
   // Auto-génère une clé si upgrade vers Business / PRO_IA sans clé existante
@@ -60,6 +90,22 @@ export async function updateSubscription(id: string, formData: FormData) {
       subscriptionExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       ...(ollamaApiKey ? { ollamaApiKey } : {}),
     },
+  });
+
+  // Journalise le mouvement d'abonnement (churn/MRR historisé)
+  const oldMrr = current?.subscriptionStartedAt ? (PLAN_MRR_CENTS[current.subscription] ?? 0) : 0;
+  const newMrr = PLAN_MRR_CENTS[subscription] ?? 0;
+  const evType = !current?.subscriptionStartedAt ? "created"
+    : newMrr > oldMrr ? "upgraded"
+    : newMrr < oldMrr ? "downgraded"
+    : "renewed";
+  await logSubscriptionEvent({
+    restaurantId: id,
+    restaurantName: current?.name,
+    type: evType,
+    plan: subscription,
+    mrrCents: newMrr,
+    mrrDeltaCents: newMrr - oldMrr,
   });
 
   // Met aussi à jour enabledApps selon le plan sélectionné
@@ -182,6 +228,22 @@ export async function updateServerUniqueQr(id: string, formData: FormData) {
 
 export async function deleteRestaurant(id: string) {
   "use server";
+  // Journalise le churn AVANT suppression (les events n'ont pas de FK, ils survivent)
+  const resto = await prisma.restaurant.findUnique({
+    where: { id },
+    select: { name: true, subscription: true, subscriptionStartedAt: true },
+  });
+  if (resto?.subscriptionStartedAt) {
+    const mrr = PLAN_MRR_CENTS[resto.subscription] ?? 0;
+    await logSubscriptionEvent({
+      restaurantId: id,
+      restaurantName: resto.name,
+      type: "canceled",
+      plan: resto.subscription,
+      mrrCents: 0,
+      mrrDeltaCents: -mrr,
+    });
+  }
   await prisma.restaurant.delete({ where: { id } });
   revalidatePath("/dashboard");
 }

@@ -40,6 +40,17 @@ export default async function MetricsPage() {
     orderBy: { createdAt: "desc" },
   })) as Resto[];
 
+  // Journal d'abonnements (historisé) — tolère l'absence de table avant migration
+  type SubEvent = { type: string; plan: string; mrrCents: number; mrrDeltaCents: number; createdAt: Date; restaurantName: string | null };
+  let events: SubEvent[] = [];
+  try {
+    events = await prisma.$queryRawUnsafe<SubEvent[]>(
+      `SELECT type, plan, "mrrCents", "mrrDeltaCents", "createdAt", "restaurantName"
+       FROM "SubscriptionEvent" ORDER BY "createdAt" DESC LIMIT 2000`
+    );
+  } catch { events = []; }
+  const hasEvents = events.length > 0;
+
   // ── Classification ────────────────────────────────────────────────────────
   const active: Resto[] = [];        // abonnement payant en cours
   const expired: Resto[] = [];       // abonnement échu (churn potentiel)
@@ -101,6 +112,26 @@ export default async function MetricsPage() {
     months[idx].newMrr += PLAN_PRICE[r.subscription] ?? 0;
   }
   const maxMrr = Math.max(1, ...months.map((m) => m.newMrr));
+
+  // ── Mouvements MRR RÉELS (depuis le journal d'événements) ──────────────────
+  const evMonths: { key: string; label: string; net: number; gained: number; lost: number }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    evMonths.push({ key: monthKey(d), label: MONTHS_FR[d.getMonth()], net: 0, gained: 0, lost: 0 });
+  }
+  const evIdx = new Map(evMonths.map((m, i) => [m.key, i]));
+  for (const e of events) {
+    const idx = evIdx.get(monthKey(new Date(e.createdAt)));
+    if (idx === undefined) continue;
+    evMonths[idx].net += e.mrrDeltaCents;
+    if (e.mrrDeltaCents >= 0) evMonths[idx].gained += e.mrrDeltaCents;
+    else evMonths[idx].lost += e.mrrDeltaCents;
+  }
+  const evMax = Math.max(1, ...evMonths.map((m) => Math.max(m.gained, Math.abs(m.lost))));
+  // Churn réel 30j (événements canceled)
+  const canceledEvents30 = events.filter((e) => e.type === "canceled" && new Date(e.createdAt) >= ago30);
+  const realChurnCount = canceledEvents30.length;
+  const realMrrLost30 = canceledEvents30.reduce((s, e) => s + Math.abs(e.mrrDeltaCents), 0) / 100;
 
   return (
     <div className="p-4 sm:p-8 space-y-8">
@@ -176,6 +207,41 @@ export default async function MetricsPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Mouvements MRR RÉELS (journal d'abonnements) ── */}
+      {hasEvents ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-lg font-bold">Mouvements MRR réels (12 mois)</h2>
+            <span className="text-xs text-slate-500">{realChurnCount} churn / 30j · −{eur(realMrrLost30)}</span>
+          </div>
+          <p className="text-xs text-slate-500 mb-4">Gains (vert) vs pertes (rouge) par mois, depuis le journal d'abonnements.</p>
+          <div className="flex items-stretch justify-between gap-1.5 h-44">
+            {evMonths.map((m) => (
+              <div key={m.key} className="flex-1 flex flex-col items-center gap-1 group">
+                {/* gains au-dessus de l'axe */}
+                <div className="w-full flex-1 flex items-end">
+                  <div className="w-full rounded-t bg-emerald-500/70 group-hover:bg-emerald-400 transition-colors"
+                       style={{ height: `${(m.gained / evMax) * 100}%` }}
+                       title={`${m.label} : +${eur(m.gained / 100)}`} />
+                </div>
+                {/* pertes en dessous */}
+                <div className="w-full flex-1 flex items-start">
+                  <div className="w-full rounded-b bg-red-500/60 group-hover:bg-red-400 transition-colors"
+                       style={{ height: `${(Math.abs(m.lost) / evMax) * 100}%` }}
+                       title={`${m.label} : ${eur(m.lost / 100)}`} />
+                </div>
+                <span className="text-[10px] text-slate-500">{m.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-sm text-slate-400">
+          <p className="font-semibold text-slate-300 mb-1">📊 Journal d'abonnements vide</p>
+          <p>Les mouvements MRR réels (gains/pertes historisés, churn exact) s'afficheront ici dès qu'un forfait sera modifié ou résilié. Lance d'abord la migration <code className="text-orange-400">create_subscription_event</code> via Base de données.</p>
+        </div>
+      )}
 
       {/* ── À renouveler bientôt (anti-churn) ── */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
