@@ -186,6 +186,11 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_reservation_alert_emails",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "reservationAlertEmails" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  // ── Quota couverts par créneau ────────────────────────────────────────────
+  {
+    name: "add_max_covers_per_slot",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "maxCoversPerSlot" INTEGER`,
+  },
   // ── Config fidélité ───────────────────────────────────────────────────────
   {
     name: "create_loyalty_config",
