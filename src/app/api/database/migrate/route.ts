@@ -231,6 +231,10 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "platformStripeSubscriptionId" TEXT`,
   },
   {
+    name: "add_billing_past_due",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "billingPastDue" BOOLEAN NOT NULL DEFAULT false`,
+  },
+  {
     name: "seed_global_config_row",
     sql: `INSERT INTO "GlobalConfig" (id) VALUES ('global') ON CONFLICT (id) DO NOTHING`,
   },
