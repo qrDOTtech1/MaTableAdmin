@@ -219,7 +219,9 @@ export default function DatabaseClient({ initialConfig }: { initialConfig: Confi
           <p>• <code className="text-blue-300">create_zone_config</code> — table <code>ZoneConfig</code> (quotas walk-in par zone)</p>
           <p>• <code className="text-blue-300">create_zone_config_idx</code> — index <code>ZoneConfig.restaurantId</code></p>
           <p>• <code className="text-blue-300">create_loyalty_customer</code> — table <code>LoyaltyCustomer</code> (programme fidélité)</p>
+          <p>• <code className="text-blue-300">patch_loyalty_customer_columns</code> — complète les colonnes clients fidélité manquantes</p>
           <p>• <code className="text-blue-300">create_loyalty_offer</code> — table <code>LoyaltyOffer</code> (récompenses)</p>
+          <p>• <code className="text-blue-300">patch_loyalty_offer_columns</code> — complète les colonnes offres manquantes</p>
           <p>• <code className="text-blue-300">create_loyalty_transaction</code> — table <code>LoyaltyTransaction</code> (historique points)</p>
           <p>• <code className="text-blue-300">add_reservation_alert_email</code> — <code>Restaurant.reservationAlertEmail TEXT</code></p>
           <p>• <code className="text-blue-300">add_reservation_alert_emails</code> — <code>Restaurant.reservationAlertEmails JSONB</code> pour plusieurs destinataires</p>
