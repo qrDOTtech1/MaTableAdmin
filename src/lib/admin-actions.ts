@@ -53,19 +53,30 @@ async function logSubscriptionEvent(opts: {
   mrrDeltaCents: number;
   method?: string | null;   // stripe | cheque | especes | virement | autre | manual
   note?: string | null;
+  amountCents?: number;     // montant réellement encaissé (0 = simple mouvement de plan)
+  interval?: string | null; // monthly | yearly
+  invoiceNumber?: string | null;
 }) {
   try {
     const id = `se_${crypto.randomBytes(12).toString("hex")}`;
     await prisma.$executeRawUnsafe(
       `INSERT INTO "SubscriptionEvent"
-        ("id","restaurantId","restaurantName","type","plan","mrrCents","mrrDeltaCents","method","note")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        ("id","restaurantId","restaurantName","type","plan","mrrCents","mrrDeltaCents","method","note","amountCents","interval","invoiceNumber")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       id, opts.restaurantId, opts.restaurantName ?? null, opts.type, opts.plan,
       opts.mrrCents, opts.mrrDeltaCents, opts.method ?? null, opts.note ?? null,
+      opts.amountCents ?? 0, opts.interval ?? null, opts.invoiceNumber ?? null,
     );
   } catch (e) {
     console.warn("logSubscriptionEvent skipped:", (e as Error).message?.split("\n")[0]);
   }
+}
+
+/** Génère un numéro de facture lisible : F-YYYYMM-XXXX */
+function genInvoiceNumber(): string {
+  const d = new Date();
+  const ym = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `F-${ym}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
 }
 
 /**
@@ -101,6 +112,8 @@ export async function recordManualPayment(id: string, formData: FormData) {
   });
 
   const mrr = PLAN_MRR_CENTS[r.subscription] ?? 0;
+  // Montant réellement encaissé : mensuel = MRR ; annuel = MRR × 12
+  const amountCents = interval === "yearly" ? mrr * 12 : mrr;
   await logSubscriptionEvent({
     restaurantId: id,
     restaurantName: r.name,
@@ -110,10 +123,14 @@ export async function recordManualPayment(id: string, formData: FormData) {
     mrrDeltaCents: isFirst ? mrr : 0,
     method,
     note,
+    amountCents,
+    interval,
+    invoiceNumber: genInvoiceNumber(),
   });
 
   revalidatePath(`/dashboard/restaurants/${id}`);
   revalidatePath("/dashboard/metrics");
+  revalidatePath("/dashboard/factures");
 }
 
 export async function updateSubscription(id: string, formData: FormData) {

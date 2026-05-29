@@ -251,6 +251,10 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
       "plan"           TEXT NOT NULL,
       "mrrCents"       INTEGER NOT NULL DEFAULT 0,
       "mrrDeltaCents"  INTEGER NOT NULL DEFAULT 0,
+      "amountCents"    INTEGER NOT NULL DEFAULT 0,
+      "interval"       TEXT,
+      "invoiceNumber"  TEXT,
+      "stripeInvoiceUrl" TEXT,
       "method"         TEXT,
       "note"           TEXT,
       "createdAt"      TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -264,6 +268,23 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
   {
     name: "add_subscription_event_note",
     sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "note" TEXT`,
+  },
+  // Champs facture (montant réellement encaissé, n° facture, lien Stripe)
+  {
+    name: "add_subscription_event_amount",
+    sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "amountCents" INTEGER NOT NULL DEFAULT 0`,
+  },
+  {
+    name: "add_subscription_event_interval",
+    sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "interval" TEXT`,
+  },
+  {
+    name: "add_subscription_event_invoice_number",
+    sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "invoiceNumber" TEXT`,
+  },
+  {
+    name: "add_subscription_event_invoice_url",
+    sql: `ALTER TABLE "SubscriptionEvent" ADD COLUMN IF NOT EXISTS "stripeInvoiceUrl" TEXT`,
   },
   {
     name: "create_subscription_event_idx_created",
