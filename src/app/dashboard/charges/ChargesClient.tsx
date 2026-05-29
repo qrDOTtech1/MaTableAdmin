@@ -145,6 +145,8 @@ export function ChargesClient({ charges }: { charges: Charge[] }) {
 
       <ExportsBlock charges={charges} />
 
+      <QuickPhotoCharge onSaved={() => router.refresh()} />
+
       {/* Bouton + form */}
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -662,6 +664,208 @@ function ExportsBlock({ charges }: { charges: Charge[] }) {
         </button>
       </div>
     </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Détection rapide par photo : 1 bouton → IA → confirmation éclair → save
+// ═════════════════════════════════════════════════════════════════════════
+function QuickPhotoCharge({ onSaved }: { onSaved: () => void }) {
+  const [phase, setPhase] = useState<"idle" | "analyzing" | "confirm" | "saving">("idle");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  // Champs détectés / éditables avant enregistrement
+  const today = new Date().toISOString().slice(0, 10);
+  const [category, setCategory] = useState("SERVEUR");
+  const [supplier, setSupplier] = useState("");
+  const [label, setLabel] = useState("");
+  const [dateIssued, setDateIssued] = useState(today);
+  const [amountHt, setAmountHt] = useState("");
+  const [vatRatePct, setVatRatePct] = useState("20");
+  const [vatDeductible, setVatDeductible] = useState(true);
+
+  async function onPickFile(f: File) {
+    setErr(null);
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+    setPhase("analyzing");
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const r = await fetch("/api/admin/charges/extract", { method: "POST", body: fd });
+      const j = await r.json();
+      if (!r.ok) {
+        setErr(j.error ?? "Erreur IA");
+        setPhase("confirm"); // l'utilisateur peut quand même saisir à la main
+        return;
+      }
+      if (j.supplier) setSupplier(j.supplier);
+      if (j.label) setLabel(j.label);
+      if (j.dateIssued) setDateIssued(j.dateIssued);
+      if (typeof j.amountHt === "number") setAmountHt(String(j.amountHt));
+      if (typeof j.vatRatePct === "number") setVatRatePct(String(j.vatRatePct));
+      if (j.suggestedCategory) setCategory(j.suggestedCategory);
+      setPhase("confirm");
+    } catch (e: any) {
+      setErr(String(e?.message ?? e));
+      setPhase("confirm");
+    }
+  }
+
+  async function save() {
+    if (!file || !supplier || !amountHt || !dateIssued) {
+      setErr("Fournisseur, date et montant HT requis.");
+      return;
+    }
+    setPhase("saving"); setErr(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);           // on archive la photo elle-même
+      fd.append("category", category);
+      fd.append("supplier", supplier);
+      fd.append("label", label);
+      fd.append("dateIssued", dateIssued);
+      fd.append("amountHt", amountHt);
+      fd.append("vatRatePct", vatRatePct);
+      if (vatDeductible) fd.append("vatDeductible", "on");
+      fd.append("paid", "true");
+      const r = await fetch("/api/admin/charges", { method: "POST", body: fd });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? "Erreur");
+      // Reset + refresh
+      reset();
+      onSaved();
+    } catch (e: any) {
+      setErr(String(e?.message ?? e));
+      setPhase("confirm");
+    }
+  }
+
+  function reset() {
+    setPhase("idle"); setFile(null);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(null); setErr(null);
+    setCategory("SERVEUR"); setSupplier(""); setLabel("");
+    setDateIssued(today); setAmountHt(""); setVatRatePct("20"); setVatDeductible(true);
+  }
+
+  const valid = supplier && amountHt && dateIssued;
+
+  return (
+    <>
+      <label className="block">
+        <div className="rounded-2xl border-2 border-dashed border-purple-500/40 bg-gradient-to-br from-purple-500/[0.08] to-orange-500/[0.05] p-5 hover:from-purple-500/[0.14] hover:to-orange-500/[0.10] transition-colors cursor-pointer">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-purple-500/25 flex items-center justify-center text-3xl shrink-0">📸</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-black text-white">Détection auto par photo</p>
+              <p className="text-sm text-purple-200/70 mt-0.5">
+                Prenez la facture en photo — l'IA détecte tout, vous validez en 2 sec, c'est enregistré.
+              </p>
+            </div>
+            <div className="text-xs font-bold text-purple-300 hidden sm:block">Tapez ici →</div>
+          </div>
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPickFile(f); e.currentTarget.value = ""; }}
+        />
+      </label>
+
+      {/* Modal confirmation */}
+      {phase !== "idle" && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => phase !== "saving" && reset()} />
+          <div className="relative w-full max-w-2xl max-h-[92vh] rounded-2xl border border-white/[0.08] bg-[#0f0f0f] shadow-2xl flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <h2 className="text-lg font-black">
+                {phase === "analyzing" ? "🤖 Analyse en cours…" : phase === "saving" ? "💾 Enregistrement…" : "✨ Vérifier et enregistrer"}
+              </h2>
+              <button onClick={reset} disabled={phase === "saving"} className="text-white/40 hover:text-white text-xl disabled:opacity-30">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-4">
+                {preview && (
+                  <div className="rounded-xl border border-white/10 overflow-hidden bg-black flex items-start justify-center max-h-64">
+                    <img src={preview} alt="aperçu facture" className="w-full h-auto max-h-64 object-contain" />
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {phase === "analyzing" ? (
+                    <div className="flex items-center gap-3 text-purple-300 py-8">
+                      <div className="w-6 h-6 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" />
+                      <span className="text-sm font-semibold">Détection des champs (fournisseur, date, montant, TVA, catégorie)…</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field label="Catégorie">
+                          <select value={category} onChange={(e) => setCategory(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                            {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
+                          </select>
+                        </Field>
+                        <Field label="Date">
+                          <input type="date" value={dateIssued} onChange={(e) => setDateIssued(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                        </Field>
+                      </div>
+                      <Field label="Fournisseur">
+                        <input value={supplier} onChange={(e) => setSupplier(e.target.value)} placeholder="Nom du fournisseur"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                      </Field>
+                      <Field label="Libellé (optionnel)">
+                        <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Description courte"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                      </Field>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Field label="Montant HT (€)">
+                          <input type="number" step="0.01" value={amountHt} onChange={(e) => setAmountHt(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
+                        </Field>
+                        <Field label="TVA (%)">
+                          <select value={vatRatePct} onChange={(e) => setVatRatePct(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                            <option value="20">20 %</option>
+                            <option value="10">10 %</option>
+                            <option value="5.5">5,5 %</option>
+                            <option value="0">0 %</option>
+                          </select>
+                        </Field>
+                      </div>
+                      <label className="flex items-center gap-2 text-sm text-white/70">
+                        <input type="checkbox" checked={vatDeductible} onChange={(e) => setVatDeductible(e.target.checked)} /> TVA déductible
+                      </label>
+                      {err && <p className="text-sm text-red-400">{err}</p>}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            {phase !== "analyzing" && (
+              <div className="border-t border-white/[0.06] p-4 flex items-center justify-between gap-3">
+                <button onClick={reset} disabled={phase === "saving"}
+                  className="text-sm text-white/45 hover:text-white disabled:opacity-30">Annuler</button>
+                <div className="flex items-center gap-2">
+                  {amountHt && (
+                    <span className="text-xs text-white/40">TTC ≈ <strong className="text-white">{(parseFloat(amountHt.replace(",", ".")) * (1 + parseFloat(vatRatePct) / 100)).toFixed(2)} €</strong></span>
+                  )}
+                  <button onClick={save} disabled={!valid || phase === "saving"}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold disabled:opacity-40 transition-colors">
+                    {phase === "saving" ? "Enregistrement…" : "✓ Enregistrer"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
