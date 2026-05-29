@@ -213,6 +213,37 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_dashboard_bottom_nav",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardBottomNav" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  // ── Programme parrainage — code unique + suivi de la récompense ────────────
+  {
+    name: "add_referral_code",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "referralCode" TEXT`,
+  },
+  {
+    name: "create_referral_code_unique_idx",
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Restaurant_referralCode_key" ON "Restaurant"("referralCode") WHERE "referralCode" IS NOT NULL`,
+  },
+  {
+    name: "add_referred_by_code",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "referredByCode" TEXT`,
+  },
+  {
+    name: "add_referral_reward_granted",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "referralRewardGranted" BOOLEAN NOT NULL DEFAULT false`,
+  },
+  // ── Campagnes email admin → restos ────────────────────────────────────────
+  {
+    name: "create_campaign_log",
+    sql: `CREATE TABLE IF NOT EXISTS "CampaignLog" (
+      "id"         TEXT NOT NULL,
+      "segment"    TEXT NOT NULL,
+      "subject"    TEXT NOT NULL,
+      "body"       TEXT NOT NULL,
+      "sentCount"  INTEGER NOT NULL DEFAULT 0,
+      "failCount"  INTEGER NOT NULL DEFAULT 0,
+      "sentAt"     TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "CampaignLog_pkey" PRIMARY KEY ("id")
+    )`,
+  },
   // ── Onboarding guidé 1er login ────────────────────────────────────────────
   {
     name: "add_onboarding_completed",

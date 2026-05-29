@@ -72,6 +72,36 @@ async function logSubscriptionEvent(opts: {
   }
 }
 
+/**
+ * Récompense parrainage : 1er paiement du filleul → +30 jours au parrain.
+ * Idempotent via Restaurant.referralRewardGranted.
+ */
+async function grantReferralRewardIfNeeded(refereeId: string) {
+  try {
+    const rows = await prisma.$queryRawUnsafe<Array<{ referredByCode: string | null; referralRewardGranted: boolean }>>(
+      `SELECT "referredByCode", "referralRewardGranted" FROM "Restaurant" WHERE id = $1`, refereeId,
+    );
+    const row = rows[0];
+    if (!row?.referredByCode || row.referralRewardGranted) return;
+    const refRows = await prisma.$queryRawUnsafe<Array<{ id: string; subscriptionExpiresAt: Date | null }>>(
+      `SELECT id, "subscriptionExpiresAt" FROM "Restaurant" WHERE "referralCode" = $1 LIMIT 1`, row.referredByCode,
+    );
+    const referrer = refRows[0];
+    if (!referrer) return;
+    const now = Date.now();
+    const base = referrer.subscriptionExpiresAt ? Math.max(new Date(referrer.subscriptionExpiresAt).getTime(), now) : now;
+    const newExpires = new Date(base + 30 * 24 * 3600 * 1000);
+    await prisma.$executeRawUnsafe(
+      `UPDATE "Restaurant" SET "subscriptionExpiresAt" = $1 WHERE id = $2`, newExpires, referrer.id,
+    );
+    await prisma.$executeRawUnsafe(
+      `UPDATE "Restaurant" SET "referralRewardGranted" = true WHERE id = $1`, refereeId,
+    );
+  } catch (e) {
+    console.warn("grantReferralRewardIfNeeded skipped:", (e as Error).message?.split("\n")[0]);
+  }
+}
+
 /** Génère un numéro de facture lisible : F-YYYYMM-XXXX */
 function genInvoiceNumber(): string {
   const d = new Date();
@@ -127,6 +157,9 @@ export async function recordManualPayment(id: string, formData: FormData) {
     interval,
     invoiceNumber: genInvoiceNumber(),
   });
+
+  // Récompense parrainage : 1er paiement → +30 jours au parrain (idempotent)
+  await grantReferralRewardIfNeeded(id);
 
   revalidatePath(`/dashboard/restaurants/${id}`);
   revalidatePath("/dashboard/metrics");
