@@ -214,6 +214,11 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_onboarding_completed",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false`,
   },
+  // ── ETA commande (temps restant affiché au client, ajustable par le cuisto) ─
+  {
+    name: "add_order_expected_ready_at",
+    sql: `ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "expectedReadyAt" TIMESTAMP(3)`,
+  },
   // ── Fix casse email : normalise les comptes existants en lowercase ─────────
   // Les inscriptions avec majuscules ne matchaient pas le login (qui lowercase
   // l'email) → impossible de se connecter. On ne touche pas une ligne si la
