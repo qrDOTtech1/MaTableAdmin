@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { printDocumentNode } from "../documents/printUtil";
 
 export type Charge = {
   id: string;
@@ -141,6 +142,8 @@ export function ChargesClient({ charges }: { charges: Charge[] }) {
           {stats.byCat.size === 0 && <p className="col-span-full text-sm text-white/40">Aucune charge sur l'année en cours.</p>}
         </div>
       </div>
+
+      <ExportsBlock charges={charges} />
 
       {/* Bouton + form */}
       <div className="flex flex-wrap items-center gap-3">
@@ -384,4 +387,285 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <div className="mt-1">{children}</div>
     </label>
   );
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Exports & déclarations
+// ═════════════════════════════════════════════════════════════════════════
+function ExportsBlock({ charges }: { charges: Charge[] }) {
+  const now = new Date();
+  const [year, setYear] = useState(String(now.getFullYear()));
+  const [period, setPeriod] = useState<"year" | "q1" | "q2" | "q3" | "q4" | "m">("year");
+  const [month, setMonth] = useState(String(now.getMonth() + 1));
+
+  function rangeFor(): { from: Date; to: Date; label: string } {
+    const y = parseInt(year, 10);
+    if (period === "year") return { from: new Date(y, 0, 1), to: new Date(y, 11, 31, 23, 59, 59), label: `Année ${y}` };
+    if (period.startsWith("q")) {
+      const q = parseInt(period.slice(1), 10);
+      const startM = (q - 1) * 3;
+      return { from: new Date(y, startM, 1), to: new Date(y, startM + 3, 0, 23, 59, 59), label: `T${q} ${y}` };
+    }
+    const m = parseInt(month, 10) - 1;
+    return { from: new Date(y, m, 1), to: new Date(y, m + 1, 0, 23, 59, 59), label: `${new Date(y, m, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}` };
+  }
+
+  function filtered() {
+    const { from, to } = rangeFor();
+    return charges.filter(c => { const d = new Date(c.dateIssued); return d >= from && d <= to; });
+  }
+
+  function totals(list: Charge[]) {
+    const totalHt = list.reduce((s, c) => s + c.amountHtCents, 0);
+    const totalTtc = list.reduce((s, c) => s + c.amountTtcCents, 0);
+    const totalVatDed = list.filter(c => c.vatDeductible).reduce((s, c) => s + c.vatAmountCents, 0);
+    const byRate = new Map<number, { ht: number; vat: number; vatDed: number; count: number }>();
+    for (const c of list) {
+      const cur = byRate.get(c.vatRatePct) ?? { ht: 0, vat: 0, vatDed: 0, count: 0 };
+      cur.ht += c.amountHtCents; cur.vat += c.vatAmountCents;
+      if (c.vatDeductible) cur.vatDed += c.vatAmountCents;
+      cur.count += 1;
+      byRate.set(c.vatRatePct, cur);
+    }
+    return { totalHt, totalTtc, totalVatDed, byRate };
+  }
+
+  function genTvaReport() {
+    const list = filtered(); const t = totals(list); const r = rangeFor();
+    const node = document.createElement("div");
+    node.className = "matable-print-doc";
+    node.style.cssText = "width:210mm;min-height:297mm;padding:14mm 12mm;box-sizing:border-box;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;margin:0 auto";
+    node.innerHTML = `
+      <div style="border-bottom:3px solid #ea580c;padding-bottom:12px;margin-bottom:16px">
+        <div style="font-size:22px;font-weight:900">Ma<span style="color:#ea580c">Table</span>.Pro — Rapport TVA déductible</div>
+        <div style="font-size:13px;color:#444;margin-top:4px">Période : <strong>${r.label}</strong> · Édité le ${fdate(new Date().toISOString())}</div>
+      </div>
+
+      <h2 style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin:14px 0 8px">Récapitulatif par taux de TVA</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="background:#f5f5f5">
+          <th style="padding:7px;text-align:left;border-bottom:1px solid #ccc">Taux</th>
+          <th style="padding:7px;text-align:right;border-bottom:1px solid #ccc">Factures</th>
+          <th style="padding:7px;text-align:right;border-bottom:1px solid #ccc">Base HT</th>
+          <th style="padding:7px;text-align:right;border-bottom:1px solid #ccc">TVA</th>
+          <th style="padding:7px;text-align:right;border-bottom:1px solid #ccc">TVA déductible</th>
+        </tr></thead>
+        <tbody>
+        ${Array.from(t.byRate.entries()).sort((a,b) => b[0]-a[0]).map(([rate, d]) => `
+          <tr>
+            <td style="padding:6px 7px;border-bottom:1px solid #eee">${rate} %</td>
+            <td style="padding:6px 7px;text-align:right;border-bottom:1px solid #eee">${d.count}</td>
+            <td style="padding:6px 7px;text-align:right;border-bottom:1px solid #eee">${eur(d.ht)}</td>
+            <td style="padding:6px 7px;text-align:right;border-bottom:1px solid #eee">${eur(d.vat)}</td>
+            <td style="padding:6px 7px;text-align:right;border-bottom:1px solid #eee;color:#059669;font-weight:700">${eur(d.vatDed)}</td>
+          </tr>`).join("")}
+        <tr style="background:#fafafa;font-weight:900">
+          <td style="padding:8px 7px;border-top:2px solid #ea580c">Total</td>
+          <td style="padding:8px 7px;text-align:right;border-top:2px solid #ea580c">${list.length}</td>
+          <td style="padding:8px 7px;text-align:right;border-top:2px solid #ea580c">${eur(t.totalHt)}</td>
+          <td style="padding:8px 7px;text-align:right;border-top:2px solid #ea580c">${eur(t.totalTtc - t.totalHt)}</td>
+          <td style="padding:8px 7px;text-align:right;border-top:2px solid #ea580c;color:#059669">${eur(t.totalVatDed)}</td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div style="background:#ecfdf5;border-left:3px solid #059669;padding:10px 12px;margin:14px 0;font-size:11px">
+        <strong style="color:#065f46">À reporter en déclaration CA3</strong> — Cadre B "TVA déductible" :<br/>
+        • Ligne 19 (Autres biens et services) : <strong>${eur(t.totalVatDed)}</strong><br/>
+        • Ligne 22 (Total TVA déductible) : reporter ce montant
+      </div>
+
+      <h2 style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin:14px 0 8px">Détail des factures (${list.length})</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead><tr style="background:#f5f5f5">
+          <th style="padding:6px;text-align:left;border-bottom:1px solid #ccc">Date</th>
+          <th style="padding:6px;text-align:left;border-bottom:1px solid #ccc">Fournisseur</th>
+          <th style="padding:6px;text-align:left;border-bottom:1px solid #ccc">Catégorie</th>
+          <th style="padding:6px;text-align:right;border-bottom:1px solid #ccc">HT</th>
+          <th style="padding:6px;text-align:right;border-bottom:1px solid #ccc">TVA</th>
+          <th style="padding:6px;text-align:right;border-bottom:1px solid #ccc">TTC</th>
+          <th style="padding:6px;text-align:center;border-bottom:1px solid #ccc">Récup.</th>
+        </tr></thead>
+        <tbody>
+        ${list.map(c => `
+          <tr>
+            <td style="padding:5px 6px;border-bottom:1px solid #f0f0f0">${fdate(c.dateIssued)}</td>
+            <td style="padding:5px 6px;border-bottom:1px solid #f0f0f0">${c.supplier}${c.label ? ` <span style="color:#888">— ${c.label}</span>` : ""}</td>
+            <td style="padding:5px 6px;border-bottom:1px solid #f0f0f0;color:#666">${CAT_BY_KEY[c.category]?.label ?? c.category}</td>
+            <td style="padding:5px 6px;text-align:right;border-bottom:1px solid #f0f0f0">${eur(c.amountHtCents)}</td>
+            <td style="padding:5px 6px;text-align:right;border-bottom:1px solid #f0f0f0">${eur(c.vatAmountCents)}</td>
+            <td style="padding:5px 6px;text-align:right;border-bottom:1px solid #f0f0f0;font-weight:600">${eur(c.amountTtcCents)}</td>
+            <td style="padding:5px 6px;text-align:center;border-bottom:1px solid #f0f0f0">${c.vatDeductible ? "✓" : "—"}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+
+      <div style="font-size:9px;color:#999;border-top:1px solid #eee;padding-top:10px;margin-top:14px">
+        Document généré automatiquement par MaTable.Pro Admin. À conserver pendant 10 ans (Art. L102 B LPF).
+      </div>
+    `;
+    printDocumentNode(node, `Rapport TVA ${r.label}`);
+  }
+
+  function gen3519() {
+    const list = filtered(); const t = totals(list); const r = rangeFor();
+    const node = document.createElement("div");
+    node.className = "matable-print-doc";
+    node.style.cssText = "width:210mm;min-height:297mm;padding:14mm 12mm;box-sizing:border-box;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;margin:0 auto";
+    node.innerHTML = `
+      <div style="border-bottom:3px solid #ea580c;padding-bottom:12px;margin-bottom:16px">
+        <div style="font-size:22px;font-weight:900">Préparation — Formulaire <span style="color:#ea580c">3519-SD</span></div>
+        <div style="font-size:13px;color:#444;margin-top:4px">Demande de remboursement de crédit de TVA · Période : <strong>${r.label}</strong></div>
+      </div>
+
+      <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#92400e">
+        ⚠️ Document préparatoire interne. La demande officielle se fait sur impots.gouv.fr → Espace pro → TVA → Formulaire 3519-SD.
+        Reportez les montants ci-dessous dans les cases correspondantes.
+      </div>
+
+      <h2 style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin:14px 0 8px">Calcul du crédit de TVA</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr><td style="padding:8px;background:#f5f5f5;border-bottom:1px solid #ddd"><strong>TVA déductible (achats / charges) — sur la période</strong></td>
+            <td style="padding:8px;text-align:right;background:#f5f5f5;border-bottom:1px solid #ddd;font-family:monospace;color:#059669;font-weight:700">${eur(t.totalVatDed)}</td></tr>
+        <tr><td style="padding:8px;border-bottom:1px solid #eee">TVA collectée (à compléter manuellement depuis vos factures émises)</td>
+            <td style="padding:8px;text-align:right;border-bottom:1px solid #eee;font-family:monospace;color:#666">à reporter</td></tr>
+        <tr><td style="padding:10px 8px;border-top:2px solid #ea580c;font-weight:900">Crédit de TVA (= déductible − collectée)</td>
+            <td style="padding:10px 8px;text-align:right;border-top:2px solid #ea580c;font-family:monospace;font-weight:900;color:#059669">à calculer</td></tr>
+      </table>
+
+      <h2 style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin:18px 0 8px">Seuils et conditions de remboursement</h2>
+      <ul style="font-size:11px;color:#333;padding-left:18px;line-height:1.5">
+        <li><strong>Demande mensuelle/trimestrielle</strong> : crédit ≥ 760 € (entreprises au régime réel normal).</li>
+        <li><strong>Demande annuelle (CA12)</strong> : crédit ≥ 150 €.</li>
+        <li>Le crédit non remboursé est <strong>reporté</strong> sur la déclaration suivante (ligne 27 CA3).</li>
+        <li>Délai de traitement : 1 à 4 mois en moyenne.</li>
+      </ul>
+
+      <h2 style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin:18px 0 8px">Pièces à joindre au dossier</h2>
+      <ul style="font-size:11px;color:#333;padding-left:18px;line-height:1.5">
+        <li>RIB du compte bancaire de l'entreprise (remboursement par virement).</li>
+        <li>Justificatifs des achats déclarés (factures fournisseurs avec TVA) — ${list.length} pièce(s) sur la période.</li>
+        <li>État détaillé de la TVA déductible par taux (rapport TVA généré séparément).</li>
+      </ul>
+
+      <h2 style="font-size:14px;font-weight:bold;border-bottom:1px solid #ddd;padding-bottom:4px;margin:18px 0 8px">Récapitulatif TVA déductible par taux</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="background:#f5f5f5">
+          <th style="padding:6px;text-align:left;border-bottom:1px solid #ccc">Taux</th>
+          <th style="padding:6px;text-align:right;border-bottom:1px solid #ccc">Base HT</th>
+          <th style="padding:6px;text-align:right;border-bottom:1px solid #ccc">TVA déductible</th>
+        </tr></thead>
+        <tbody>
+        ${Array.from(t.byRate.entries()).sort((a,b) => b[0]-a[0]).map(([rate, d]) => `
+          <tr>
+            <td style="padding:5px 6px;border-bottom:1px solid #eee">${rate} %</td>
+            <td style="padding:5px 6px;text-align:right;border-bottom:1px solid #eee">${eur(d.ht)}</td>
+            <td style="padding:5px 6px;text-align:right;border-bottom:1px solid #eee;font-weight:600;color:#059669">${eur(d.vatDed)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+
+      <div style="font-size:9px;color:#999;border-top:1px solid #eee;padding-top:10px;margin-top:18px">
+        Préparation MaTable.Pro Admin · à conserver pendant 10 ans. Source : Art. 271-IV CGI, BOI-TVA-DED-50-20-30.
+      </div>
+    `;
+    printDocumentNode(node, `Préparation 3519 ${r.label}`);
+  }
+
+  function exportCsv() {
+    const list = filtered(); const r = rangeFor();
+    const head = ["Date", "Fournisseur", "Libellé", "Catégorie", "HT", "Taux TVA %", "TVA", "TTC", "TVA déductible", "Notes"].join(";");
+    const rows = list.map(c => [
+      fdate(c.dateIssued),
+      escapeCsv(c.supplier),
+      escapeCsv(c.label ?? ""),
+      escapeCsv(CAT_BY_KEY[c.category]?.label ?? c.category),
+      (c.amountHtCents / 100).toFixed(2).replace(".", ","),
+      String(c.vatRatePct),
+      (c.vatAmountCents / 100).toFixed(2).replace(".", ","),
+      (c.amountTtcCents / 100).toFixed(2).replace(".", ","),
+      c.vatDeductible ? "Oui" : "Non",
+      escapeCsv(c.notes ?? ""),
+    ].join(";"));
+    // BOM UTF-8 pour Excel
+    const csv = "﻿" + [head, ...rows].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `journal-achats-${r.label.replace(/\s/g, "-")}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  const list = filtered(); const t = totals(list); const r = rangeFor();
+
+  return (
+    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-sm font-bold text-white/60 uppercase tracking-widest">📄 Exports & déclarations</h2>
+          <p className="text-xs text-white/40 mt-0.5">Période : <strong className="text-white">{r.label}</strong> · {list.length} pièce(s) · TVA déductible <strong className="text-emerald-400">{eur(t.totalVatDed)}</strong></p>
+        </div>
+        <div className="flex gap-2">
+          <select value={period} onChange={(e) => setPeriod(e.target.value as any)}
+            className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+            <option value="year">Année</option>
+            <option value="q1">T1 (Jan-Mar)</option>
+            <option value="q2">T2 (Avr-Juin)</option>
+            <option value="q3">T3 (Juil-Sep)</option>
+            <option value="q4">T4 (Oct-Déc)</option>
+            <option value="m">Mois précis</option>
+          </select>
+          {period === "m" && (
+            <select value={month} onChange={(e) => setMonth(e.target.value)}
+              className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleDateString("fr-FR", { month: "long" })}</option>
+              ))}
+            </select>
+          )}
+          <select value={year} onChange={(e) => setYear(e.target.value)}
+            className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+            {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <button onClick={genTvaReport} disabled={list.length === 0}
+          className="flex items-start gap-3 text-left p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-40 transition-colors">
+          <span className="text-xl">📊</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-emerald-300">Rapport TVA déductible</p>
+            <p className="text-[11px] text-white/50">PDF récap par taux, montants à reporter en CA3 cadre B.</p>
+          </div>
+        </button>
+
+        <button onClick={gen3519} disabled={list.length === 0}
+          className="flex items-start gap-3 text-left p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 disabled:opacity-40 transition-colors">
+          <span className="text-xl">💰</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-orange-300">Préparation 3519-SD</p>
+            <p className="text-[11px] text-white/50">PDF demande de remboursement TVA — montants pré-calculés.</p>
+          </div>
+        </button>
+
+        <button onClick={exportCsv} disabled={list.length === 0}
+          className="flex items-start gap-3 text-left p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 disabled:opacity-40 transition-colors">
+          <span className="text-xl">📋</span>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-sky-300">Journal des achats</p>
+            <p className="text-[11px] text-white/50">CSV pour votre expert-comptable (compatible Excel).</p>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function escapeCsv(s: string): string {
+  if (/[";\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
 }
