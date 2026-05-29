@@ -209,6 +209,10 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_dashboard_quick_actions",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardQuickActions" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  {
+    name: "add_dashboard_bottom_nav",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardBottomNav" JSONB NOT NULL DEFAULT '[]'::jsonb`,
+  },
   // ── Onboarding guidé 1er login ────────────────────────────────────────────
   {
     name: "add_onboarding_completed",
