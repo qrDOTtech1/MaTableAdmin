@@ -248,6 +248,36 @@ function ChargeForm({ onSaved }: { onSaved: () => void }) {
   const today = new Date().toISOString().slice(0, 10);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMsg, setAiMsg] = useState<string | null>(null);
+  // État contrôlé pour permettre à l'IA de pré-remplir
+  const [category, setCategory] = useState("SERVEUR");
+  const [supplier, setSupplier] = useState("");
+  const [label, setLabel] = useState("");
+  const [dateIssued, setDateIssued] = useState(today);
+  const [amountHt, setAmountHt] = useState("");
+  const [vatRatePct, setVatRatePct] = useState("20");
+
+  async function runExtract(file: File) {
+    setAiBusy(true); setAiMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/admin/charges/extract", { method: "POST", body: fd });
+      const j = await r.json();
+      if (!r.ok) { setAiMsg(`IA : ${j.error}`); return; }
+      const filled: string[] = [];
+      if (j.supplier) { setSupplier(j.supplier); filled.push("fournisseur"); }
+      if (j.label) { setLabel(j.label); filled.push("libellé"); }
+      if (j.dateIssued) { setDateIssued(j.dateIssued); filled.push("date"); }
+      if (typeof j.amountHt === "number") { setAmountHt(String(j.amountHt)); filled.push("montant HT"); }
+      if (typeof j.vatRatePct === "number") { setVatRatePct(String(j.vatRatePct)); filled.push("TVA"); }
+      if (j.suggestedCategory) { setCategory(j.suggestedCategory); filled.push("catégorie"); }
+      setAiMsg(filled.length > 0 ? `✨ Pré-rempli : ${filled.join(", ")}. Vérifiez avant d'enregistrer.` : "IA n'a rien trouvé d'exploitable.");
+    } catch (e: any) {
+      setAiMsg(`Erreur IA : ${e?.message ?? "réseau"}`);
+    } finally { setAiBusy(false); }
+  }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -265,31 +295,51 @@ function ChargeForm({ onSaved }: { onSaved: () => void }) {
 
   return (
     <form onSubmit={submit} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+      {/* Zone IA : drop fichier image → extraction auto */}
+      <div className="rounded-xl border border-purple-500/25 bg-purple-500/[0.06] p-3 space-y-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm font-bold text-purple-300">🤖 Pré-remplir avec l'IA</span>
+          <input
+            type="file"
+            accept="image/*"
+            disabled={aiBusy}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) runExtract(f); }}
+            className="flex-1 min-w-48 text-sm text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-purple-500 file:text-white file:font-bold"
+          />
+          {aiBusy && <span className="text-xs text-purple-300">Analyse…</span>}
+        </div>
+        <p className="text-[11px] text-purple-200/60">
+          Sélectionnez une <strong>photo</strong> (JPG/PNG) de la facture — l'IA lit les champs et les pré-remplit ci-dessous.
+          Pour conserver le PDF original, joignez-le en pièce ci-dessous après vérification.
+        </p>
+        {aiMsg && <p className="text-xs text-purple-200/90 font-semibold">{aiMsg}</p>}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Catégorie">
-          <select name="category" required defaultValue="SERVEUR"
+          <select name="category" required value={category} onChange={(e) => setCategory(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
             {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
           </select>
         </Field>
         <Field label="Date facture">
-          <input name="dateIssued" type="date" required defaultValue={today}
+          <input name="dateIssued" type="date" required value={dateIssued} onChange={(e) => setDateIssued(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
         </Field>
         <Field label="Fournisseur">
-          <input name="supplier" required placeholder="OVH, Anthropic, Free Pro…"
+          <input name="supplier" required placeholder="OVH, Anthropic, Free Pro…" value={supplier} onChange={(e) => setSupplier(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
         </Field>
         <Field label="Libellé (optionnel)">
-          <input name="label" placeholder="Serveur Web Avril"
+          <input name="label" placeholder="Serveur Web Avril" value={label} onChange={(e) => setLabel(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
         </Field>
         <Field label="Montant HT (€)">
-          <input name="amountHt" type="number" step="0.01" min="0" required
+          <input name="amountHt" type="number" step="0.01" min="0" required value={amountHt} onChange={(e) => setAmountHt(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
         </Field>
         <Field label="Taux TVA (%)">
-          <select name="vatRatePct" defaultValue="20"
+          <select name="vatRatePct" value={vatRatePct} onChange={(e) => setVatRatePct(e.target.value)}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
             <option value="20">20 % (normal)</option>
             <option value="10">10 % (intermédiaire)</option>
@@ -303,7 +353,7 @@ function ChargeForm({ onSaved }: { onSaved: () => void }) {
           <textarea name="notes" rows={2}
             className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" />
         </Field>
-        <Field label="Pièce jointe (PDF / image, max 10 Mo)">
+        <Field label="Pièce jointe à archiver (PDF/image, max 10 Mo)">
           <input name="file" type="file" accept="application/pdf,image/*"
             className="w-full text-sm text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-orange-500 file:text-white" />
         </Field>
