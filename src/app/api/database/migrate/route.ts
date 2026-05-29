@@ -209,6 +209,11 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_dashboard_quick_actions",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardQuickActions" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  // ── Onboarding guidé 1er login ────────────────────────────────────────────
+  {
+    name: "add_onboarding_completed",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false`,
+  },
   // ── Config billing plateforme (Stripe Billing — facturer les restos) ──────
   {
     name: "create_global_config",
