@@ -230,6 +230,40 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_referral_reward_granted",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "referralRewardGranted" BOOLEAN NOT NULL DEFAULT false`,
   },
+  // ── Charges fournisseurs (factures d'utilisation : IA, serveurs, télécom…) ─
+  {
+    name: "create_supplier_invoice",
+    sql: `CREATE TABLE IF NOT EXISTS "SupplierInvoice" (
+      "id"              TEXT NOT NULL,
+      "category"        TEXT NOT NULL,
+      "supplier"        TEXT NOT NULL,
+      "label"           TEXT,
+      "dateIssued"      DATE NOT NULL,
+      "amountHtCents"   INTEGER NOT NULL,
+      "vatRatePct"      INTEGER NOT NULL DEFAULT 20,
+      "vatAmountCents"  INTEGER NOT NULL,
+      "amountTtcCents"  INTEGER NOT NULL,
+      "currency"        TEXT NOT NULL DEFAULT 'EUR',
+      "vatDeductible"   BOOLEAN NOT NULL DEFAULT true,
+      "paid"            BOOLEAN NOT NULL DEFAULT true,
+      "paidAt"          TIMESTAMP(3),
+      "notes"           TEXT,
+      "fileName"        TEXT,
+      "fileMime"        TEXT,
+      "fileData"        TEXT,
+      "fileSize"        INTEGER,
+      "createdAt"       TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "SupplierInvoice_pkey" PRIMARY KEY ("id")
+    )`,
+  },
+  {
+    name: "create_supplier_invoice_idx_date",
+    sql: `CREATE INDEX IF NOT EXISTS "SupplierInvoice_dateIssued_idx" ON "SupplierInvoice"("dateIssued" DESC)`,
+  },
+  {
+    name: "create_supplier_invoice_idx_category",
+    sql: `CREATE INDEX IF NOT EXISTS "SupplierInvoice_category_idx" ON "SupplierInvoice"("category")`,
+  },
   // ── Campagnes email admin → restos ────────────────────────────────────────
   {
     name: "create_campaign_log",

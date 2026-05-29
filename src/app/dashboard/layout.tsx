@@ -14,6 +14,7 @@ const NAV = [
       { href: "/dashboard/metrics", label: "📈 Churn & Revenus" },
       { href: "/dashboard/billing-config", label: "💳 Facturation" },
       { href: "/dashboard/factures", label: "🧾 Factures émises" },
+      { href: "/dashboard/charges", label: "💸 Charges & TVA" },
       { href: "/dashboard/parrainages", label: "🎁 Parrainages" },
       { href: "/dashboard/campagnes", label: "📣 Campagnes email" },
       { href: "/dashboard/settings", label: "⚙️ Configuration" },
