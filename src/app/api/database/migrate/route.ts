@@ -214,6 +214,20 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_onboarding_completed",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false`,
   },
+  // ── Fix casse email : normalise les comptes existants en lowercase ─────────
+  // Les inscriptions avec majuscules ne matchaient pas le login (qui lowercase
+  // l'email) → impossible de se connecter. On ne touche pas une ligne si la
+  // version lowercase existe déjà (évite toute violation d'unicité).
+  {
+    name: "lowercase_existing_user_emails",
+    sql: `UPDATE "User" u
+            SET email = LOWER(email)
+          WHERE email <> LOWER(email)
+            AND NOT EXISTS (
+              SELECT 1 FROM "User" u2
+              WHERE u2.email = LOWER(u.email) AND u2.id <> u.id
+            )`,
+  },
   // ── Config billing plateforme (Stripe Billing — facturer les restos) ──────
   {
     name: "create_global_config",
