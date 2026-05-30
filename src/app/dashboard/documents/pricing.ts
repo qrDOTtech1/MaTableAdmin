@@ -47,7 +47,7 @@ export const PLANS = [
       "Réservations Intelligentes (créneaux dynamiques, arrhes Stripe, anti no-show)",
       "Programme Fidélité inclus (clients, points, offres et récompenses)",
       "Statistiques actionnables avec recommandations IA en langage naturel",
-      "Programme parrainage MaTable (12 codes/an, +30 jours offerts par filleul converti)",
+      "Programme parrainage MaTable (12 codes/an, +30 jours à votre niveau par filleul converti, bonus Nova IA pour les parrains Starter)",
     ],
     featuresShort: ["Starter inclus : Avis Google, Commande QR, Portails Serveur/Cuisine/Caisse (cuisine bump + timer ajustable + vente comptoir)", "Réservations Intelligentes & anti no-show", "Programme Fidélité inclus", "Statistiques actionnables IA", "Parrainage 12 codes/an"],
     featuresDetailed: [
@@ -55,7 +55,7 @@ export const PLANS = [
       { name: "Réservations Intelligentes", desc: "Créneaux dynamiques calculés selon votre capacité réelle ; arrhes encaissées automatiquement via Stripe ; SMS/email de rappel anti no-show envoyés 24 h avant." },
       { name: "Programme Fidélité", desc: "Base clients, points cumulés, niveaux VIP, offres personnalisées et récompenses configurables inclus dans le forfait Pro, sans abonnement fidélité séparé." },
       { name: "Statistiques actionnables", desc: "Tableau de bord renforcé : CA, ticket moyen, heatmap d'affluence jour × heure, plats stars vs plats jamais commandés, tendances vs période précédente, et recommandations en langage naturel (ex. « vos mardis chutent de 20 % : pensez à lancer une promo »)." },
-      { name: "Programme parrainage MaTable", desc: "Un nouveau code parrainage par mois (12 codes par an). Chaque restaurateur que vous parrainez et qui devient payant vous offre 30 jours d'abonnement. Plafond théorique : une année entière gratuite. Récompense versée uniquement à la 1re facture payée du filleul." },
+      { name: "Programme parrainage MaTable", desc: "Un nouveau code parrainage par mois (12 codes par an). Chaque restaurateur que vous parrainez et qui devient payant vous offre 30 jours d'abonnement à votre niveau actuel (équivalent de votre forfait, pas un mois \"générique\"). Bonus Starter : vous débloquez en plus 30 jours d'accès Nova IA à votre 1re conversion — pour goûter à la Business sans payer le prix. Récompense versée uniquement à la 1re facture payée du filleul. Plafond théorique : une année entière gratuite." },
     ],
   },
   {
