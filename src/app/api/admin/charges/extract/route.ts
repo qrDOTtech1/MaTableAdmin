@@ -90,50 +90,92 @@ export async function POST(req: NextRequest) {
   }
   const b64 = buf.toString("base64");
 
-  // Appel Ollama Cloud vision (modèle natif images en base64)
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 90_000);
-  let rawText = "";
+  // Appel Ollama Cloud vision en STREAM — on forwarde au client (SSE-like)
+  // afin qu'il voie l'IA répondre en direct au lieu d'attendre la fin.
+  let ollamaRes: Response;
   try {
-    const res = await fetch("https://ollama.com/api/chat", {
+    ollamaRes = await fetch("https://ollama.com/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
       body: JSON.stringify({
         model: cfg.visionModel,
         messages: [{ role: "user", content: EXTRACT_PROMPT, images: [b64] }],
-        stream: false,
-        format: "json",
+        stream: true,
       }),
-      signal: controller.signal,
     });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      return NextResponse.json({ error: `Ollama ${res.status}: ${body.slice(0, 200)}` }, { status: 502 });
-    }
-    const data = await res.json();
-    rawText = (data?.message?.content ?? "").trim();
   } catch (e: any) {
-    return NextResponse.json({ error: `Erreur IA : ${e?.message ?? "timeout"}` }, { status: 504 });
-  } finally {
-    clearTimeout(timer);
+    return NextResponse.json({ error: `Connexion Ollama : ${e?.message ?? "réseau"}` }, { status: 502 });
+  }
+  if (!ollamaRes.ok || !ollamaRes.body) {
+    const errBody = await ollamaRes.text().catch(() => "");
+    return NextResponse.json({ error: `Ollama ${ollamaRes.status}: ${errBody.slice(0, 200)}` }, { status: 502 });
   }
 
-  let parsed: any;
-  try {
-    parsed = extractJson(rawText);
-  } catch {
-    return NextResponse.json({ error: "IA n'a pas renvoyé de JSON exploitable", raw: rawText.slice(0, 400) }, { status: 502 });
-  }
+  // On lit chaque ligne NDJSON d'Ollama, on accumule le texte, et on émet
+  // des évènements SSE "delta" puis "done" avec le JSON final validé.
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const reader = ollamaRes.body!.getReader();
+      let buf = "";
+      let accum = "";
+      function send(event: string, data: any) {
+        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+      }
+      send("start", { ok: true });
 
-  // Validation/normalisation des champs
-  const result = {
-    supplier: typeof parsed.supplier === "string" ? parsed.supplier : null,
-    label: typeof parsed.label === "string" ? parsed.label : null,
-    dateIssued: typeof parsed.dateIssued === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dateIssued) ? parsed.dateIssued : null,
-    amountHt: typeof parsed.amountHt === "number" && Number.isFinite(parsed.amountHt) ? parsed.amountHt : null,
-    vatRatePct: typeof parsed.vatRatePct === "number" && [0, 5.5, 10, 20].includes(parsed.vatRatePct) ? parsed.vatRatePct : null,
-    suggestedCategory: typeof parsed.suggestedCategory === "string" && ALLOWED_CATEGORIES.includes(parsed.suggestedCategory) ? parsed.suggestedCategory : null,
-  };
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
+          for (const line of lines) {
+            const t = line.trim();
+            if (!t) continue;
+            try {
+              const obj = JSON.parse(t);
+              const chunk = obj?.message?.content ?? "";
+              if (chunk) {
+                accum += chunk;
+                send("delta", { chars: accum.length, snippet: accum.slice(-80) });
+              }
+              if (obj?.done) {
+                // Fin du flux → parser le JSON accumulé
+                let parsed: any = null;
+                try { parsed = extractJson(accum); } catch {}
+                const result = parsed ? {
+                  supplier: typeof parsed.supplier === "string" ? parsed.supplier : null,
+                  label: typeof parsed.label === "string" ? parsed.label : null,
+                  dateIssued: typeof parsed.dateIssued === "string" && /^\d{4}-\d{2}-\d{2}$/.test(parsed.dateIssued) ? parsed.dateIssued : null,
+                  amountHt: typeof parsed.amountHt === "number" && Number.isFinite(parsed.amountHt) ? parsed.amountHt : null,
+                  vatRatePct: typeof parsed.vatRatePct === "number" && [0, 5.5, 10, 20].includes(parsed.vatRatePct) ? parsed.vatRatePct : null,
+                  suggestedCategory: typeof parsed.suggestedCategory === "string" && ALLOWED_CATEGORIES.includes(parsed.suggestedCategory) ? parsed.suggestedCategory : null,
+                } : null;
+                send("done", { ok: !!result, ...(result ?? { error: "JSON non exploitable", raw: accum.slice(0, 400) }) });
+                controller.close();
+                return;
+              }
+            } catch { /* ligne non JSON — on ignore */ }
+          }
+        }
+        send("done", { ok: false, error: "Flux interrompu sans réponse complète", raw: accum.slice(0, 400) });
+      } catch (e: any) {
+        send("error", { error: e?.message ?? "stream error" });
+      } finally {
+        controller.close();
+      }
+    },
+  });
 
-  return NextResponse.json({ ok: true, ...result });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }

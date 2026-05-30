@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { printDocumentNode } from "../documents/printUtil";
 
@@ -264,13 +264,13 @@ function ChargeForm({ onSaved }: { onSaved: () => void }) {
   const [vatRatePct, setVatRatePct] = useState("20");
 
   async function runExtract(file: File) {
-    setAiBusy(true); setAiMsg(null);
+    setAiBusy(true); setAiMsg("Analyse en cours…");
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const r = await fetch("/api/admin/charges/extract", { method: "POST", body: fd });
-      const j = await r.json();
-      if (!r.ok) { setAiMsg(`IA : ${j.error}`); return; }
+      const ctl = new AbortController();
+      const j = await streamExtract(file, ctl.signal, (info) => {
+        setAiMsg(`🤖 IA en train d'analyser… ${info.chars} caractère(s)`);
+      });
+      if (j.error) { setAiMsg(`IA : ${j.error}`); return; }
       const filled: string[] = [];
       if (j.supplier) { setSupplier(j.supplier); filled.push("fournisseur"); }
       if (j.label) { setLabel(j.label); filled.push("libellé"); }
@@ -685,33 +685,54 @@ function QuickPhotoCharge({ onSaved }: { onSaved: () => void }) {
   const [amountHt, setAmountHt] = useState("");
   const [vatRatePct, setVatRatePct] = useState("20");
   const [vatDeductible, setVatDeductible] = useState(true);
+  const [aiChars, setAiChars] = useState(0);
+  const [aiSnippet, setAiSnippet] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+  const abortRef = useState<{ ctl: AbortController | null }>({ ctl: null })[0];
+
+  // Compteur de secondes écoulées pendant l'analyse
+  useEffect(() => {
+    if (phase !== "analyzing") return;
+    setElapsed(0);
+    const iv = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, [phase]);
 
   async function onPickFile(f: File) {
     setErr(null);
+    setAiChars(0); setAiSnippet("");
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setPhase("analyzing");
+    const ctl = new AbortController();
+    abortRef.ctl = ctl;
     try {
-      const fd = new FormData();
-      fd.append("file", f);
-      const r = await fetch("/api/admin/charges/extract", { method: "POST", body: fd });
-      const j = await r.json();
-      if (!r.ok) {
-        setErr(j.error ?? "Erreur IA");
-        setPhase("confirm"); // l'utilisateur peut quand même saisir à la main
-        return;
+      const j = await streamExtract(f, ctl.signal, (info) => {
+        setAiChars(info.chars); setAiSnippet(info.snippet);
+      });
+      if (ctl.signal.aborted) return; // utilisateur a coupé
+      if (j.error) {
+        setErr(j.error);
+      } else {
+        if (j.supplier) setSupplier(j.supplier);
+        if (j.label) setLabel(j.label);
+        if (j.dateIssued) setDateIssued(j.dateIssued);
+        if (typeof j.amountHt === "number") setAmountHt(String(j.amountHt));
+        if (typeof j.vatRatePct === "number") setVatRatePct(String(j.vatRatePct));
+        if (j.suggestedCategory) setCategory(j.suggestedCategory);
       }
-      if (j.supplier) setSupplier(j.supplier);
-      if (j.label) setLabel(j.label);
-      if (j.dateIssued) setDateIssued(j.dateIssued);
-      if (typeof j.amountHt === "number") setAmountHt(String(j.amountHt));
-      if (typeof j.vatRatePct === "number") setVatRatePct(String(j.vatRatePct));
-      if (j.suggestedCategory) setCategory(j.suggestedCategory);
       setPhase("confirm");
     } catch (e: any) {
-      setErr(String(e?.message ?? e));
-      setPhase("confirm");
+      if (!ctl.signal.aborted) {
+        setErr(String(e?.message ?? e));
+        setPhase("confirm");
+      }
     }
+  }
+
+  function skipToManual() {
+    abortRef.ctl?.abort();
+    setPhase("confirm");
   }
 
   async function save() {
@@ -797,9 +818,29 @@ function QuickPhotoCharge({ onSaved }: { onSaved: () => void }) {
                 )}
                 <div className="space-y-3">
                   {phase === "analyzing" ? (
-                    <div className="flex items-center gap-3 text-purple-300 py-8">
-                      <div className="w-6 h-6 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin" />
-                      <span className="text-sm font-semibold">Détection des champs (fournisseur, date, montant, TVA, catégorie)…</span>
+                    <div className="space-y-3 py-2">
+                      <div className="flex items-center gap-3 text-purple-300">
+                        <div className="w-6 h-6 rounded-full border-2 border-purple-500/30 border-t-purple-500 animate-spin shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold">Détection des champs en cours…</p>
+                          <p className="text-[11px] text-purple-200/60 mt-0.5">
+                            {aiChars > 0
+                              ? `${aiChars} caractère(s) reçus de l'IA · ${elapsed}s`
+                              : elapsed < 4
+                              ? "Envoi de l'image au modèle vision…"
+                              : `Modèle en train de réfléchir… ${elapsed}s écoulées`}
+                          </p>
+                        </div>
+                      </div>
+                      {aiSnippet && (
+                        <pre className="text-[10px] font-mono text-purple-200/70 bg-black/30 rounded-lg p-2 max-h-24 overflow-hidden whitespace-pre-wrap">{aiSnippet}</pre>
+                      )}
+                      <button
+                        onClick={skipToManual}
+                        className="text-xs text-orange-300 hover:text-orange-200 font-semibold underline"
+                      >
+                        ✏️ Trop long ? Saisir à la main →
+                      </button>
                     </div>
                   ) : (
                     <>
@@ -867,6 +908,61 @@ function QuickPhotoCharge({ onSaved }: { onSaved: () => void }) {
       )}
     </>
   );
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// Helper : appel SSE de l'extraction IA avec progression en direct
+// ═════════════════════════════════════════════════════════════════════════
+type ExtractResult = {
+  supplier?: string | null; label?: string | null; dateIssued?: string | null;
+  amountHt?: number | null; vatRatePct?: number | null; suggestedCategory?: string | null;
+  error?: string;
+};
+
+async function streamExtract(
+  file: File,
+  signal: AbortSignal,
+  onDelta: (info: { chars: number; snippet: string }) => void,
+): Promise<ExtractResult> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/admin/charges/extract", { method: "POST", body: fd, signal });
+  if (!res.ok || !res.body) {
+    // Anciens endpoints renvoient JSON simple
+    const j = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    return { error: j.error ?? `HTTP ${res.status}` };
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let final: ExtractResult | null = null;
+  let errMsg: string | undefined;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    // Parse les évènements SSE séparés par "\n\n"
+    let idx;
+    while ((idx = buf.indexOf("\n\n")) >= 0) {
+      const evtBlock = buf.slice(0, idx);
+      buf = buf.slice(idx + 2);
+      const lines = evtBlock.split("\n");
+      let event = "message"; let data = "";
+      for (const ln of lines) {
+        if (ln.startsWith("event:")) event = ln.slice(6).trim();
+        else if (ln.startsWith("data:")) data += ln.slice(5).trim();
+      }
+      if (!data) continue;
+      try {
+        const obj = JSON.parse(data);
+        if (event === "delta") onDelta({ chars: obj.chars ?? 0, snippet: obj.snippet ?? "" });
+        else if (event === "done") final = obj;
+        else if (event === "error") errMsg = obj.error;
+      } catch { /* ignore */ }
+    }
+  }
+  if (final) return final;
+  return { error: errMsg ?? "Flux interrompu" };
 }
 
 function escapeCsv(s: string): string {
