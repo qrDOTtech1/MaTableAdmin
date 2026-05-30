@@ -76,29 +76,55 @@ async function logSubscriptionEvent(opts: {
  * Récompense parrainage : 1er paiement du filleul → +30 jours au parrain.
  * Idempotent via Restaurant.referralRewardGranted.
  */
+async function addThirtyDaysToReferrer(referrerId: string) {
+  const refRows = await prisma.$queryRawUnsafe<Array<{ subscriptionExpiresAt: Date | null }>>(
+    `SELECT "subscriptionExpiresAt" FROM "Restaurant" WHERE id = $1`, referrerId,
+  );
+  const referrer = refRows[0];
+  if (!referrer) return;
+  const now = Date.now();
+  const base = referrer.subscriptionExpiresAt ? Math.max(new Date(referrer.subscriptionExpiresAt).getTime(), now) : now;
+  const newExpires = new Date(base + 30 * 24 * 3600 * 1000);
+  await prisma.$executeRawUnsafe(
+    `UPDATE "Restaurant" SET "subscriptionExpiresAt" = $1 WHERE id = $2`, newExpires, referrerId,
+  );
+}
+
 async function grantReferralRewardIfNeeded(refereeId: string) {
+  // 1. Nouveau système mensuel
+  try {
+    const rc = await prisma.$queryRawUnsafe<Array<{ id: string; restaurantId: string }>>(
+      `SELECT id, "restaurantId" FROM "ReferralCode"
+        WHERE "usedByRefereeId" = $1 AND "rewardedAt" IS NULL LIMIT 1`,
+      refereeId,
+    );
+    if (rc[0]) {
+      await addThirtyDaysToReferrer(rc[0].restaurantId);
+      await prisma.$executeRawUnsafe(
+        `UPDATE "ReferralCode" SET "rewardedAt" = NOW() WHERE id = $1`, rc[0].id,
+      );
+      return;
+    }
+  } catch (e) {
+    console.warn("grantReferralRewardIfNeeded (monthly) skipped:", (e as Error).message?.split("\n")[0]);
+  }
+  // 2. Legacy
   try {
     const rows = await prisma.$queryRawUnsafe<Array<{ referredByCode: string | null; referralRewardGranted: boolean }>>(
       `SELECT "referredByCode", "referralRewardGranted" FROM "Restaurant" WHERE id = $1`, refereeId,
     );
     const row = rows[0];
     if (!row?.referredByCode || row.referralRewardGranted) return;
-    const refRows = await prisma.$queryRawUnsafe<Array<{ id: string; subscriptionExpiresAt: Date | null }>>(
-      `SELECT id, "subscriptionExpiresAt" FROM "Restaurant" WHERE "referralCode" = $1 LIMIT 1`, row.referredByCode,
+    const refRows = await prisma.$queryRawUnsafe<Array<{ id: string }>>(
+      `SELECT id FROM "Restaurant" WHERE "referralCode" = $1 LIMIT 1`, row.referredByCode,
     );
-    const referrer = refRows[0];
-    if (!referrer) return;
-    const now = Date.now();
-    const base = referrer.subscriptionExpiresAt ? Math.max(new Date(referrer.subscriptionExpiresAt).getTime(), now) : now;
-    const newExpires = new Date(base + 30 * 24 * 3600 * 1000);
-    await prisma.$executeRawUnsafe(
-      `UPDATE "Restaurant" SET "subscriptionExpiresAt" = $1 WHERE id = $2`, newExpires, referrer.id,
-    );
+    if (!refRows[0]) return;
+    await addThirtyDaysToReferrer(refRows[0].id);
     await prisma.$executeRawUnsafe(
       `UPDATE "Restaurant" SET "referralRewardGranted" = true WHERE id = $1`, refereeId,
     );
   } catch (e) {
-    console.warn("grantReferralRewardIfNeeded skipped:", (e as Error).message?.split("\n")[0]);
+    console.warn("grantReferralRewardIfNeeded (legacy) skipped:", (e as Error).message?.split("\n")[0]);
   }
 }
 

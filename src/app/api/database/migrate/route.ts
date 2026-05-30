@@ -230,6 +230,34 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_referral_reward_granted",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "referralRewardGranted" BOOLEAN NOT NULL DEFAULT false`,
   },
+  // ── Codes parrainage mensuels (1 code/mois, 12/an max) ─────────────────────
+  {
+    name: "create_referral_code_table",
+    sql: `CREATE TABLE IF NOT EXISTS "ReferralCode" (
+      "id"                  TEXT NOT NULL,
+      "restaurantId"        TEXT NOT NULL,
+      "code"                TEXT NOT NULL,
+      "periodYearMonth"     TEXT NOT NULL,
+      "createdAt"           TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "usedByRefereeId"     TEXT,
+      "refereeRegisteredAt" TIMESTAMP(3),
+      "rewardedAt"          TIMESTAMP(3),
+      "rewardCancelledAt"   TIMESTAMP(3),
+      CONSTRAINT "ReferralCode_pkey" PRIMARY KEY ("id")
+    )`,
+  },
+  {
+    name: "create_referral_code_code_unique",
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS "ReferralCode_code_key" ON "ReferralCode"("code")`,
+  },
+  {
+    name: "create_referral_code_period_unique",
+    sql: `CREATE UNIQUE INDEX IF NOT EXISTS "ReferralCode_restaurantId_period_key" ON "ReferralCode"("restaurantId", "periodYearMonth")`,
+  },
+  {
+    name: "create_referral_code_referee_idx",
+    sql: `CREATE INDEX IF NOT EXISTS "ReferralCode_usedByRefereeId_idx" ON "ReferralCode"("usedByRefereeId")`,
+  },
   // ── Charges fournisseurs (factures d'utilisation : IA, serveurs, télécom…) ─
   {
     name: "create_supplier_invoice",
