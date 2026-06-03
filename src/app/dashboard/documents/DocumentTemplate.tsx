@@ -1456,102 +1456,91 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       {/* ===== PLAQUETTE ÉCO — minimaliste, économe en encre ===== */}
       {docType === "plaquette-eco" && (
         <div>
-          {/* Hero ultra-épuré : tout en typo, fond blanc */}
-          <div className="mb-5">
-            <p className="text-xs uppercase tracking-[0.3em] text-orange-500 font-black">Préparé pour</p>
-            <p className="text-lg font-black text-gray-900 mt-1">{clientData.name || "Votre établissement"}</p>
+          {/* Hero ultra-épuré */}
+          <div className="mb-3">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-orange-500 font-black">Préparé pour</p>
+            <p className="text-base font-black text-gray-900 mt-0.5">{clientData.name || "Votre établissement"}</p>
             {clientData.managerName && (
-              <p className="text-sm text-gray-500 mt-0.5">À l'attention de <b className="text-gray-700">{clientData.managerName}</b></p>
+              <p className="text-xs text-gray-500">À l'attention de <b className="text-gray-700">{clientData.managerName}</b></p>
             )}
           </div>
 
-          <h1 className="text-3xl font-black leading-[1.05] mb-4">
-            Le logiciel tout-en-un<br/>
+          <h1 className="text-2xl font-black leading-[1.05] mb-3">
+            Le logiciel tout-en-un{" "}
             <span className="text-orange-500">pour votre restaurant.</span>
           </h1>
 
-          <div className="h-px bg-gray-300 mb-4" />
+          <div className="h-px bg-gray-300 mb-3" />
 
-          {/* 3 chiffres clés en typo, pas de fond */}
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          {/* 3 chiffres clés */}
+          <div className="grid grid-cols-3 gap-3 mb-3">
             <div>
-              <p className="text-3xl font-black text-gray-900">+200<span className="text-orange-500">%</span></p>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">Avis Google</p>
+              <p className="text-2xl font-black text-gray-900 leading-none">+200<span className="text-orange-500">%</span></p>
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Avis Google</p>
             </div>
             <div>
-              <p className="text-3xl font-black text-gray-900">+30<span className="text-orange-500">%</span></p>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">Service plus rapide</p>
+              <p className="text-2xl font-black text-gray-900 leading-none">+30<span className="text-orange-500">%</span></p>
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Service + rapide</p>
             </div>
             <div>
-              <p className="text-3xl font-black text-gray-900">+15<span className="text-orange-500">%</span></p>
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">Pourboires</p>
+              <p className="text-2xl font-black text-gray-900 leading-none">+15<span className="text-orange-500">%</span></p>
+              <p className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Pourboires</p>
             </div>
           </div>
 
-          <div className="h-px bg-gray-300 mb-4" />
+          <div className="h-px bg-gray-300 mb-3" />
 
-          {/* Le constat (texte fluide, économe) — global */}
-          <p className="text-sm leading-relaxed mb-2 text-gray-700">
-            Avis Google, commande & paiement QR, caisse, réservations, cuisine en direct, fidélité et statistiques —
-            <b className="text-gray-900"> tout connecté</b> dans une seule plateforme. Nova IA s'occupe des avis,
-            des descriptions et des recommandations. Votre équipe gagne du temps <b>là où ça compte</b>.
-          </p>
-          <p className="text-xs text-gray-600 italic mb-5 leading-relaxed">
-            🎁 <b className="not-italic text-gray-800">Programme parrainage inclus</b> — 12 codes par an,
-            <b className="not-italic text-gray-800"> +30 jours offerts à votre niveau d'abonnement</b> à chaque filleul converti
-            (bonus Nova IA pour les parrains Starter).
+          {/* Constat global + parrainage condensés en un seul bloc */}
+          <p className="text-[11px] leading-snug mb-3 text-gray-700">
+            Avis Google, commande & paiement QR, caisse, réservations, cuisine en direct, fidélité, statistiques —
+            <b className="text-gray-900"> tout connecté</b> dans une seule plateforme, opérée par Nova IA.
+            {" "}<b className="text-gray-900">🎁 Parrainage inclus</b> : 12 codes/an, chaque filleul converti offre le mois suivant
+            <span className="text-gray-500"> (conditions sur matable.pro)</span>.
           </p>
 
           {/* Forfaits — version économe */}
-          <p className="text-xs uppercase tracking-widest text-orange-500 font-black mb-1">Forfaits HT/mois — sans engagement</p>
-          <p className="text-[10px] text-gray-500 italic mb-2">Paiement annuel : −12 % sur le mensuel.</p>
-          <table className="w-full text-sm mb-4 border-collapse">
+          <p className="text-[10px] uppercase tracking-widest text-orange-500 font-black mb-1">Forfaits HT/mois — sans engagement · annuel −12 %</p>
+          <table className="w-full text-xs mb-2 border-collapse">
             <tbody>
               {PLANS.map((p) => (
-                <tr key={p.id} className="border-b border-gray-200">
-                  <td className="py-1.5 pr-2">
-                    <b>{p.name}</b>
-                    <ul className="text-[10px] text-gray-500 mt-0.5 space-y-0.5">
+                <tr key={p.id} className="border-b border-gray-200 align-top">
+                  <td className="py-1 pr-2">
+                    <b className="text-[12px]">{p.name}</b>
+                    <ul className="text-[9px] text-gray-500 leading-snug mt-0.5">
                       {p.featuresDetailed.map((f, i) => (
                         <li key={i}><span className="text-orange-500">›</span> <b className="text-gray-700">{f.name}</b> — <span className="italic">{f.desc}</span></li>
                       ))}
                     </ul>
                   </td>
-                  <td className="py-1.5 text-right font-bold align-top">{p.priceMonthly} €</td>
+                  <td className="py-1 text-right font-bold text-[12px]">{p.priceMonthly} €</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <p className="text-xs text-gray-700 mb-4 leading-relaxed">
-            Annuel : <b className="text-emerald-700">−12 %</b> sur chaque forfait. Sans frais d'installation.
-          </p>
+          <div className="h-px bg-gray-300 mb-2" />
 
-          <div className="h-px bg-gray-300 mb-4" />
-
-          {/* Prix d'entrée */}
-          <div className="mb-5 text-sm">
+          {/* Prix d'entrée + complet */}
+          <div className="mb-3 text-xs">
             <div className="flex items-baseline justify-between">
               <p className="text-gray-700">Forfait d'entrée (Starter)</p>
-              <p className="text-2xl font-black text-orange-500">59 € HT/mois</p>
+              <p className="text-lg font-black text-orange-500">59 € HT/mois</p>
             </div>
-            <div className="flex items-baseline justify-between mt-1 text-xs text-gray-500">
+            <div className="flex items-baseline justify-between text-[10px] text-gray-500">
               <p>Forfait complet (Business, engagement annuel)</p>
               <p className="font-bold">219 € HT/mois</p>
             </div>
           </div>
 
           {/* CTA — SEULE zone colorée du doc */}
-          <div className="border-2 border-orange-500 rounded-xl p-3 text-center">
-            <p className="text-xs uppercase tracking-widest text-orange-600 font-bold mb-1">Démo gratuite · 15 min · sans engagement</p>
-            <p className="text-xl font-black text-gray-900 mt-1">📞 {vendor.phone}</p>
-            <p className="text-sm text-orange-600 font-bold">{vendor.email}</p>
-            <p className="text-[11px] text-gray-500 italic mt-1">Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> · Réf. {docMeta.numero}</p>
+          <div className="border-2 border-orange-500 rounded-lg p-2 text-center">
+            <p className="text-[10px] uppercase tracking-widest text-orange-600 font-bold">Démo gratuite · 15 min · sans engagement</p>
+            <p className="text-lg font-black text-gray-900 leading-tight">📞 {vendor.phone}</p>
+            <p className="text-xs text-orange-600 font-bold leading-tight">{vendor.email}</p>
+            <p className="text-[10px] text-gray-500 italic">Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> · Réf. {docMeta.numero}</p>
           </div>
 
-          <p className="text-[10px] text-gray-400 text-center mt-3">
-            {vendor.raisonSociale} · matable.pro
-          </p>
+          <p className="text-[9px] text-gray-400 text-center mt-2">{vendor.raisonSociale} · matable.pro</p>
         </div>
       )}
 
