@@ -1457,44 +1457,49 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
       {docType === "plaquette-eco" && (
         <div>
           {/* Hero ultra-épuré : tout en typo, fond blanc */}
-          <div className="mb-8">
+          <div className="mb-5">
             <p className="text-xs uppercase tracking-[0.3em] text-orange-500 font-black">Préparé pour</p>
-            <p className="text-xl font-black text-gray-900 mt-1">{clientData.name || "Votre établissement"}</p>
+            <p className="text-lg font-black text-gray-900 mt-1">{clientData.name || "Votre établissement"}</p>
             {clientData.managerName && (
               <p className="text-sm text-gray-500 mt-0.5">À l'attention de <b className="text-gray-700">{clientData.managerName}</b></p>
             )}
           </div>
 
-          <h1 className="text-4xl font-black leading-[1.05] mb-6">
-            Triplez vos avis Google.<br/>
-            <span className="text-orange-500">Sans effort.</span>
+          <h1 className="text-3xl font-black leading-[1.05] mb-4">
+            Le logiciel tout-en-un<br/>
+            <span className="text-orange-500">pour votre restaurant.</span>
           </h1>
 
-          <div className="h-px bg-gray-300 mb-6" />
+          <div className="h-px bg-gray-300 mb-4" />
 
           {/* 3 chiffres clés en typo, pas de fond */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-3 gap-4 mb-5">
             <div>
-              <p className="text-4xl font-black text-gray-900">+200<span className="text-orange-500">%</span></p>
-              <p className="text-xs uppercase tracking-wider text-gray-500 mt-1">Avis Google</p>
+              <p className="text-3xl font-black text-gray-900">+200<span className="text-orange-500">%</span></p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">Avis Google</p>
             </div>
             <div>
-              <p className="text-4xl font-black text-gray-900">+30<span className="text-orange-500">%</span></p>
-              <p className="text-xs uppercase tracking-wider text-gray-500 mt-1">Service plus rapide</p>
+              <p className="text-3xl font-black text-gray-900">+30<span className="text-orange-500">%</span></p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">Service plus rapide</p>
             </div>
             <div>
-              <p className="text-4xl font-black text-gray-900">+15<span className="text-orange-500">%</span></p>
-              <p className="text-xs uppercase tracking-wider text-gray-500 mt-1">Pourboires</p>
+              <p className="text-3xl font-black text-gray-900">+15<span className="text-orange-500">%</span></p>
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 mt-1">Pourboires</p>
             </div>
           </div>
 
-          <div className="h-px bg-gray-300 mb-6" />
+          <div className="h-px bg-gray-300 mb-4" />
 
-          {/* Le constat (texte fluide, économe) */}
-          <p className="text-sm leading-relaxed mb-6 text-gray-700">
-            <b className="text-gray-900">70 % de vos clients satisfaits</b> ne laissent jamais d'avis Google — par oubli.
-            Nova IA leur propose à la fin du repas de partager leur expérience en 30 secondes, directement publié.
-            Votre équipe ne fait <b>rien de plus</b> : tout est automatique.
+          {/* Le constat (texte fluide, économe) — global */}
+          <p className="text-sm leading-relaxed mb-2 text-gray-700">
+            Avis Google, commande & paiement QR, caisse, réservations, cuisine en direct, fidélité et statistiques —
+            <b className="text-gray-900"> tout connecté</b> dans une seule plateforme. Nova IA s'occupe des avis,
+            des descriptions et des recommandations. Votre équipe gagne du temps <b>là où ça compte</b>.
+          </p>
+          <p className="text-xs text-gray-600 italic mb-5 leading-relaxed">
+            🎁 <b className="not-italic text-gray-800">Programme parrainage inclus</b> — 12 codes par an,
+            <b className="not-italic text-gray-800"> +30 jours offerts à votre niveau d'abonnement</b> à chaque filleul converti
+            (bonus Nova IA pour les parrains Starter).
           </p>
 
           {/* Forfaits — version économe */}
@@ -1518,14 +1523,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </tbody>
           </table>
 
-          <p className="text-xs text-gray-700 mb-6 leading-relaxed">
+          <p className="text-xs text-gray-700 mb-4 leading-relaxed">
             Annuel : <b className="text-emerald-700">−12 %</b> sur chaque forfait. Sans frais d'installation.
           </p>
 
-          <div className="h-px bg-gray-300 mb-6" />
+          <div className="h-px bg-gray-300 mb-4" />
 
           {/* Prix d'entrée */}
-          <div className="mb-8 text-sm">
+          <div className="mb-5 text-sm">
             <div className="flex items-baseline justify-between">
               <p className="text-gray-700">Forfait d'entrée (Starter)</p>
               <p className="text-2xl font-black text-orange-500">59 € HT/mois</p>
@@ -1537,14 +1542,14 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
           </div>
 
           {/* CTA — SEULE zone colorée du doc */}
-          <div className="border-2 border-orange-500 rounded-xl p-4 text-center">
+          <div className="border-2 border-orange-500 rounded-xl p-3 text-center">
             <p className="text-xs uppercase tracking-widest text-orange-600 font-bold mb-1">Démo gratuite · 15 min · sans engagement</p>
-            <p className="text-2xl font-black text-gray-900 mt-2">📞 {vendor.phone}</p>
-            <p className="text-sm text-orange-600 font-bold mt-1">{vendor.email}</p>
-            <p className="text-xs text-gray-500 italic mt-2">Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> · Réf. {docMeta.numero}</p>
+            <p className="text-xl font-black text-gray-900 mt-1">📞 {vendor.phone}</p>
+            <p className="text-sm text-orange-600 font-bold">{vendor.email}</p>
+            <p className="text-[11px] text-gray-500 italic mt-1">Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> · Réf. {docMeta.numero}</p>
           </div>
 
-          <p className="text-[10px] text-gray-400 text-center mt-4">
+          <p className="text-[10px] text-gray-400 text-center mt-3">
             {vendor.raisonSociale} · matable.pro
           </p>
         </div>
