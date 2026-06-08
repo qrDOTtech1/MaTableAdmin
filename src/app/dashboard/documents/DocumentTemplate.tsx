@@ -381,8 +381,13 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
 
       {/* Header commun */}
       <div className="flex justify-between items-start border-b-2 border-orange-500 pb-5 mb-8">
-        <div className="text-2xl font-black">
-          MaTable<span className="text-orange-500">.Pro</span>
+        <div>
+          <div className="text-2xl font-black leading-none">
+            MaTable<span className="text-orange-500">.Pro</span>
+          </div>
+          <p className="text-[10px] text-gray-500 mt-1 tracking-wider">
+            Digitalisation d'établissement depuis 2017<span className="text-orange-500">*</span>
+          </p>
         </div>
         <div className="text-right text-sm text-gray-500">
           <div className="uppercase font-bold">{docType === "cgvu" ? "CGV / CGU" : docType}</div>
@@ -1447,8 +1452,9 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </p>
           </div>
 
-          <p className="text-xs text-gray-500 italic text-center mt-4">
-            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · matable.pro
+          <p className="text-xs text-gray-500 italic text-center mt-4 leading-tight">
+            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · matable.pro<br/>
+            <span className="text-[10px]">*Avant la création de MaTable.Pro, ses deux co-fondateurs collaboraient déjà à la digitalisation d'établissements.</span>
           </p>
         </div>
       )}
@@ -1540,7 +1546,10 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <p className="text-[10px] text-gray-500 italic">Demandez <b className="not-italic text-gray-900">{vendor.representant}</b> · Réf. {docMeta.numero}</p>
           </div>
 
-          <p className="text-[9px] text-gray-400 text-center mt-2">{vendor.raisonSociale} · matable.pro</p>
+          <p className="text-[9px] text-gray-400 text-center mt-2 leading-tight">
+            {vendor.raisonSociale} · matable.pro<br/>
+            <span className="italic">*Avant la création de MaTable.Pro, ses deux co-fondateurs collaboraient déjà à la digitalisation d'établissements.</span>
+          </p>
         </div>
       )}
 
@@ -1667,8 +1676,9 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <p className="text-xs text-gray-500 italic mt-2">Réf. {docMeta.numero} · Cette proposition est valable jusqu'au {docMeta.validite}</p>
           </div>
 
-          <p className="text-[10px] text-gray-400 text-center mt-4">
-            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · {vendor.address} · matable.pro
+          <p className="text-[10px] text-gray-400 text-center mt-4 leading-tight">
+            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · {vendor.address} · matable.pro<br/>
+            <span className="italic">*Avant la création de MaTable.Pro, ses deux co-fondateurs collaboraient déjà à la digitalisation d'établissements.</span>
           </p>
         </div>
       )}
@@ -1744,8 +1754,9 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             <p className="text-[10px] text-gray-500 italic mt-1">Demandez {vendor.representant}</p>
           </div>
 
-          <p className="text-[8px] text-gray-400 text-center mt-3">
-            {vendor.raisonSociale} · matable.pro · Réf. {docMeta.numero}
+          <p className="text-[8px] text-gray-400 text-center mt-3 leading-tight">
+            {vendor.raisonSociale} · matable.pro · Réf. {docMeta.numero}<br/>
+            <span className="italic">*Avant la création de MaTable.Pro, ses deux co-fondateurs collaboraient déjà à la digitalisation d'établissements.</span>
           </p>
         </div>
       )}
@@ -1857,8 +1868,9 @@ const DocumentTemplate = forwardRef<HTMLDivElement, Props>(function DocumentTemp
             </p>
           </div>
 
-          <p className="text-xs text-gray-500 italic text-center mt-4">
-            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · matable.pro
+          <p className="text-xs text-gray-500 italic text-center mt-4 leading-tight">
+            {vendor.raisonSociale} {vendor.formeJuridique && `· ${vendor.formeJuridique}`} · matable.pro<br/>
+            <span className="text-[10px]">*Avant la création de MaTable.Pro, ses deux co-fondateurs collaboraient déjà à la digitalisation d'établissements.</span>
           </p>
         </div>
       )}
