@@ -213,6 +213,27 @@ const MIGRATIONS: Array<{ name: string; sql: string }> = [
     name: "add_dashboard_bottom_nav",
     sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "dashboardBottomNav" JSONB NOT NULL DEFAULT '[]'::jsonb`,
   },
+  // ── Souscription directe : signature CGV + contrat numérique ─────────────
+  {
+    name: "add_cgv_accepted_at",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "cgvAcceptedAt" TIMESTAMP(3)`,
+  },
+  {
+    name: "add_cgv_signature_name",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "cgvSignatureName" TEXT`,
+  },
+  {
+    name: "add_cgv_ip",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "cgvIp" TEXT`,
+  },
+  {
+    name: "add_cgv_user_agent",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "cgvUserAgent" TEXT`,
+  },
+  {
+    name: "add_cgv_contract_data",
+    sql: `ALTER TABLE "Restaurant" ADD COLUMN IF NOT EXISTS "cgvContractData" JSONB`,
+  },
   // ── Programme parrainage — code unique + suivi de la récompense ────────────
   {
     name: "add_referral_code",
