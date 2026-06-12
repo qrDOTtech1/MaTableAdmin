@@ -9,7 +9,7 @@ import DocumentTemplate, {
   type DocMeta,
   type Prestation,
 } from "../DocumentTemplate";
-import { computeQuote, type DurationKey } from "../pricing";
+import { computeQuote, type DurationKey, type PlanId } from "../pricing";
 import { printDocumentNode } from "../printUtil";
 
 type Doc = {
@@ -19,7 +19,15 @@ type Doc = {
   title: string;
   vendor: Vendor;
   client: ClientData;
-  data: { engagement?: string; selectedModules?: string[]; docMeta?: DocMeta; prestation?: Prestation; chainQuote?: any };
+  data: {
+    engagement?: string;
+    selectedModules?: string[];
+    selectedPlan?: PlanId;
+    billing?: "monthly" | "annual";
+    docMeta?: DocMeta;
+    prestation?: Prestation;
+    chainQuote?: any;
+  };
   restaurantName: string;
   signedAt: string | null;
 };
@@ -30,9 +38,11 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
   const [busy, setBusy] = useState<"pdf" | "sign" | "delete" | null>(null);
   const [signed, setSigned] = useState<string | null>(doc.signedAt);
 
-  const engagement = (doc.data?.engagement ?? "12m") as DurationKey;
-  // Rétro-compat : si selectedModules absent (anciens docs), on suppose le plan "avis" seul
-  const selectedModules = doc.data?.selectedModules ?? ["avis"];
+  // Rétro-compat : anciens docs n'ont pas selectedPlan/billing.
+  const selectedPlan: PlanId = doc.data?.selectedPlan ?? "starter";
+  const billing: "monthly" | "annual" =
+    doc.data?.billing ?? (doc.data?.engagement === "annual" ? "annual" : "monthly");
+  const engagement = billing as DurationKey;
   const docMeta: DocMeta = doc.data?.docMeta ?? {
     numero: doc.number,
     date: new Date().toLocaleDateString("fr-FR"),
@@ -46,7 +56,7 @@ export default function DocumentViewerClient({ doc }: { doc: Doc }) {
     modalites: "",
     delaiLivraison: "",
   };
-  const priceInfo = computeQuote(selectedModules, engagement);
+  const priceInfo = computeQuote(selectedPlan, billing);
 
   const exportPDF = () => {
     const element = printRef.current;

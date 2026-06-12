@@ -78,7 +78,7 @@ export default function CallModeTab() {
 
   const withPhone = sorted.filter(p => p.phone).length;
   const stats = {
-    NEW: prospects.filter(p => p.status === "NEW" && p.status !== "IGNORED").length,
+    NEW: prospects.filter(p => p.status === "NEW").length,
     CONTACTED: prospects.filter(p => p.status === "CONTACTED").length,
     hot: prospects.filter(p => p.score === "🔥").length,
     withPhone: prospects.filter(p => p.phone).length,

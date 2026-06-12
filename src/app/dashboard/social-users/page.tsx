@@ -149,7 +149,7 @@ export default async function SocialUsersPage() {
                   <td className="px-4 py-3 text-slate-400 text-xs">{user.profile?.occupation ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1 max-w-xs">
-                      {(user.profile?.interests ?? []).slice(0, 4).map((i) => (
+                      {(user.profile?.interests ?? []).slice(0, 4).map((i: string) => (
                         <span key={i} className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">{i}</span>
                       ))}
                       {(user.profile?.interests?.length ?? 0) > 4 && (

@@ -35,7 +35,7 @@ export async function GET() {
         where: { id: { in: activatedIds } },
         select: { id: true, slug: true },
       });
-      for (const s of slugs) slugMap[s.id] = s.slug;
+      for (const s of slugs) if (s.slug) slugMap[s.id] = s.slug;
     }
 
     return NextResponse.json({

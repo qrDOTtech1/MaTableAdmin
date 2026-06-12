@@ -20,14 +20,14 @@ const RESULT_STATUS: Record<NonNullable<CallResult>, string> = {
 };
 
 interface Props {
-  prospect: MapProspect & {
+  prospect: Omit<MapProspect, "lat" | "lng"> & {
+    lat?: number | null;
+    lng?: number | null;
     autoScore?: number;
     autoScoreEmoji?: string;
     autoScoreLabel?: string;
     autoScoreReasons?: string[];
-    reviews_count?: number;
-    category?: string;
-    description?: string;
+    reviews_count?: number | null;
   };
   onClose: () => void;
   onSaved?: (updates: { status?: string; notes?: string }) => void;
