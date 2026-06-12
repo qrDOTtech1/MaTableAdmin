@@ -1,5 +1,6 @@
 import { existsSync } from "fs";
-import { spawn, type ChildProcessWithoutNullStreams } from "child_process";
+import { spawn, type ChildProcessByStdio } from "child_process";
+import type { Readable } from "stream";
 
 export type ProspectScraperStatus = "idle" | "running" | "success" | "error";
 
@@ -51,7 +52,7 @@ function createInitialState(): ProspectScraperState {
 
 class ProspectScraperController {
   private state: ProspectScraperState = createInitialState();
-  private child: ChildProcessWithoutNullStreams | null = null;
+  private child: ChildProcessByStdio<null, Readable, Readable> | null = null;
 
   getState(): ProspectScraperState {
     const refreshed = createInitialState();
