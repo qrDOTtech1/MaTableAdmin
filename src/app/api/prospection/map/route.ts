@@ -29,7 +29,7 @@ export async function GET() {
     `.catch(() => []);
 
     const activatedIds = rows.filter(r => r.restaurantId).map(r => r.restaurantId!);
-    let slugMap: Record<string, string> = {};
+    const slugMap: Record<string, string> = {};
     if (activatedIds.length > 0) {
       const slugs = await prisma.restaurant.findMany({
         where: { id: { in: activatedIds } },
