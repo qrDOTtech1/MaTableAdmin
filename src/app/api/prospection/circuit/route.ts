@@ -507,7 +507,7 @@ Format example: [{"name":"The Zinc","address":"12 Main St, 90210 Los Angeles","c
     }
 
     // Tentative 1 : sonar-pro
-    let attemptLogs: string[] = [];
+    const attemptLogs: string[] = [];
     let citations: any[] = [];
     let restaurants: CircuitRestaurant[] = [];
 
