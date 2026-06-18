@@ -15,8 +15,6 @@ export async function POST(req: Request) {
     const { id, name, city, address } = await req.json();
     if (!name || !city) return NextResponse.json({ error: "name_city_required" }, { status: 400 });
 
-    const locationHint = address ? `situé au ${address}` : `dans la ville de ${city}`;
-
     const prompt = `Recherche en temps réel sur Google Maps, Pages Jaunes et Tripadvisor les informations complètes et à jour pour ce restaurant français :
 
 Nom : "${name}"
@@ -98,11 +96,6 @@ ZÉRO texte avant ou après. JSON pur.`;
 
     // Update DB if we have an id
     if (id) {
-      const setClause = Object.entries(updates)
-        .filter(([k]) => k !== "updatedAt")
-        .map(([k]) => `"${k}" = COALESCE("${k}", $${Object.keys(updates).indexOf(k) + 1})`)
-        .join(", ");
-
       if (phone || enriched.website || enriched.lat) {
         await prisma.$executeRawUnsafe(
           `UPDATE "Prospect" SET

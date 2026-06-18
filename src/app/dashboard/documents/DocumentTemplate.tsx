@@ -3015,7 +3015,7 @@ function TutoReservationsSheet({ vendor, client }: { vendor: Vendor; client: Cli
   const accent = "#6366f1"; // indigo
   const bdr = "1px solid #e5e7eb";
 
-  const SR = ({ num, title, items }: { num: string; title: string; items: string[] }) => (
+  const renderSR = ({ num, title, items }: { num: string; title: string; items: string[] }) => (
     <div style={{ display: "flex", gap: 12, padding: "12px 14px", border: bdr, borderLeft: `4px solid ${accent}`, borderRadius: 8, marginBottom: 10, pageBreakInside: "avoid" }}>
       <div style={{ width: 32, height: 32, borderRadius: "50%", background: accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{num}</div>
       <div>
@@ -3047,15 +3047,15 @@ function TutoReservationsSheet({ vendor, client }: { vendor: Vendor; client: Cli
         ))}
       </div>
 
-      <SR num="1" title="Activer le module et paramétrer votre agenda"
-        items={["Depuis le dashboard MaTable.Pro → Réservations → Paramètres.", "Définissez vos créneaux horaires (ex : 12h–14h30 / 19h–22h) et la durée moyenne d'un repas.", "Indiquez votre capacité (nombre de couverts max par service) et le nombre de couverts minimum par réservation.", "Activez ou désactivez les réservations pour des jours spécifiques (jours fériés, fermeture exceptionnelle)."]}
-      />
-      <SR num="2" title="Configurer l'acompte anti no-show (Stripe)"
-        items={["Dans Réservations → Paiement, connectez votre compte Stripe (5 min — guidé pas à pas).", "Définissez le montant de l'acompte (ex : 10 € par personne ou 20 % du panier estimé).", "L'acompte est prélevé automatiquement à la confirmation. En cas de no-show, vous le conservez.", "Politique d'annulation personnalisable : ex. annulation gratuite jusqu'à 24h avant la réservation."]}
-      />
-      <SR num="3" title="Partager le lien de réservation"
-        items={["Copiez votre lien de réservation personnalisé depuis le dashboard (bouton Copier le lien).", "Ajoutez-le sur votre fiche Google, votre page Instagram, Facebook, votre site web, et vos stories.", "Vous pouvez aussi imprimer un QR code de réservation et le placer en devanture ou en terrasse.", "Astuce : ajoutez le lien en bio Instagram — ça représente 30 % des réservations en ligne."]}
-      />
+      {renderSR({ num: "1", title: "Activer le module et paramétrer votre agenda",
+        items: ["Depuis le dashboard MaTable.Pro → Réservations → Paramètres.", "Définissez vos créneaux horaires (ex : 12h–14h30 / 19h–22h) et la durée moyenne d'un repas.", "Indiquez votre capacité (nombre de couverts max par service) et le nombre de couverts minimum par réservation.", "Activez ou désactivez les réservations pour des jours spécifiques (jours fériés, fermeture exceptionnelle)."],
+      })}
+      {renderSR({ num: "2", title: "Configurer l'acompte anti no-show (Stripe)",
+        items: ["Dans Réservations → Paiement, connectez votre compte Stripe (5 min — guidé pas à pas).", "Définissez le montant de l'acompte (ex : 10 € par personne ou 20 % du panier estimé).", "L'acompte est prélevé automatiquement à la confirmation. En cas de no-show, vous le conservez.", "Politique d'annulation personnalisable : ex. annulation gratuite jusqu'à 24h avant la réservation."],
+      })}
+      {renderSR({ num: "3", title: "Partager le lien de réservation",
+        items: ["Copiez votre lien de réservation personnalisé depuis le dashboard (bouton Copier le lien).", "Ajoutez-le sur votre fiche Google, votre page Instagram, Facebook, votre site web, et vos stories.", "Vous pouvez aussi imprimer un QR code de réservation et le placer en devanture ou en terrasse.", "Astuce : ajoutez le lien en bio Instagram — ça représente 30 % des réservations en ligne."],
+      })}
 
       <div style={{ borderTop: bdr, paddingTop: 8, marginTop: 4, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
         <span>{vendor.raisonSociale} · matable.pro</span><span>Page 1 / 2</span>
@@ -3070,15 +3070,15 @@ function TutoReservationsSheet({ vendor, client }: { vendor: Vendor; client: Cli
         <div style={{ marginLeft: "auto", fontSize: 9, color: "#6b7280" }}>Réservations · MaTable.Pro</div>
       </div>
 
-      <SR num="4" title="Valider, modifier ou refuser une réservation"
-        items={["Toutes les réservations arrivent dans Réservations → À venir, avec heure, couverts, nom et téléphone.", "Validez ou refusez en 1 clic — le client reçoit un email automatique de confirmation ou d'annulation.", "Modifiez l'heure ou le nombre de couverts directement depuis la fiche de réservation.", "En cas de surbooking, MaTable.Pro vous alerte avant que le problème n'arrive."]}
-      />
-      <SR num="5" title="Gérer les no-shows et les annulations"
-        items={["Si un client ne se présente pas, marquez-le comme no-show — l'acompte reste acquis automatiquement.", "Pour les annulations respectant votre délai : remboursement déclenché en 1 clic depuis la fiche.", "Vous pouvez bloquer un client récidiviste depuis Réservations → Clients → Ajouter à la liste noire.", "Statistiques no-shows disponibles dans Réservations → Rapport mensuel."]}
-      />
-      <SR num="6" title="Analyser vos données et optimiser vos créneaux"
-        items={["Dans Réservations → Statistiques : taux de remplissage, créneaux les plus demandés, recettes acomptes.", "Identifiez vos heures creuses et proposez des offres spéciales sur ces créneaux depuis le module Nova IA.", "Exportez le récapitulatif mensuel en PDF pour votre comptable."]}
-      />
+      {renderSR({ num: "4", title: "Valider, modifier ou refuser une réservation",
+        items: ["Toutes les réservations arrivent dans Réservations → À venir, avec heure, couverts, nom et téléphone.", "Validez ou refusez en 1 clic — le client reçoit un email automatique de confirmation ou d'annulation.", "Modifiez l'heure ou le nombre de couverts directement depuis la fiche de réservation.", "En cas de surbooking, MaTable.Pro vous alerte avant que le problème n'arrive."],
+      })}
+      {renderSR({ num: "5", title: "Gérer les no-shows et les annulations",
+        items: ["Si un client ne se présente pas, marquez-le comme no-show — l'acompte reste acquis automatiquement.", "Pour les annulations respectant votre délai : remboursement déclenché en 1 clic depuis la fiche.", "Vous pouvez bloquer un client récidiviste depuis Réservations → Clients → Ajouter à la liste noire.", "Statistiques no-shows disponibles dans Réservations → Rapport mensuel."],
+      })}
+      {renderSR({ num: "6", title: "Analyser vos données et optimiser vos créneaux",
+        items: ["Dans Réservations → Statistiques : taux de remplissage, créneaux les plus demandés, recettes acomptes.", "Identifiez vos heures creuses et proposez des offres spéciales sur ces créneaux depuis le module Nova IA.", "Exportez le récapitulatif mensuel en PDF pour votre comptable."],
+      })}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 6 }}>
         <div style={{ border: bdr, borderRadius: 8, padding: "12px 14px" }}>
@@ -3284,7 +3284,7 @@ function TutoCommandeSheet({ vendor, client }: { vendor: Vendor; client: ClientD
   const bdr = "1px solid #d1d5db";
   const accent = "#1e293b"; // tout en N&B
 
-  const StepRow = ({ num, title, items }: { num: string; title: string; items: string[] }) => (
+  const renderStepRow = ({ num, title, items }: { num: string; title: string; items: string[] }) => (
     <div style={{ display: "flex", gap: 12, padding: "12px 14px", border: bdr, borderLeft: `4px solid ${accent}`, borderRadius: 8, marginBottom: 10, pageBreakInside: "avoid" }}>
       <div style={{ width: 32, height: 32, borderRadius: "50%", background: accent, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>{num}</div>
       <div style={{ flex: 1 }}>
@@ -3327,40 +3327,40 @@ function TutoCommandeSheet({ vendor, client }: { vendor: Vendor; client: ClientD
         </div>
       </div>
 
-      <StepRow num="1" title="Créer et enrichir votre carte"
-        items={[
+      {renderStepRow({ num: "1", title: "Créer et enrichir votre carte",
+        items: [
           "Connectez-vous sur matable.pro avec vos identifiants et ouvrez l'onglet Menu.",
           "Créez vos catégories (Entrées, Plats, Desserts, Boissons...) puis ajoutez vos plats : nom, prix, description, photo.",
           "Astuce : ajoutez des photos — les plats avec photo ont 38 % de commandes en plus.",
           "Activez/désactivez un plat en 1 clic si vous êtes en rupture — sans devoir réimprimer quoi que ce soit.",
-        ]}
-      />
+        ],
+      })}
 
-      <StepRow num="2" title="Générer et installer les QR codes"
-        items={[
+      {renderStepRow({ num: "2", title: "Générer et installer les QR codes",
+        items: [
           "Dans Dashboard → Tables, sélectionnez le nombre de tables et cliquez Générer les QR codes.",
           "Téléchargez le PDF ou les PNG, puis imprimez et placez sur chaque table (support, ardoise ou plastifié).",
           "Chaque QR code est unique par table — les commandes arrivent avec le bon numéro de table.",
           "Optionnel : encodez une carte NFC via le bouton dédié (Chrome Android) — le client pose son téléphone et accède directement au menu.",
-        ]}
-      />
+        ],
+      })}
 
-      <StepRow num="3" title="Recevoir et gérer les commandes"
-        items={[
+      {renderStepRow({ num: "3", title: "Recevoir et gérer les commandes",
+        items: [
           "Activez les notifications sur votre téléphone depuis matable.pro/app — chaque nouvelle commande déclenche une alerte.",
           "Dans Commandes → En cours, validez, préparez ou refusez chaque commande en temps réel.",
           "Le client voit le statut mis à jour sur son écran : Reçue → En préparation → Prête → Servie.",
           "En fin de service, exportez le récapitulatif des commandes depuis l'onglet Historique.",
-        ]}
-      />
+        ],
+      })}
 
-      <StepRow num="4" title="Encaisser et clôturer"
-        items={[
+      {renderStepRow({ num: "4", title: "Encaisser et clôturer",
+        items: [
           "Le client peut payer directement depuis son téléphone (si le module Paiement est activé) ou appeler le serveur pour régler en caisse.",
           "Chaque table peut être soldée d'un clic : Commandes → Table N° → Clôturer.",
           "Les données de vente (CA, plats les plus commandés, heure de pointe) sont disponibles dans Statistiques.",
-        ]}
-      />
+        ],
+      })}
 
       <div style={{ borderTop: bdr, paddingTop: 10, marginTop: 6, display: "flex", justifyContent: "space-between", fontSize: 8, color: "#9ca3af" }}>
         <span>{vendor.raisonSociale} · matable.pro · {vendor.email}</span>
