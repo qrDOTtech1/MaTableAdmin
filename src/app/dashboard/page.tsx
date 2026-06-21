@@ -5,13 +5,17 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const restaurants = await prisma.restaurant.findMany({
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      createdAt: true,
       users: {
         take: 1,
-        select: { email: true }
-      }
+        select: { email: true },
+      },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 
   return (
