@@ -3,18 +3,23 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function StatsPage() {
-  const [totalRestos, totalOrders, totalUsers, totalReservations] = await Promise.all([
+  const [totalRestos, totalOrders, totalUsers, totalReservations, recentOrders] = await Promise.all([
     prisma.restaurant.count(),
     prisma.order.count(),
     prisma.user.count(),
     prisma.reservation.count(),
-  ]);
-
-  const recentOrders = await prisma.order.findMany({
-    take: 10,
-    orderBy: { createdAt: "desc" },
-    include: { table: { include: { restaurant: true } } }
-  }) as any[];
+    prisma.order.findMany({
+      take: 10,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        totalCents: true,
+        status: true,
+        createdAt: true,
+        table: { select: { restaurant: { select: { name: true } } } },
+      },
+    }),
+  ]) as [number, number, number, number, any[]];
 
   return (
     <div className="p-8 space-y-8">
