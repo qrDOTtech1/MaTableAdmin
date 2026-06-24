@@ -11,7 +11,8 @@ export default async function AdminDashboardPage() {
         select: { email: true }
       }
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
+    take: 500,
   });
 
   return (
