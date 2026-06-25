@@ -5,11 +5,16 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Ensure columns
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lat" FLOAT`).catch(() => {});
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lng" FLOAT`).catch(() => {});
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "source" TEXT DEFAULT 'scraper'`).catch(() => {});
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "score" TEXT`).catch(() => {});
+    // Ensure columns. Schema-drift errors are non-fatal here (column may
+    // already exist or the role may lack DDL), so we log + continue rather
+    // than fail the whole request — but we no longer silently swallow.
+    const logDdl = (col: string) => (err: unknown) => {
+      console.warn(`[map] ensure column ${col} skipped:`, err);
+    };
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lat" FLOAT`).catch(logDdl("lat"));
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lng" FLOAT`).catch(logDdl("lng"));
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "source" TEXT DEFAULT 'scraper'`).catch(logDdl("source"));
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "score" TEXT`).catch(logDdl("score"));
 
     const rows = await prisma.$queryRaw<Array<{
       id: string; name: string; city: string | null; address: string | null;
@@ -26,7 +31,11 @@ export async function GET() {
       WHERE "lat" IS NOT NULL AND "lng" IS NOT NULL
       ORDER BY "createdAt" DESC
       LIMIT 500
-    `.catch(() => []);
+    `.catch((err) => {
+      // Log so a missing schema doesn't masquerade as "no prospects".
+      console.warn("[map] prospect query failed, returning empty list:", err);
+      return [];
+    });
 
     const activatedIds = rows.filter(r => r.restaurantId).map(r => r.restaurantId!);
     let slugMap: Record<string, string> = {};
