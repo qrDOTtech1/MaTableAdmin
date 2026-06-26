@@ -41,15 +41,25 @@ export async function buildBackup(): Promise<BackupResult> {
   let totalRows = 0;
   let tableCount = 0;
 
-  for (const table of CRITICAL_TABLES) {
-    try {
-      const rows = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM "${table}"`);
-      dump[table] = rows;
-      totalRows += rows.length;
+  // Les SELECT de chaque table sont indépendants — exécution en parallèle
+  // pour réduire la durée totale du backup nocturne.
+  const results = await Promise.all(
+    CRITICAL_TABLES.map(async (table) => {
+      try {
+        const rows = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM "${table}"`);
+        return { table, rows, error: null as string | null };
+      } catch (e: any) {
+        return { table, rows: null as any[] | null, error: e?.message ?? String(e) };
+      }
+    }),
+  );
+  for (const r of results) {
+    if (r.rows) {
+      dump[r.table] = r.rows;
+      totalRows += r.rows.length;
       tableCount++;
-    } catch (e: any) {
-      // Table absente ou inaccessible — on note l'erreur sans tout faire échouer
-      dump[`__error_${table}`] = [{ error: e?.message ?? String(e) }];
+    } else if (r.error) {
+      dump[`__error_${r.table}`] = [{ error: r.error }];
     }
   }
 

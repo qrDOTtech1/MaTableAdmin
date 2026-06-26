@@ -5,11 +5,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Ensure columns
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lat" FLOAT`).catch(() => {});
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lng" FLOAT`).catch(() => {});
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "source" TEXT DEFAULT 'scraper'`).catch(() => {});
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "score" TEXT`).catch(() => {});
+    // Ensure columns — 4 ALTER indépendants exécutés en parallèle (chacun idempotent)
+    await Promise.all([
+      prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lat" FLOAT`).catch(() => {}),
+      prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "lng" FLOAT`).catch(() => {}),
+      prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "source" TEXT DEFAULT 'scraper'`).catch(() => {}),
+      prisma.$executeRawUnsafe(`ALTER TABLE "Prospect" ADD COLUMN IF NOT EXISTS "score" TEXT`).catch(() => {}),
+    ]);
 
     const rows = await prisma.$queryRaw<Array<{
       id: string; name: string; city: string | null; address: string | null;
