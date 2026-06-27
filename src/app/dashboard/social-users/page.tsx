@@ -18,7 +18,7 @@ async function getSocialData(): Promise<
       }).catch((e: any) => { throw new Error("user.findMany: " + e.message); }),
       (socialPrisma as any).socialProfile.count().catch((e: any) => { throw new Error("socialProfile.count: " + e.message); }),
       (socialPrisma as any).socialPing.groupBy({ by: ["status"], _count: true }).catch(() => [] as any[]),
-      (socialPrisma as any).restaurant.findMany({ orderBy: { createdAt: "desc" } }).catch(() => [] as any[]),
+      (socialPrisma as any).restaurant.findMany({ orderBy: { createdAt: "desc" }, take: 500 }).catch(() => [] as any[]),
       (socialPrisma as any).reservation.findMany({
         include: {
           user: { select: { name: true, email: true } },
