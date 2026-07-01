@@ -18,26 +18,22 @@ export async function GET() {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const counts: Record<string, number | null> = {};
-  for (const t of TABLES) {
-    try {
-      const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-        `SELECT COUNT(*)::bigint AS count FROM "${t}"`
-      );
-      counts[t] = Number(rows[0]?.count ?? 0);
-    } catch {
-      counts[t] = null;  // table absente
-    }
-  }
+  // Run every COUNT + the DB size query in parallel. Postgres serves each on
+  // its own pool connection, so total latency ≈ the single slowest query
+  // instead of the sum of them all.
+  const countPromises = TABLES.map((t) =>
+    prisma
+      .$queryRawUnsafe<Array<{ count: bigint }>>(`SELECT COUNT(*)::bigint AS count FROM "${t}"`)
+      .then((rows: Array<{ count: bigint }>) => [t, Number(rows[0]?.count ?? 0)] as const)
+      .catch(() => [t, null] as const)
+  );
+  const dbSizePromise = prisma
+    .$queryRawUnsafe<Array<{ size: bigint }>>(`SELECT pg_database_size(current_database())::bigint AS size`)
+    .then((r: Array<{ size: bigint }>) => Number(r[0]?.size ?? 0))
+    .catch(() => null);
 
-  // DB size (Postgres)
-  let dbSizeBytes: number | null = null;
-  try {
-    const r = await prisma.$queryRawUnsafe<Array<{ size: bigint }>>(
-      `SELECT pg_database_size(current_database())::bigint AS size`
-    );
-    dbSizeBytes = Number(r[0]?.size ?? 0);
-  } catch {}
+  const [countEntries, dbSizeBytes] = await Promise.all([Promise.all(countPromises), dbSizePromise]);
+  const counts: Record<string, number | null> = Object.fromEntries(countEntries);
 
   return NextResponse.json({ counts, dbSizeBytes, at: new Date().toISOString() });
 }

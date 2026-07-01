@@ -41,16 +41,32 @@ export async function POST(req: Request) {
     let saved = 0;
     let skipped = 0;
 
-    for (const r of restaurants) {
-      // Upsert by name + city (avoid duplicates)
-      const existing = await prisma.$queryRaw<Array<{ id: string }>>`
-        SELECT id FROM "Prospect"
-        WHERE LOWER(name) = LOWER(${r.name}) AND LOWER(COALESCE(city, '')) = LOWER(${r.city ?? searchCity ?? ''})
-        LIMIT 1
-      `;
+    // 1) Fetch every existing prospect (name+city match) in a single query
+    //    instead of N sequential SELECTs — turns O(N) round-trips into O(1).
+    const normalized = restaurants.map((r) => ({
+      raw: r,
+      nameKey: r.name.toLowerCase(),
+      cityKey: (r.city ?? searchCity ?? "").toLowerCase(),
+    }));
+    const names = normalized.map((n) => n.nameKey);
+    const cities = normalized.map((n) => n.cityKey);
+    const existingRows = names.length > 0
+      ? await prisma.$queryRaw<Array<{ id: string; nameKey: string; cityKey: string }>>`
+          SELECT id, LOWER(name) AS "nameKey", LOWER(COALESCE(city, '')) AS "cityKey"
+          FROM "Prospect"
+          WHERE LOWER(name) = ANY(${names}::text[])
+            AND LOWER(COALESCE(city, '')) = ANY(${cities}::text[])
+        `
+      : [];
+    const existingMap = new Map<string, string>();
+    for (const row of existingRows) existingMap.set(`${row.nameKey}::${row.cityKey}`, row.id);
 
-      if (existing.length > 0) {
-        // Update lat/lng/phone/website if missing
+    // 2) Route each incoming row to update-vs-insert; batch the updates so the
+    //    common "circuit re-saved" case stays fast, but still fall back to
+    //    per-row updates when non-null lat/lng/phone/website need to be filled.
+    for (const { raw: r, nameKey, cityKey } of normalized) {
+      const existingId = existingMap.get(`${nameKey}::${cityKey}`);
+      if (existingId) {
         await prisma.$executeRawUnsafe(
           `UPDATE "Prospect" SET
             "lat" = COALESCE("lat", $1),
@@ -66,7 +82,7 @@ export async function POST(req: Request) {
           r.phone ?? null,
           r.website ?? null,
           r.photo_url ?? null,
-          existing[0].id,
+          existingId,
         );
         skipped++;
       } else {
