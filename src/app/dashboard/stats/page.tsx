@@ -13,7 +13,13 @@ export default async function StatsPage() {
   const recentOrders = await prisma.order.findMany({
     take: 10,
     orderBy: { createdAt: "desc" },
-    include: { table: { include: { restaurant: true } } }
+    select: {
+      id: true,
+      totalCents: true,
+      createdAt: true,
+      status: true,
+      table: { select: { restaurant: { select: { name: true } } } },
+    },
   }) as any[];
 
   return (
