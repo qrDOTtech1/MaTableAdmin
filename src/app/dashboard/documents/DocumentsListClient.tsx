@@ -157,20 +157,23 @@ export default function DocumentsListClient({
   const [showNewModal, setShowNewModal] = useState(false);
   const [newRestaurantId, setNewRestaurantId] = useState("");
   const [newDocTypeVal, setNewDocTypeVal] = useState("contrat");
-  // Liste des restaurants déduite des docs existants + fetch API
-  const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([]);
-  useEffect(() => {
-    if (!showNewModal) return;
-    // Construire la liste depuis les docs déjà chargés (pas d'appel API)
+  // Derived from docs — avoids setState-in-effect (cascading render) and the stale-deps bug
+  // where the list wasn't refreshed when docs changed while the modal was open.
+  const restaurants = useMemo(() => {
     const seen = new Map<string, string>();
     for (const d of docs) {
       if (d.restaurantId && d.restaurantName && !seen.has(d.restaurantId)) {
         seen.set(d.restaurantId, d.restaurantName);
       }
     }
-    setRestaurants(Array.from(seen.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)));
-    if (seen.size > 0 && !newRestaurantId) setNewRestaurantId(Array.from(seen.keys())[0]);
-  }, [showNewModal]);
+    return Array.from(seen.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [docs]);
+  useEffect(() => {
+    if (!showNewModal) return;
+    if (restaurants.length > 0 && !newRestaurantId) setNewRestaurantId(restaurants[0].id);
+  }, [showNewModal, restaurants, newRestaurantId]);
 
   const handleCreateDoc = () => {
     if (!newRestaurantId) return;
