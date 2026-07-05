@@ -1,12 +1,23 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-async function ensureColumns() {
-  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "vapiApiKey" TEXT`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "vapiPhoneNumberId" TEXT`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "vapiAssistantId" TEXT`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig" ADD COLUMN IF NOT EXISTS "elevenLabsVoiceId" TEXT`);
-  await prisma.$executeRawUnsafe(`INSERT INTO "GlobalConfig" (id) VALUES ('global') ON CONFLICT (id) DO NOTHING`);
+let columnsEnsured: Promise<void> | null = null;
+async function ensureColumns(): Promise<void> {
+  if (columnsEnsured) return columnsEnsured;
+  columnsEnsured = (async () => {
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "GlobalConfig"
+        ADD COLUMN IF NOT EXISTS "vapiApiKey" TEXT,
+        ADD COLUMN IF NOT EXISTS "vapiPhoneNumberId" TEXT,
+        ADD COLUMN IF NOT EXISTS "vapiAssistantId" TEXT,
+        ADD COLUMN IF NOT EXISTS "elevenLabsVoiceId" TEXT`);
+      await prisma.$executeRawUnsafe(`INSERT INTO "GlobalConfig" (id) VALUES ('global') ON CONFLICT (id) DO NOTHING`);
+    } catch (e) {
+      columnsEnsured = null;
+      throw e;
+    }
+  })();
+  return columnsEnsured;
 }
 
 export async function GET() {

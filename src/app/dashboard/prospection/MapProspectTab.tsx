@@ -576,10 +576,12 @@ export default function MapProspectTab() {
             </div>
           </div>
 
-          {/* Panel content */}
-          {panel === "detail" && <DetailPanel />}
-          {panel === "edit" && <EditPanel />}
-          {panel === "activate" && <ActivatePanel />}
+          {/* Panel content — call as functions, not components, so React doesn't
+              remount the whole subtree on every parent re-render (which was
+              causing controlled inputs to lose focus mid-typing). */}
+          {panel === "detail" && DetailPanel()}
+          {panel === "edit" && EditPanel()}
+          {panel === "activate" && ActivatePanel()}
         </div>
       )}
 

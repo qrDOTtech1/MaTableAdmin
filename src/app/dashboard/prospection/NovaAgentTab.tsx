@@ -122,6 +122,10 @@ export default function NovaAgentTab() {
   // Keep ref in sync with state (needed for async handlers)
   useEffect(() => { simMessagesRef.current = simMessages; }, [simMessages]);
 
+  // Ensure the Vapi polling interval is cleared if the user navigates away
+  // mid-call — otherwise setRealCall keeps firing on an unmounted component.
+  useEffect(() => () => { clearInterval(pollRef.current); }, []);
+
   // Auto-scroll sim messages
   useEffect(() => {
     messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: "smooth" });
@@ -312,7 +316,7 @@ export default function NovaAgentTab() {
     .sort((a, b) => (SCORE_ORDER.indexOf(a.score ?? "") === -1 ? 99 : SCORE_ORDER.indexOf(a.score ?? "")) - (SCORE_ORDER.indexOf(b.score ?? "") === -1 ? 99 : SCORE_ORDER.indexOf(b.score ?? "")));
 
   function toggleAutoSelect(id: string) {
-    setAutoSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setAutoSelected(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
 
   async function launchAutoCalls() {
