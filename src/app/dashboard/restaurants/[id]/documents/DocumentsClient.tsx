@@ -135,12 +135,20 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     bic: "",
   });
 
-  const [docMeta, setDocMeta] = useState({
-    numero: `CONT-2026-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
-    date: new Date().toLocaleDateString("fr-FR"),
-    validite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR"),
-    echeance: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15).toLocaleDateString("fr-FR"),
-    periode: `01/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1} — ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1}`,
+  // Lazy initializer : Math.random() + Date sont impures — elles ne doivent
+  // s'évaluer qu'à la première monte, jamais à chaque render (react-hooks/purity).
+  const [docMeta, setDocMeta] = useState(() => {
+    const now = new Date();
+    const monthNum = now.getMonth() + 1;
+    const mm = monthNum < 10 ? '0' + monthNum : String(monthNum);
+    const lastDay = new Date(now.getFullYear(), monthNum, 0).getDate();
+    return {
+      numero: `CONT-2026-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+      date: now.toLocaleDateString("fr-FR"),
+      validite: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR"),
+      echeance: new Date(now.getFullYear(), monthNum, 15).toLocaleDateString("fr-FR"),
+      periode: `01/${mm} — ${lastDay}/${mm}`,
+    };
   });
 
   // Devis Chaîne — lignes saisies à la main par l'admin
