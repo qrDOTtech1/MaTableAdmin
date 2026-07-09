@@ -54,6 +54,14 @@ export default function DemandesClient({ requests: initial }: { requests: Req[] 
     [requests, filter]
   );
 
+  // Compte par statut en un seul passage — évite 4×requests.filter() par render
+  // (chaque clic sur un bouton "Marquer contacté / converti / rejeté" re-render la table).
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { ALL: requests.length, NEW: 0, CONTACTED: 0, CONVERTED: 0, REJECTED: 0 };
+    for (const r of requests) if (r.status in c) c[r.status]++;
+    return c;
+  }, [requests]);
+
   const updateStatus = async (id: string, status: string) => {
     const res = await fetch(`/api/pricing-requests/${id}`, {
       method: "PATCH",
@@ -80,7 +88,7 @@ export default function DemandesClient({ requests: initial }: { requests: Req[] 
       {/* Filtres */}
       <div className="flex gap-2 flex-wrap">
         {["ALL", "NEW", "CONTACTED", "CONVERTED", "REJECTED"].map((s) => {
-          const count = s === "ALL" ? requests.length : requests.filter((r) => r.status === s).length;
+          const count = counts[s] ?? 0;
           return (
             <button
               key={s}
