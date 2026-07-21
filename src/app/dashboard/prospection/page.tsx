@@ -140,10 +140,19 @@ export default function ProspectionPage() {
     if (scraper?.status !== "running") return;
 
     const interval = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       fetchScraperState();
     }, 1500);
 
-    return () => clearInterval(interval);
+    const onVis = () => {
+      if (document.visibilityState === "visible") fetchScraperState();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [scraper?.status, fetchScraperState]);
 
   // Debounce search
