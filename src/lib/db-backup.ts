@@ -41,27 +41,36 @@ export async function buildBackup(): Promise<BackupResult> {
   let totalRows = 0;
   let tableCount = 0;
 
-  for (const table of CRITICAL_TABLES) {
+  const tableReads = CRITICAL_TABLES.map(async (table) => {
     try {
       const rows = await prisma.$queryRawUnsafe<any[]>(`SELECT * FROM "${table}"`);
-      dump[table] = rows;
-      totalRows += rows.length;
-      tableCount++;
+      return { table, rows, error: null as string | null };
     } catch (e: any) {
-      // Table absente ou inaccessible — on note l'erreur sans tout faire échouer
-      dump[`__error_${table}`] = [{ error: e?.message ?? String(e) }];
+      return { table, rows: null as any[] | null, error: e?.message ?? String(e) };
+    }
+  });
+
+  const recentOrdersRead = prisma
+    .$queryRawUnsafe<any[]>(`SELECT * FROM "Order" WHERE "createdAt" > NOW() - INTERVAL '90 days'`)
+    .catch(() => null);
+
+  const [tableResults, recentOrders] = await Promise.all([Promise.all(tableReads), recentOrdersRead]);
+
+  for (const r of tableResults) {
+    if (r.rows) {
+      dump[r.table] = r.rows;
+      totalRows += r.rows.length;
+      tableCount++;
+    } else {
+      dump[`__error_${r.table}`] = [{ error: r.error }];
     }
   }
 
-  // Commandes payées récentes uniquement (90 jours) — sinon trop volumineux
-  try {
-    const recentOrders = await prisma.$queryRawUnsafe<any[]>(
-      `SELECT * FROM "Order" WHERE "createdAt" > NOW() - INTERVAL '90 days'`
-    );
+  if (recentOrders) {
     dump["Order_last90d"] = recentOrders;
     totalRows += recentOrders.length;
     tableCount++;
-  } catch {}
+  }
 
   const meta = {
     generatedAt: new Date().toISOString(),
