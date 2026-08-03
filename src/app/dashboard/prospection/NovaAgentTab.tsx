@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ProspectItem {
@@ -32,6 +32,8 @@ type CallMode = "sim" | "real";
 type PickerMode = "list" | "dial";
 
 const SCORE_ORDER = ["🔥", "😊", "🤔", "❄️"];
+const SCORE_RANK: Record<string, number> = Object.fromEntries(SCORE_ORDER.map((s, i) => [s, i]));
+const scoreRank = (s?: string | null) => (s && SCORE_RANK[s] !== undefined ? SCORE_RANK[s] : 99);
 const OUTCOMES = [
   { id: "interested", label: "Intéressé !",  emoji: "🟢", cls: "bg-emerald-500/20 border-emerald-500/40 text-emerald-300" },
   { id: "callback",   label: "Rappeler",      emoji: "📅", cls: "bg-amber-500/20 border-amber-500/40 text-amber-300" },
@@ -308,8 +310,15 @@ export default function NovaAgentTab() {
   }
 
   // ── Auto calls ──────────────────────────────────────────────────────────────
-  const autoProspects = prospects.filter(p => p.phone && p.status !== "IGNORED" && p.status !== "ACTIVATED")
-    .sort((a, b) => (SCORE_ORDER.indexOf(a.score ?? "") === -1 ? 99 : SCORE_ORDER.indexOf(a.score ?? "")) - (SCORE_ORDER.indexOf(b.score ?? "") === -1 ? 99 : SCORE_ORDER.indexOf(b.score ?? "")));
+  // Memoized: this component re-renders every second while a call is running
+  // (setSimTimer / setRealCall tick), and this list feeds a large select UI.
+  const autoProspects = useMemo(
+    () =>
+      prospects
+        .filter(p => p.phone && p.status !== "IGNORED" && p.status !== "ACTIVATED")
+        .sort((a, b) => scoreRank(a.score) - scoreRank(b.score)),
+    [prospects],
+  );
 
   function toggleAutoSelect(id: string) {
     setAutoSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -339,9 +348,12 @@ export default function NovaAgentTab() {
   }
 
   // ── Computed ─────────────────────────────────────────────────────────────────
-  const simProspects = prospects
-    .filter(p => !prospectSearch || p.name.toLowerCase().includes(prospectSearch.toLowerCase()) || p.city?.toLowerCase().includes(prospectSearch.toLowerCase()))
-    .sort((a, b) => (SCORE_ORDER.indexOf(a.score ?? "") === -1 ? 99 : SCORE_ORDER.indexOf(a.score ?? "")) - (SCORE_ORDER.indexOf(b.score ?? "") === -1 ? 99 : SCORE_ORDER.indexOf(b.score ?? "")));
+  const simProspects = useMemo(() => {
+    const q = prospectSearch.trim().toLowerCase();
+    return prospects
+      .filter(p => !q || p.name.toLowerCase().includes(q) || p.city?.toLowerCase().includes(q))
+      .sort((a, b) => scoreRank(a.score) - scoreRank(b.score));
+  }, [prospects, prospectSearch]);
 
   const SECTIONS: { id: Section; label: string; emoji: string }[] = [
     { id: "sim",     label: "Mode Appel",  emoji: "📞" },
