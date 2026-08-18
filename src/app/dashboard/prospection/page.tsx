@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import CircuitTab from "./CircuitTab";
-import CallModeTab from "./CallModeTab";
-import NovaAgentTab from "./NovaAgentTab";
 import dynamic from "next/dynamic";
+// Heavy tab-only clients — lazy so the CRM tab (default) doesn't pay their bundle cost up front.
+const CircuitTab     = dynamic(() => import("./CircuitTab"));
+const CallModeTab    = dynamic(() => import("./CallModeTab"));
+const NovaAgentTab   = dynamic(() => import("./NovaAgentTab"));
 const MapProspectTab = dynamic(() => import("./MapProspectTab"), { ssr: false });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
