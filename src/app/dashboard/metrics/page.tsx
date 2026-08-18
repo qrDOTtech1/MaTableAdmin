@@ -32,23 +32,21 @@ export default async function MetricsPage() {
   const ago30 = new Date(now.getTime() - 30 * 86400_000);
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const restos = (await prisma.restaurant.findMany({
-    select: {
-      id: true, name: true, subscription: true,
-      subscriptionStartedAt: true, subscriptionExpiresAt: true, createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-  })) as Resto[];
-
-  // Journal d'abonnements (historisé) — tolère l'absence de table avant migration
+  // Restaurants list and the (optional) subscription event journal are independent — fan them out.
   type SubEvent = { type: string; plan: string; mrrCents: number; mrrDeltaCents: number; createdAt: Date; restaurantName: string | null };
-  let events: SubEvent[] = [];
-  try {
-    events = await prisma.$queryRawUnsafe<SubEvent[]>(
+  const [restos, events] = await Promise.all([
+    prisma.restaurant.findMany({
+      select: {
+        id: true, name: true, subscription: true,
+        subscriptionStartedAt: true, subscriptionExpiresAt: true, createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }) as Promise<Resto[]>,
+    prisma.$queryRawUnsafe<SubEvent[]>(
       `SELECT type, plan, "mrrCents", "mrrDeltaCents", "createdAt", "restaurantName"
        FROM "SubscriptionEvent" ORDER BY "createdAt" DESC LIMIT 2000`
-    );
-  } catch { events = []; }
+    ).catch(() => [] as SubEvent[]),
+  ]);
   const hasEvents = events.length > 0;
 
   // ── Classification ────────────────────────────────────────────────────────
