@@ -107,10 +107,22 @@ const ENUM_TO_PLAN: Record<string, typeof PLANS[number]> = {
 
 export default async function RestaurantManagePage({ params }: { params: { id: string } }) {
   const { id } = await params;
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { id },
-    include: { users: true, tables: true, menuItems: true },
-  });
+  const [restaurant, contactEmailRows, stripeKeys, serverUniqueQrRows] = await Promise.all([
+    prisma.restaurant.findUnique({
+      where: { id },
+      include: { users: true, tables: true, menuItems: true },
+    }),
+    prisma.$queryRaw<Array<{ contactEmail: string | null; email: string | null }>>`
+      SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
+    `,
+    prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
+      SELECT "stripeSecretKey", "stripePublicKey", "stripeWebhookSecret"
+      FROM "Restaurant" WHERE id = ${id} LIMIT 1
+    `.then(r => r[0] ?? { stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null }),
+    prisma.$queryRaw<Array<{ serverUniqueReviewQr: boolean | null }>>`
+      SELECT "serverUniqueReviewQr" FROM "Restaurant" WHERE id = ${id} LIMIT 1
+    `.catch(() => [{ serverUniqueReviewQr: true }]),
+  ]);
   if (!restaurant) notFound();
 
   async function handleDelete() { "use server"; await deleteRestaurant(id); redirect("/dashboard"); }
@@ -123,22 +135,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
   const currentCaissePin = (restaurant as any).caissePin ?? "";
 
-  // Contact email for public page
-  const contactEmailRows = await prisma.$queryRaw<Array<{ contactEmail: string | null; email: string | null }>>`
-    SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `;
   const currentContactEmail = contactEmailRows[0]?.contactEmail ?? contactEmailRows[0]?.email ?? "";
-
-  // Stripe per-restaurant keys
-  const stripeKeys = await prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
-    SELECT "stripeSecretKey", "stripePublicKey", "stripeWebhookSecret"
-    FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `.then(r => r[0] ?? { stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null });
-
-  // serverUniqueReviewQr — default true if column doesn't exist yet
-  const serverUniqueQrRows = await prisma.$queryRaw<Array<{ serverUniqueReviewQr: boolean | null }>>`
-    SELECT "serverUniqueReviewQr" FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `.catch(() => [{ serverUniqueReviewQr: true }]);
   const serverUniqueReviewQr: boolean = serverUniqueQrRows[0]?.serverUniqueReviewQr ?? true;
 
   return (
