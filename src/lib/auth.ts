@@ -1,9 +1,7 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-admin-matable";
-const ADMIN_CREDENTIALS = process.env.ADMIN_CREDENTIALS || "admin:admin1234";
+import { ADMIN_CREDENTIALS, JWT_SECRET } from "./admin-secrets";
 
 export async function login(formData: FormData) {
   const username = formData.get("username") as string;
