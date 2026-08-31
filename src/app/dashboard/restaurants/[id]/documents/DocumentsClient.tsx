@@ -135,13 +135,31 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     bic: "",
   });
 
+  // Stable initial state so SSR + first client render match. The real numero/dates
+  // (Math.random + new Date) are computed in useEffect below, after mount.
   const [docMeta, setDocMeta] = useState({
-    numero: `CONT-2026-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
-    date: new Date().toLocaleDateString("fr-FR"),
-    validite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR"),
-    echeance: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15).toLocaleDateString("fr-FR"),
-    periode: `01/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1} — ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1}`,
+    numero: "CONT-2026-000",
+    date: "",
+    validite: "",
+    echeance: "",
+    periode: "",
   });
+  useEffect(() => {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const mm = month < 10 ? `0${month}` : String(month);
+    const lastDay = new Date(now.getFullYear(), month, 0).getDate();
+    // One-shot mount init for non-deterministic values (random doc number + current
+    // dates) — can't be derived from props, so setState-in-effect is the right tool.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDocMeta({
+      numero: `CONT-2026-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
+      date: now.toLocaleDateString("fr-FR"),
+      validite: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR"),
+      echeance: new Date(now.getFullYear(), month, 15).toLocaleDateString("fr-FR"),
+      periode: `01/${mm} — ${lastDay}/${mm}`,
+    });
+  }, []);
 
   // Devis Chaîne — lignes saisies à la main par l'admin
   const [chainQuote, setChainQuote] = useState<{
