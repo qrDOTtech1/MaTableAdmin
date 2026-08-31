@@ -14,7 +14,7 @@ export async function GET() {
     `;
     const key = rows[0]?.perplexityApiKey ?? null;
     return NextResponse.json({ hasKey: !!key, key: key ?? null, updatedAt: rows[0]?.updatedAt ?? null });
-  } catch (err: any) {
+  } catch {
     return NextResponse.json({ hasKey: false, key: null });
   }
 }

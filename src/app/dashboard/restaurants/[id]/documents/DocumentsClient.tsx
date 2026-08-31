@@ -135,13 +135,13 @@ export default function DocumentsClient({ restaurantId, restaurant }: { restaura
     bic: "",
   });
 
-  const [docMeta, setDocMeta] = useState({
+  const [docMeta, setDocMeta] = useState(() => ({
     numero: `CONT-2026-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`,
     date: new Date().toLocaleDateString("fr-FR"),
     validite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("fr-FR"),
     echeance: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15).toLocaleDateString("fr-FR"),
     periode: `01/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1} — ${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate()}/${new Date().getMonth() + 1 < 10 ? '0'+(new Date().getMonth() + 1) : new Date().getMonth() + 1}`,
-  });
+  }));
 
   // Devis Chaîne — lignes saisies à la main par l'admin
   const [chainQuote, setChainQuote] = useState<{

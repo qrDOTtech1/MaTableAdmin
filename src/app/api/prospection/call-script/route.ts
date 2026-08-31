@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     `.catch(() => [{ perplexityApiKey: null }]);
 
     const apiKey = rows[0]?.perplexityApiKey;
-    const { name, city, category, phone, website, google_rating, reviews_count, description, autoScoreLabel, autoScoreReasons } = await req.json();
+    const { name, city, category, website, google_rating, reviews_count, description, autoScoreLabel, autoScoreReasons } = await req.json();
 
     // Build contextual insights
     const insights: string[] = [];

@@ -41,7 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const passwordHash = await bcrypt.hash(password, 12);
 
   // Generate unique slug
-  let baseSlug = slugify(prospect.name || "restaurant");
+  const baseSlug = slugify(prospect.name || "restaurant");
   let slug = baseSlug;
   let attempt = 0;
   while (await prisma.restaurant.findUnique({ where: { slug } })) {

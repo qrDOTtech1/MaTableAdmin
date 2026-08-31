@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     try {
       await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
       return NextResponse.next();
-    } catch (err) {
+    } catch {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
     try {
       await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
       return NextResponse.redirect(new URL("/dashboard", request.url));
-    } catch (err) {
+    } catch {
       return NextResponse.next();
     }
   }

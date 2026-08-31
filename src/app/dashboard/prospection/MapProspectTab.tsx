@@ -577,9 +577,9 @@ export default function MapProspectTab() {
           </div>
 
           {/* Panel content */}
-          {panel === "detail" && <DetailPanel />}
-          {panel === "edit" && <EditPanel />}
-          {panel === "activate" && <ActivatePanel />}
+          {panel === "detail" && DetailPanel()}
+          {panel === "edit" && EditPanel()}
+          {panel === "activate" && ActivatePanel()}
         </div>
       )}
 
