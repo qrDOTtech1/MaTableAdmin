@@ -24,7 +24,9 @@ export async function GET(req: NextRequest) {
     ];
   }
 
-  const [total, prospects] = await Promise.all([
+  // All four reads are independent — issue them in one round-trip's worth of
+  // wall time instead of four sequential awaits.
+  const [total, prospects, stats, cities] = await Promise.all([
     (prisma as any).prospect.count({ where }),
     (prisma as any).prospect.findMany({
       where,
@@ -32,24 +34,20 @@ export async function GET(req: NextRequest) {
       skip: (page - 1) * limit,
       take: limit,
     }),
+    (prisma as any).prospect.groupBy({
+      by: ["status"],
+      _count: { _all: true },
+    }),
+    (prisma as any).prospect.findMany({
+      where: { city: { not: null } },
+      select: { city: true },
+      distinct: ["city"],
+      orderBy: { city: "asc" },
+    }),
   ]);
-
-  // Stats
-  const stats = await (prisma as any).prospect.groupBy({
-    by: ["status"],
-    _count: { _all: true },
-  });
 
   const statMap: Record<string, number> = {};
   for (const s of stats) statMap[s.status] = s._count._all;
-
-  // Cities list for filter
-  const cities = await (prisma as any).prospect.findMany({
-    where: { city: { not: null } },
-    select: { city: true },
-    distinct: ["city"],
-    orderBy: { city: "asc" },
-  });
 
   return NextResponse.json({
     prospects,
