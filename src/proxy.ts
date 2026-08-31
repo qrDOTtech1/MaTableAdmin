@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-for-admin-matable";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get("admin_token")?.value;
 
   if (request.nextUrl.pathname.startsWith("/dashboard")) {
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     try {
       await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
       return NextResponse.next();
-    } catch (err) {
+    } catch {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
     try {
       await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
       return NextResponse.redirect(new URL("/dashboard", request.url));
-    } catch (err) {
+    } catch {
       return NextResponse.next();
     }
   }

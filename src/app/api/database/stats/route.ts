@@ -18,26 +18,29 @@ export async function GET() {
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const counts: Record<string, number | null> = {};
-  for (const t of TABLES) {
+  // Run all counts + db size in parallel — independent queries.
+  const countPromises = TABLES.map(async (t) => {
     try {
       const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
         `SELECT COUNT(*)::bigint AS count FROM "${t}"`
       );
-      counts[t] = Number(rows[0]?.count ?? 0);
+      return [t, Number(rows[0]?.count ?? 0)] as const;
     } catch {
-      counts[t] = null;  // table absente
+      return [t, null] as const;  // table absente
     }
-  }
-
-  // DB size (Postgres)
-  let dbSizeBytes: number | null = null;
-  try {
-    const r = await prisma.$queryRawUnsafe<Array<{ size: bigint }>>(
+  });
+  const dbSizePromise = prisma
+    .$queryRawUnsafe<Array<{ size: bigint }>>(
       `SELECT pg_database_size(current_database())::bigint AS size`
-    );
-    dbSizeBytes = Number(r[0]?.size ?? 0);
-  } catch {}
+    )
+    .then((r) => Number(r[0]?.size ?? 0))
+    .catch(() => null);
+
+  const [countEntries, dbSizeBytes] = await Promise.all([
+    Promise.all(countPromises),
+    dbSizePromise,
+  ]);
+  const counts: Record<string, number | null> = Object.fromEntries(countEntries);
 
   return NextResponse.json({ counts, dbSizeBytes, at: new Date().toISOString() });
 }
