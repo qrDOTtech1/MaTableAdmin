@@ -19,16 +19,20 @@ export async function GET() {
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const counts: Record<string, number | null> = {};
-  for (const t of TABLES) {
-    try {
-      const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
-        `SELECT COUNT(*)::bigint AS count FROM "${t}"`
-      );
-      counts[t] = Number(rows[0]?.count ?? 0);
-    } catch {
-      counts[t] = null;  // table absente
-    }
-  }
+
+  const countResults = await Promise.all(
+    TABLES.map(async (t) => {
+      try {
+        const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
+          `SELECT COUNT(*)::bigint AS count FROM "${t}"`
+        );
+        return [t, Number(rows[0]?.count ?? 0)] as const;
+      } catch {
+        return [t, null] as const;  // table absente
+      }
+    })
+  );
+  for (const [t, c] of countResults) counts[t] = c;
 
   // DB size (Postgres)
   let dbSizeBytes: number | null = null;

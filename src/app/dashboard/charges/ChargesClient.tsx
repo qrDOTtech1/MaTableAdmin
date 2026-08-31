@@ -49,9 +49,14 @@ export function ChargesClient({ charges }: { charges: Charge[] }) {
   const [catFilter, setCatFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState<string>(String(new Date().getFullYear()));
 
-  // ── Stats ────────────────────────────────────────────────────────────────
+  // Read the clock at render-time (fine for KPI labels; the JSX re-runs on
+  // every render). The memo below re-reads it internally so the YTD /
+  // rolling-12 window advances for long-lived sessions.
   const now = new Date();
+
+  // ── Stats ────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
+    const now = new Date();
     const currentYear = now.getFullYear();
     const ytdHt = sumWhere(charges, c => new Date(c.dateIssued).getFullYear() === currentYear, c => c.amountHtCents);
     const ytdVat = sumWhere(charges, c => new Date(c.dateIssued).getFullYear() === currentYear && c.vatDeductible, c => c.vatAmountCents);
