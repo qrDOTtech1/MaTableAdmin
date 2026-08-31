@@ -11,12 +11,15 @@ export default async function GlobalDocumentsPage() {
   let cfg: any = null;
   let migrationPending = false;
   try {
-    docs = await prisma.generatedDocument.findMany({
-      include: { restaurant: { select: { id: true, name: true, slug: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 500,
-    });
-    cfg = await prisma.adminConfig.findUnique({ where: { id: "default" } });
+    // Independent reads — fan out.
+    [docs, cfg] = await Promise.all([
+      prisma.generatedDocument.findMany({
+        include: { restaurant: { select: { id: true, name: true, slug: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 500,
+      }),
+      prisma.adminConfig.findUnique({ where: { id: "default" } }),
+    ]);
   } catch (e: any) {
     if (e?.code === "P2021") {
       migrationPending = true;

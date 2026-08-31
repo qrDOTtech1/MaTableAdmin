@@ -123,22 +123,23 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
   const currentApiKey = (restaurant as any).ollamaApiKey ?? "";
   const currentCaissePin = (restaurant as any).caissePin ?? "";
 
-  // Contact email for public page
-  const contactEmailRows = await prisma.$queryRaw<Array<{ contactEmail: string | null; email: string | null }>>`
-    SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `;
+  // Three secondary Restaurant fetches — all read the same row, all independent
+  // of each other. Run them in parallel so page latency is one round-trip, not
+  // three.
+  const [contactEmailRows, stripeKeys, serverUniqueQrRows] = await Promise.all([
+    prisma.$queryRaw<Array<{ contactEmail: string | null; email: string | null }>>`
+      SELECT "contactEmail", email FROM "Restaurant" WHERE id = ${id} LIMIT 1
+    `,
+    prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
+      SELECT "stripeSecretKey", "stripePublicKey", "stripeWebhookSecret"
+      FROM "Restaurant" WHERE id = ${id} LIMIT 1
+    `.then(r => r[0] ? [r[0]] : [{ stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null }]),
+    prisma.$queryRaw<Array<{ serverUniqueReviewQr: boolean | null }>>`
+      SELECT "serverUniqueReviewQr" FROM "Restaurant" WHERE id = ${id} LIMIT 1
+    `.catch(() => [{ serverUniqueReviewQr: true }]),
+  ]);
   const currentContactEmail = contactEmailRows[0]?.contactEmail ?? contactEmailRows[0]?.email ?? "";
-
-  // Stripe per-restaurant keys
-  const stripeKeys = await prisma.$queryRaw<Array<{ stripeSecretKey: string | null; stripePublicKey: string | null; stripeWebhookSecret: string | null }>>`
-    SELECT "stripeSecretKey", "stripePublicKey", "stripeWebhookSecret"
-    FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `.then(r => r[0] ?? { stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null });
-
-  // serverUniqueReviewQr — default true if column doesn't exist yet
-  const serverUniqueQrRows = await prisma.$queryRaw<Array<{ serverUniqueReviewQr: boolean | null }>>`
-    SELECT "serverUniqueReviewQr" FROM "Restaurant" WHERE id = ${id} LIMIT 1
-  `.catch(() => [{ serverUniqueReviewQr: true }]);
+  const stripeKeysRow = stripeKeys[0] ?? { stripeSecretKey: null, stripePublicKey: null, stripeWebhookSecret: null };
   const serverUniqueReviewQr: boolean = serverUniqueQrRows[0]?.serverUniqueReviewQr ?? true;
 
   return (
@@ -196,14 +197,18 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             </div>
           </div>
           <div className="pt-3 border-t border-slate-800">
-            <h3 className="text-sm font-bold text-slate-400 mb-3">👤 Utilisateurs & Accès</h3>
-            <UsersManager restaurantId={restaurant.id} restaurantSlug={restaurant.slug ?? ""} />
+            <h3 className="text-sm font-bold text-slate-400 mb-3">👤 Utilisateurs</h3>
+            <div className="bg-slate-800 p-4 rounded-lg text-center">
+              <div className="text-xs text-slate-400 mb-1">Comptes</div>
+              <div className="text-3xl font-bold">{restaurant.users.length}</div>
+              <a href="#compte-acces" className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block">Gérer ↓</a>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── Compte & Accès ── */}
-      <div className="bg-slate-900 border border-blue-500/20 p-6 rounded-xl space-y-4">
+      <div id="compte-acces" className="bg-slate-900 border border-blue-500/20 p-6 rounded-xl space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center text-xl">🔐</div>
           <div>
@@ -436,7 +441,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             <input
               name="stripePublicKey"
               type="text"
-              defaultValue={stripeKeys.stripePublicKey ?? ""}
+              defaultValue={stripeKeysRow.stripePublicKey ?? ""}
               placeholder="pk_live_..."
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
             />
@@ -446,7 +451,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             <input
               name="stripeSecretKey"
               type="password"
-              defaultValue={stripeKeys.stripeSecretKey ?? ""}
+              defaultValue={stripeKeysRow.stripeSecretKey ?? ""}
               placeholder="sk_live_..."
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
             />
@@ -456,7 +461,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
             <input
               name="stripeWebhookSecret"
               type="password"
-              defaultValue={stripeKeys.stripeWebhookSecret ?? ""}
+              defaultValue={stripeKeysRow.stripeWebhookSecret ?? ""}
               placeholder="whsec_..."
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white font-mono text-sm"
             />
@@ -467,7 +472,7 @@ export default async function RestaurantManagePage({ params }: { params: { id: s
           </button>
         </form>
 
-        {stripeKeys.stripeSecretKey ? (
+        {stripeKeysRow.stripeSecretKey ? (
           <p className="text-xs text-emerald-400/70">✓ Cles Stripe configurees — paiement actif pour ce restaurant</p>
         ) : (
           <p className="text-xs text-slate-600">Aucune cle Stripe — le paiement utilisera les cles globales (si configurees)</p>
