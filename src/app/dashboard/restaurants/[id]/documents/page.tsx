@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/db";
 import DocumentsClient from "./DocumentsClient";
-
-const prisma = new PrismaClient();
 
 export default async function RestaurantDocumentsPage({
   params,
